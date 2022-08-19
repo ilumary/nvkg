@@ -62,5 +62,5 @@ Build with ```make app``` and execute with ```./bin/app```.
 
 ## References
 
-- [vulkan cpp starter](https://github.com/CapsCollective/vulkan-cpp-starter)
+- [canonical project structure](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1204r0.html)
 - [sascha willem's examples](https://github.com/SaschaWillems/Vulkan)
