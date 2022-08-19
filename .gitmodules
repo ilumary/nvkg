@@ -1,0 +1,39 @@
+[submodule "extern/glfw"]
+	path = extern/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "extern/glslang"]
+	path = extern/glslang
+	url = https://github.com/KhronosGroup/glslang.git
+[submodule "extern/glm"]
+	path = extern/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "extern/stb"]
+	path = extern/stb
+	url = https://github.com/nothings/stb
+[submodule "extern/vulkan/volk"]
+	path = extern/vulkan/volk
+	url = https://github.com/zeux/volk.git
+[submodule "extern/vulkan/Vulkan-Headers"]
+	path = extern/vulkan/Vulkan-Headers
+	url = https://github.com/KhronosGroup/Vulkan-Headers.git
+[submodule "extern/vulkan/MoltenVK"]
+	path = extern/vulkan/MoltenVK
+	url = https://github.com/KhronosGroup/MoltenVK.git
+[submodule "extern/vulkan/Vulkan-Loader"]
+	path = extern/vulkan/Vulkan-Loader
+	url = https://github.com/KhronosGroup/Vulkan-Loader.git
+[submodule "extern/vulkan/SPIRV-Headers"]
+	path = extern/vulkan/SPIRV-Headers
+	url = https://github.com/KhronosGroup/SPIRV-Headers.git
+[submodule "extern/vulkan/SPIRV-Cross"]
+	path = extern/vulkan/SPIRV-Cross
+	url = https://github.com/KhronosGroup/SPIRV-Cross.git
+[submodule "extern/vulkan/SPIRV-Tools"]
+	path = extern/vulkan/SPIRV-Tools
+	url = https://github.com/KhronosGroup/SPIRV-Tools.git
+[submodule "extern/vulkan/robin-hood-hashing"]
+	path = extern/vulkan/robin-hood-hashing
+	url = https://github.com/martinus/robin-hood-hashing.git
+[submodule "extern/vulkan/Vulkan-ValidationLayers"]
+	path = extern/vulkan/Vulkan-ValidationLayers
+	url = https://github.com/KhronosGroup/Vulkan-ValidationLayers.git

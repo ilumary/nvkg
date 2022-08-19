@@ -1,0 +1,14 @@
+# macOS filesystem
+.DS_STORE
+
+# Visual Studio Code
+.vscode
+
+# Environment
+.env
+
+# Intermediates
+bin
+lib
+extern/vulkan/lib
+extern/vulkan/include
