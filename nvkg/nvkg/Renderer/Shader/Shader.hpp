@@ -25,9 +25,9 @@ namespace nvkg {
                 uint32_t vertexStride = 0;
             };
 
-            struct Uniform {
+            struct ShaderResource {
                 Utils::StringId id;
-                uint32_t binding = 0; 
+                uint32_t binding = 0;
                 uint64_t size = 0;
                 size_t arraySize = 0;
                 size_t dyn_count = 1;
@@ -39,10 +39,9 @@ namespace nvkg {
             std::string entrance_function;
 
             // specifies the binding order of the model descriptor.
-            std::vector<Utils::Descriptor::DescriptorInfo> material_descriptor_orderings{};
             std::vector<VkPushConstantRange> push_constants{};
             std::vector<VertexBinding> vertex_bindings{};
-            std::vector<Uniform> uniforms{};
+            std::vector<ShaderResource> shader_resources{};
 
             uint32_t combined_uniform_size = 0;
 
@@ -84,5 +83,30 @@ namespace nvkg {
             * Uses SPIRV-Cross to perform runtime reflection of the spriv shader to analyze descriptor binding info.
             */
             void reflect_descriptor_types(std::vector<uint32_t> spirv_binary, VkShaderStageFlagBits shader_stage);
+
+            /*
+            * Collects all push constant data from shader.
+            */
+            void reflect_push_constants(spirv_cross::CompilerGLSL &glsl);
+
+            /*
+            * Collects all uniform buffer data from shader.
+            */
+            void reflect_uniform_buffers(spirv_cross::CompilerGLSL &glsl);
+
+            /*
+            * Collects all storage buffer data from shader.
+            */
+            void reflect_storage_buffers(spirv_cross::CompilerGLSL &glsl);
+
+            /*
+            * Collects all sampled images from shader.
+            */
+            void reflect_sampled_images(spirv_cross::CompilerGLSL &glsl);
+
+            /*
+            * Collects all vertex shader stage inputs.
+            */
+            void reflect_stage_inputs(spirv_cross::CompilerGLSL &glsl);
     };
 }

@@ -41,7 +41,7 @@ namespace nvkg {
             reflect_descriptor_types(convert(binary_data), VK_SHADER_STAGE_VERTEX_BIT);
 
         std::cout << "SHADER INFO: " << name << "." << stage << std::endl;
-        std::cout << "UBO's: " << uniforms.size() << " with overall size " << combined_uniform_size << std::endl;
+        std::cout << "UBO's: " << shader_resources.size() << " with overall size " << combined_uniform_size << std::endl;
         std::cout << "Vertex Bindings: " << vertex_bindings.size() << std::endl;
         std::cout << "Push Constants: " << push_constants.size() << std::endl;
 
@@ -75,14 +75,146 @@ namespace nvkg {
 		return buffer;
 	}
 
-    //TODO expand functionality
     void ShaderModule::reflect_descriptor_types(std::vector<uint32_t> spirv_binary, VkShaderStageFlagBits shader_stage) {
         spirv_cross::CompilerGLSL glsl(spirv_binary);
         spirv_cross::ShaderResources resources = glsl.get_shader_resources();
 
+        reflect_push_constants(glsl);
+        reflect_uniform_buffers(glsl);
+        reflect_storage_buffers(glsl);
+        reflect_sampled_images(glsl);
+
+        if(shader_stage == VK_SHADER_STAGE_VERTEX_BIT) {
+            reflect_stage_inputs(glsl);
+        }
+
+        // sort uniforms found by binding
+        std::sort(shader_resources.begin(), shader_resources.end(),
+            [](ShaderResource &l, ShaderResource &r) {
+                return l.binding < r.binding;
+            }
+        );
+    }
+
+    void ShaderModule::reflect_stage_inputs(spirv_cross::CompilerGLSL &glsl) {
+        spirv_cross::ShaderResources resources = glsl.get_shader_resources();
+
+        uint32_t inputs_size = 0, locations = 0;
+        VertexBinding n_binding{};
+
+        for(auto& resource : resources.stage_inputs) {
+            locations += 1;
+            unsigned set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
+            unsigned binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
+            unsigned location = glsl.get_decoration(resource.id, spv::DecorationLocation);
+            std::string name = glsl.get_name(resource.id);
+
+            const spirv_cross::SPIRType &type = glsl.get_type(resource.type_id);
+
+            auto attrib_type = VertexDescription::AttributeType::VEC2;
+            if(type.vecsize == 3) {
+                attrib_type = VertexDescription::AttributeType::VEC3;
+            } else if(type.vecsize == 4) {
+                attrib_type = VertexDescription::AttributeType::VEC4;
+            }
+
+            auto attrib = VertexDescription::Attribute {
+                .offset = inputs_size,
+                .type = attrib_type,
+            };
+
+            n_binding.attributes.push_back(attrib);
+
+            inputs_size += type.vecsize * 4; // because float = 4B
+        }
+        
+        if(inputs_size > 0) {
+            n_binding.vertexStride = inputs_size;
+            vertex_bindings.push_back(n_binding);
+        }
+    }
+
+    void ShaderModule::reflect_sampled_images(spirv_cross::CompilerGLSL &glsl) {
+        spirv_cross::ShaderResources resources = glsl.get_shader_resources();
+        
+        for (auto &resource : resources.sampled_images) {
+            unsigned set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
+            unsigned binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
+            std::string name = glsl.get_name(resource.id);
+        }
+    }
+
+    void ShaderModule::reflect_storage_buffers(spirv_cross::CompilerGLSL &glsl) {
+        spirv_cross::ShaderResources resources = glsl.get_shader_resources();
         size_t min_device_alignment = VulkanDevice::get_device_instance()->get_device_alignment();
 
-        // Get all push constants
+        for(auto& resource : resources.storage_buffers) {
+            unsigned set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
+            unsigned binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
+            std::string name = glsl.get_name(resource.id);
+
+            const spirv_cross::SPIRType &type = glsl.get_type(resource.base_type_id);
+            size_t ubo_size = glsl.get_declared_struct_size(type);
+
+            unsigned member_count = type.member_types.size();
+            for (unsigned i = 0; i < member_count; i++) {
+                auto &member_type = glsl.get_type(type.member_types[i]);
+                size_t member_size = glsl.get_declared_struct_member_size(type, i);
+
+                //account for min device alignment padding with non-array types
+                if (member_type.array.empty()) {
+                    if(member_size % min_device_alignment != 0) {
+                        ubo_size += (min_device_alignment - member_size);
+                    }
+                }
+
+                const std::string &name = glsl.get_member_name(type.self, i);
+            }
+
+            Utils::StringId strId = INTERN_STR(name.c_str());
+            auto padded_size = Buffer::pad_uniform_buffer_size(ubo_size);
+            shader_resources.push_back(ShaderResource{strId, binding, padded_size, 1, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER});
+            combined_uniform_size += padded_size;
+        }
+    }
+
+    void ShaderModule::reflect_uniform_buffers(spirv_cross::CompilerGLSL &glsl) {
+        spirv_cross::ShaderResources resources = glsl.get_shader_resources();
+        size_t min_device_alignment = VulkanDevice::get_device_instance()->get_device_alignment();
+
+        for (auto &resource : resources.uniform_buffers) {
+            unsigned set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
+            unsigned binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
+            std::string name = glsl.get_name(resource.id);
+
+            const spirv_cross::SPIRType &type = glsl.get_type(resource.base_type_id);
+            size_t ubo_size = glsl.get_declared_struct_size(type);
+
+            unsigned member_count = type.member_types.size();
+            for (unsigned i = 0; i < member_count; i++) {
+                auto &member_type = glsl.get_type(type.member_types[i]);
+                size_t member_size = glsl.get_declared_struct_member_size(type, i);
+
+                //account for min device alignment padding with non-array types
+                if (member_type.array.empty()) {
+                    if(member_size % min_device_alignment != 0) {
+                        ubo_size += (min_device_alignment - member_size);
+                    }
+                }
+
+                const std::string &name = glsl.get_member_name(type.self, i);
+            }
+
+            Utils::StringId strId = INTERN_STR(name.c_str());
+            auto padded_size = Buffer::pad_uniform_buffer_size(ubo_size);
+            shader_resources.push_back(ShaderResource{strId, binding, padded_size, 1, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER});
+            combined_uniform_size += padded_size;
+        }
+    }
+
+    void ShaderModule::reflect_push_constants(spirv_cross::CompilerGLSL &glsl) {
+        spirv_cross::ShaderResources resources = glsl.get_shader_resources();
+
         for (auto &resource : resources.push_constant_buffers) {
             auto ranges = glsl.get_active_buffer_ranges(resource.id);
             std::string name = glsl.get_name(resource.id);
@@ -92,8 +224,6 @@ namespace nvkg {
             const spirv_cross::SPIRType &type = glsl.get_type(resource.base_type_id);
             if(type.basetype == spirv_cross::SPIRType::Struct) {
                 size_t push_size = glsl.get_declared_struct_size(type);
-
-                std::cout << "Push Constant struct " << name << " with size " << push_size << std::endl;
 
                 push_constant_range.offset = 0;
                 push_constant_range.size = push_size;
@@ -110,140 +240,5 @@ namespace nvkg {
                 }
             }
         }
-        
-        // Get all sampled uniform buffers
-        for (auto &resource : resources.uniform_buffers) {
-            unsigned set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
-            unsigned binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
-            std::string name = glsl.get_name(resource.id);
-            Utils::Descriptor::DescriptorInfo descriptor_info = { binding, name, shader_stage, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER };
-
-            const spirv_cross::SPIRType &type = glsl.get_type(resource.base_type_id);
-            size_t ubo_size = glsl.get_declared_struct_size(type);
-
-            material_descriptor_orderings.push_back(descriptor_info);
-
-            unsigned member_count = type.member_types.size();
-            for (unsigned i = 0; i < member_count; i++) {
-                auto &member_type = glsl.get_type(type.member_types[i]);
-                size_t member_size = glsl.get_declared_struct_member_size(type, i);
-
-                //account for min device alignment padding with non-array types
-                if (member_type.array.empty()) {
-                    if(member_size % min_device_alignment != 0) {
-                        ubo_size += (min_device_alignment - member_size);
-                    }
-                }
-
-                const std::string &name = glsl.get_member_name(type.self, i);
-
-                std::cout << "Struct member " << name << " with size " << member_size << std::endl;
-            }
-
-            Utils::StringId strId = INTERN_STR(name.c_str());
-            auto padded_size = Buffer::pad_uniform_buffer_size(ubo_size);
-            uniforms.push_back(Uniform{strId, binding, padded_size, 1, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER});
-            combined_uniform_size += padded_size;
-
-            std::cout << "UBO: set " << set << ", binding " << binding << ", name " << name << " and size " << ubo_size << std::endl;
-        }
-
-        // Get all sampled images
-        for (auto &resource : resources.sampled_images) {
-            unsigned set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
-            unsigned binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
-            std::string name = glsl.get_name(resource.id);
-            Utils::Descriptor::DescriptorInfo descriptor_info = { binding, name, shader_stage, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER };
-
-            std::cout << "Sample Image: set " << set << ", binding " << binding << ", name " << name << std::endl;
-
-            material_descriptor_orderings.push_back(descriptor_info);
-        }
-
-        // Get all storage buffers
-        for(auto& resource : resources.storage_buffers) {
-            unsigned set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
-            unsigned binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
-            std::string name = glsl.get_name(resource.id);
-            Utils::Descriptor::DescriptorInfo descriptor_info = { binding, name, shader_stage, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC };
-
-            material_descriptor_orderings.push_back(descriptor_info);
-
-            const spirv_cross::SPIRType &type = glsl.get_type(resource.base_type_id);
-            size_t ubo_size = glsl.get_declared_struct_size(type);
-
-            unsigned member_count = type.member_types.size();
-            for (unsigned i = 0; i < member_count; i++) {
-                auto &member_type = glsl.get_type(type.member_types[i]);
-                size_t member_size = glsl.get_declared_struct_member_size(type, i);
-
-                //account for min device alignment padding with non-array types
-                if (member_type.array.empty()) {
-                    if(member_size % min_device_alignment != 0) {
-                        ubo_size += (min_device_alignment - member_size);
-                    }
-                }
-
-                const std::string &name = glsl.get_member_name(type.self, i);
-
-                std::cout << "Struct member " << name << " with size " << member_size << std::endl;
-            }
-
-            Utils::StringId strId = INTERN_STR(name.c_str());
-            auto padded_size = Buffer::pad_uniform_buffer_size(ubo_size);
-            uniforms.push_back(Uniform{strId, binding, padded_size, 1, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER});
-            combined_uniform_size += padded_size;
-
-            std::cout << "Storage Buffer: set " << set << ", binding " << binding << ", name " << name << ", size " << ubo_size << std::endl;
-        }
-
-        if(shader_stage == VK_SHADER_STAGE_VERTEX_BIT) {
-            uint32_t inputs_size = 0, locations = 0;
-            VertexBinding n_binding{};
-
-            // Get all stage inputs
-            for(auto& resource : resources.stage_inputs) {
-                locations += 1;
-                unsigned set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
-                unsigned binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
-                unsigned location = glsl.get_decoration(resource.id, spv::DecorationLocation);
-                std::string name = glsl.get_name(resource.id);
-
-                const spirv_cross::SPIRType &type = glsl.get_type(resource.type_id);
-
-                auto attrib_type = VertexDescription::AttributeType::VEC2;
-                if(type.vecsize == 3) {
-                    attrib_type = VertexDescription::AttributeType::VEC3;
-                } else if(type.vecsize == 4) {
-                    attrib_type = VertexDescription::AttributeType::VEC4;
-                }
-
-                auto attrib = VertexDescription::Attribute {
-                    .offset = inputs_size,
-                    .type = attrib_type,
-                };
-
-                n_binding.attributes.push_back(attrib);
-
-                inputs_size += type.vecsize * 4; // because float = 4B
-
-                std::cout << "Stage Input: set " << set << ", binding " << binding << ", name " << name << ", location " << location << ", vecsize " << type.vecsize << std::endl;
-            }
-            
-            if(inputs_size > 0) {
-                n_binding.vertexStride = inputs_size;
-                vertex_bindings.push_back(n_binding);
-
-                std::cout << "Added one vertex binding with " << locations << " locations and overall size of " << inputs_size << std::endl;
-            }
-                
-        }
-
-        // sort uniforms found by binding
-        std::sort(uniforms.begin(), uniforms.end(),
-            [](Uniform &l, Uniform &r) {
-                return l.binding < r.binding;
-            }
-        );
     }
 }
