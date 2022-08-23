@@ -88,12 +88,18 @@ namespace nvkg {
             reflect_stage_inputs(glsl);
         }
 
-        // sort uniforms found by binding
+        // sort uniforms by set and binding
         std::sort(shader_resources.begin(), shader_resources.end(),
             [](ShaderResource &l, ShaderResource &r) {
-                return l.binding < r.binding;
+                if( l.set != r.set)
+                    return (l.set < r.set);
+                return (l.binding < r.binding);
             }
         );
+
+        for(auto &resource : shader_resources) {
+            std::cout << resource.set << " " << resource.binding << std::endl;
+        }
     }
 
     void ShaderModule::reflect_stage_inputs(spirv_cross::CompilerGLSL &glsl) {
@@ -173,7 +179,7 @@ namespace nvkg {
 
             Utils::StringId strId = INTERN_STR(name.c_str());
             auto padded_size = Buffer::pad_uniform_buffer_size(ubo_size);
-            shader_resources.push_back(ShaderResource{strId, binding, padded_size, 1, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER});
+            shader_resources.push_back(ShaderResource{strId, set, binding, padded_size, 1, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER});
             combined_uniform_size += padded_size;
         }
     }
@@ -207,7 +213,7 @@ namespace nvkg {
 
             Utils::StringId strId = INTERN_STR(name.c_str());
             auto padded_size = Buffer::pad_uniform_buffer_size(ubo_size);
-            shader_resources.push_back(ShaderResource{strId, binding, padded_size, 1, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER});
+            shader_resources.push_back(ShaderResource{strId, set, binding, padded_size, 1, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER});
             combined_uniform_size += padded_size;
         }
     }

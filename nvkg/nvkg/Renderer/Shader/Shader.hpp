@@ -27,6 +27,7 @@ namespace nvkg {
 
             struct ShaderResource {
                 Utils::StringId id;
+                uint32_t set = 0;
                 uint32_t binding = 0;
                 uint64_t size = 0;
                 size_t arraySize = 0;
