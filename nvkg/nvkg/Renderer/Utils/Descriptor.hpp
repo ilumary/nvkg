@@ -5,102 +5,89 @@
 
 #include <nvkg/Renderer/Core.hpp>
 
-namespace nvkg::Utils {
-    // TODO document this
-    class Descriptor {
-        public: 
+// from Sasha Willems initialisers https://github.com/SaschaWillems/Vulkan/blob/master/base/VulkanInitializers.hpp
+namespace nvkg::descriptors {
 
-        struct DescriptorInfo {
-            unsigned binding;
-            std::string name;
-            VkShaderStageFlagBits shader_stage;
-            VkDescriptorType type;
-        };
-
-        enum Type
-        {
-            UNIFORM = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            STORAGE = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            UNIFORM_DYNAMIC = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
-            STORAGE_DYNAMIC = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC
-        };
-
-        static VkDescriptorSetLayoutBinding CreateLayoutBinding(
-            uint32_t binding, 
-            uint32_t count, 
-            uint32_t type, 
+    inline VkDescriptorSetLayoutBinding descriptor_set_layout_binding (
+            VkDescriptorType type,
             VkShaderStageFlags stageFlags,
-            const VkSampler* sampler = nullptr
-        );
+            uint32_t binding,
+            uint32_t descriptorCount = 1)
+    {
+            VkDescriptorSetLayoutBinding setLayoutBinding {
+                .descriptorType = type,
+                .stageFlags = stageFlags,
+                .binding = binding,
+                .descriptorCount = descriptorCount,
+            };
+            
+            return setLayoutBinding;
+    }
 
-        static bool CreateLayout(
-            VkDevice device,
-            VkDescriptorSetLayout& layout,
-            VkDescriptorSetLayoutBinding* bindings, 
-            uint32_t bindingCount, 
-            VkDescriptorSetLayoutCreateFlags flags = 0,
-            const void* pNext = nullptr
-        );
+    inline VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info(
+			const VkDescriptorSetLayoutBinding* pBindings,
+			uint32_t bindingCount)
+    {
+			VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {
+                .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+                .pBindings = pBindings,
+                .bindingCount = bindingCount,
+            };
+			
+			return descriptorSetLayoutCreateInfo;
+    }
 
-        static VkDescriptorSetLayoutCreateInfo CreateLayoutInfo(
-            VkDescriptorSetLayoutBinding* bindings, 
-            uint32_t bindingCount, 
-            VkDescriptorSetLayoutCreateFlags flags = 0,
-            const void* pNext = nullptr
-        );
+    inline VkDescriptorSetAllocateInfo descriptor_set_allocate_info(
+			VkDescriptorPool descriptorPool,
+			const VkDescriptorSetLayout* pSetLayouts,
+			uint32_t descriptorSetCount)
+    {
+			VkDescriptorSetAllocateInfo descriptorSetAllocateInfo {
+                .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+                .descriptorPool = descriptorPool,
+                .pSetLayouts = pSetLayouts,
+                .descriptorSetCount = descriptorSetCount,
+            };
+			
+			return descriptorSetAllocateInfo;
+    }
 
-        static void AllocateSets(
-            VkDevice device, 
-            VkDescriptorSet* descriptorSets,
-            VkDescriptorPool descriptorPool, 
-            uint32_t setCount, 
-            const VkDescriptorSetLayout* layouts, 
-            const void* pNext = nullptr
-        );
+    inline VkWriteDescriptorSet write_descriptor_set(
+			VkDescriptorSet dstSet,
+			VkDescriptorType type,
+			uint32_t binding,
+			VkDescriptorBufferInfo* bufferInfo,
+			uint32_t descriptorCount = 1)
+    {
+			VkWriteDescriptorSet writeDescriptorSet {
+                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .dstSet = dstSet,
+                .descriptorType = type,
+                .dstBinding = binding,
+                .pBufferInfo = bufferInfo,
+                .descriptorCount = descriptorCount,
+            };
+			
+			return writeDescriptorSet;
+    }
 
-        static VkDescriptorSetAllocateInfo CreateAllocateInfo(
-            VkDescriptorPool pool, 
-            uint32_t setCount, 
-            const VkDescriptorSetLayout* layouts, 
-            const void* pNext = nullptr
-        );
+		inline VkWriteDescriptorSet write_descriptor_set(
+			VkDescriptorSet dstSet,
+			VkDescriptorType type,
+			uint32_t binding,
+			VkDescriptorImageInfo *imageInfo,
+			uint32_t descriptorCount = 1)
+    {
+			VkWriteDescriptorSet writeDescriptorSet {
+                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .dstSet = dstSet,
+                .descriptorType = type,
+                .dstBinding = binding,
+                .pImageInfo = imageInfo,
+                .descriptorCount = descriptorCount,
+            };
+			
+			return writeDescriptorSet;
+    }
 
-        static VkDescriptorBufferInfo CreateBufferInfo(
-            VkBuffer buffer, 
-            VkDeviceSize offset, 
-            VkDeviceSize size
-        );
-
-        static VkDescriptorImageInfo CreateImageInfo(
-            VkSampler sampler,
-            VkImageView view,
-            VkImageLayout layout
-        );
-
-        static VkWriteDescriptorSet CreateBufferWriteSet(
-            uint32_t dstBinding,
-            VkDescriptorSet& dstSet,
-            uint32_t descriptorCount,
-            VkDescriptorType type, 
-            const VkDescriptorBufferInfo* bufferInfo
-        );
-
-        static VkWriteDescriptorSet CreateImageWriteSet(
-            uint32_t dstBinding, 
-            VkDescriptorSet& dstSet, 
-            uint32_t descriptorCount, 
-            VkDescriptorType type, 
-            const VkDescriptorImageInfo* imageInfo
-        );
-
-        static void WriteSets(
-            VkDevice device, 
-            const VkWriteDescriptorSet* sets, 
-            uint32_t setCount,
-            const VkCopyDescriptorSet* copies = nullptr,
-            uint32_t copyCount = 0
-        );
-
-        private: 
-    };
 }
