@@ -6,10 +6,9 @@
 namespace nvkg {
 
     NVKGMaterial::NVKGMaterial() {
-        vert_shader_new = nullptr;
-        frag_shader_new = nullptr;
+        vert_shader = nullptr;
+        frag_shader = nullptr;
         shader_count = 0;
-        is_new_shader_class = true;
         buffer_size = 0;
     }
 
@@ -17,28 +16,23 @@ namespace nvkg {
         NVKG_ASSERT(vertex_shader != nullptr && fragment_shader != nullptr, 
             "Error: the vertex and fragment shaders must be initialised");
 
-        vert_shader_new = vertex_shader;
-        frag_shader_new = fragment_shader;
+        vert_shader = vertex_shader;
+        frag_shader = fragment_shader;
         shader_count = 2;
-        is_new_shader_class = true;
 
-        buffer_size = vert_shader_new->combined_uniform_size + frag_shader_new->combined_uniform_size;
+        buffer_size = vert_shader->combined_uniform_size + frag_shader->combined_uniform_size;
     }
 
     void NVKGMaterial::set_vert_shader_new(ShaderModule* shader) {
-        if(vert_shader_new == nullptr) shader_count++;
-        vert_shader_new = shader; 
+        if(vert_shader == nullptr) shader_count++;
+        vert_shader = shader; 
         buffer_size += shader->combined_uniform_size;
-
-        is_new_shader_class = true;
     }
 
     void NVKGMaterial::set_frag_shader_new(ShaderModule* shader) {
-        if(frag_shader_new == nullptr) shader_count++;
-        frag_shader_new = shader; 
+        if(frag_shader == nullptr) shader_count++;
+        frag_shader = shader; 
         buffer_size += shader->combined_uniform_size;
-
-        is_new_shader_class = true;
     }
 
     NVKGMaterial::~NVKGMaterial() {
@@ -47,6 +41,7 @@ namespace nvkg {
         destroy_material();
     }
 
+    //TODO remove and replace by somehting les spaghetti like
     void NVKGMaterial::create_layout( VkDescriptorSetLayout* layouts, uint32_t layoutCount, VkPushConstantRange* pushConstants, uint32_t pushConstantCount) {
         auto device = VulkanDevice::get_device_instance();
 
@@ -62,7 +57,7 @@ namespace nvkg {
     void NVKGMaterial::bind(VkCommandBuffer commandBuffer) {
         pipeline.bind(commandBuffer);
 
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, desc_sets.size(), desc_sets.data(), desc_offs.size(), desc_offs.data());
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
     }
 
     void NVKGMaterial::push_constant(VkCommandBuffer command_buffer, size_t push_constant_size, const void* data) {
@@ -72,47 +67,65 @@ namespace nvkg {
     void NVKGMaterial::recreate_pipeline() {
         // Clear our graphics pipeline before swapchain re-creation
         pipeline.ClearPipeline();
-
-        create_pipeline();
+        prepare_pipeline();
     }
 
-    //TODO: rewrite for new shader module class
-    void NVKGMaterial::create_pipeline() {
-        std::vector<PipelineConfig::ShaderConfig> shader_configs{};
+    void NVKGMaterial::set_texture(SampledTexture* tex, std::string tex_name, uint32_t binding, VkShaderStageFlagBits shader_stage) {
+        //TODO
+    }
 
-        if (vert_shader_new) shader_configs.push_back(PipelineConfig::ShaderConfig { nullptr, PipelineConfig::PipelineStage::VERTEX, vert_shader_new->shader_module });
-        if (frag_shader_new) shader_configs.push_back(PipelineConfig::ShaderConfig { nullptr, PipelineConfig::PipelineStage::FRAGMENT, frag_shader_new->shader_module });
+    void NVKGMaterial::prepare_desc_set_layouts() {
+        //TODO add security checks for empty sets, no sets etc, also check for maximum number of sets
 
-        size_t bindingCount = prop_vec.size();
+        descriptor_set_layouts = std::vector<VkDescriptorSetLayout>(max_set + 1);
 
-        VkDescriptorSetLayout layouts[bindingCount];
+        for(int i = 0; i < (max_set + 1); i++) {
+            if(prop_vec_sorted[i].size() > 0) {
+                std::vector<VkDescriptorSetLayoutBinding> set_layout_bindings{};
 
-        for(size_t i = 0; i < bindingCount; i++) {
-            layouts[i] = prop_vec.at(i).descriptorBinding.layout;
+                for(auto& prop : prop_vec_sorted[i]) {
+                    set_layout_bindings.push_back(nvkg::descriptors::descriptor_set_layout_binding(
+                        prop.type,
+                        prop.stage,
+                        prop.binding
+                    ));
+
+                    std::cout << "Set Layout Binding for set " << i << ", binding " << prop.binding << ", stage " << prop.stage << ", type " << prop.type << std::endl;
+                }
+
+                std::cout << "Creating Set Layout " << i << " with " << set_layout_bindings.size() << " bindings" << std::endl;
+
+                VkDescriptorSetLayoutCreateInfo descriptor_layout =
+                    nvkg::descriptors::descriptor_set_layout_create_info(
+                        set_layout_bindings.data(),
+                        static_cast<uint32_t>(set_layout_bindings.size()));
+
+                NVKG_ASSERT(vkCreateDescriptorSetLayout(VulkanDevice::get_device_instance()->device(), &descriptor_layout, nullptr, &descriptor_set_layouts[i]) == VK_SUCCESS, "Failed to create descriptor set layout");
+            }      
         }
 
         std::vector<VkPushConstantRange> vpc{}, fpc{};
 
-        if (vert_shader_new) vpc = vert_shader_new->push_constants;
-        if (frag_shader_new) fpc = frag_shader_new->push_constants;
+        if (vert_shader) vpc = vert_shader->push_constants;
+        if (frag_shader) fpc = frag_shader->push_constants;
 
         push_constants.reserve(vpc.size() + fpc.size());
         push_constants.insert(push_constants.end(), vpc.begin(), vpc.end());
         push_constants.insert(push_constants.end(), fpc.begin(), fpc.end());
 
-        std::cout << "\n";
-        for(auto& pc : push_constants) {
-            std::cout << "PUSH CONSTANT: " << pc.stageFlags << " " << pc.size << " " << pc.offset << std::endl;
-        }
-
         void* push_constant_data;
         if(push_constants.size() == 0) { push_constant_data = nullptr; } else { push_constant_data = &push_constants[0]; }
 
-        create_layout(layouts, bindingCount, (VkPushConstantRange*)push_constant_data, push_constants.size());
+        create_layout(&descriptor_set_layouts[0], descriptor_set_layouts.size(), (VkPushConstantRange*)push_constant_data, push_constants.size());
 
         NVKG_ASSERT(pipeline_layout != nullptr, "Cannot create pipeline without a valid layout!");
-        
-        // Maybe pipelineConfig should be a builder class?
+    }
+
+    void NVKGMaterial::prepare_pipeline() { 
+        std::vector<PipelineConfig::ShaderConfig> shader_configs{};
+
+        if (vert_shader) shader_configs.push_back(PipelineConfig::ShaderConfig { nullptr, PipelineConfig::PipelineStage::VERTEX, vert_shader->shader_module });
+        if (frag_shader) shader_configs.push_back(PipelineConfig::ShaderConfig { nullptr, PipelineConfig::PipelineStage::FRAGMENT, frag_shader->shader_module });
 
         auto pipelineConfig = Pipeline::DefaultPipelineConfig();
         pipelineConfig.rasterizationInfo.polygonMode = (VkPolygonMode)shader_config.mode;
@@ -123,85 +136,57 @@ namespace nvkg {
         
         pipelineConfig.vertexData = VertexDescription::CreateDescriptions(vert_count, vertex_binds.data());
 
-        pipeline.RecreatePipeline(
+        pipeline.recreate_pipeline(
             shader_configs.data(),
             shader_count,
             pipelineConfig
         );
     }
 
-    // At some point it might be useful to batch create
-    // bindings. To do this we'd need to sort all bindings by type, stage, and 
-    // binding. 
-    
-    // This could potentially break if we have multiple 
-    // uniforms in the same dynamic uniform or storage buffer. 
-    void NVKGMaterial::init_descriptors() {
-        auto device = VulkanDevice::get_device_instance();
+    void NVKGMaterial::setup_descriptor_sets() {
 
-        auto descriptorPool = DescriptorPool::get_descr_pool();
+        descriptor_sets = std::vector<VkDescriptorSet>(max_set + 1);
 
-        // Create a descriptor set for our object transforms.
+        VkDescriptorSetAllocateInfo alloc_info =
+			nvkg::descriptors::descriptor_set_allocate_info(
+				DescriptorPool::get_descr_pool(),
+				&descriptor_set_layouts[0],
+				descriptor_set_layouts.size());
 
-        // A layout binding must be created for each resource used by a shader. 
-        // If we have two uniforms at different bindings (binding 0, 1, 2...etc), then we need
-        // a new layout binding for each one. 
+        vkAllocateDescriptorSets(VulkanDevice::get_device_instance()->device(), &alloc_info, &descriptor_sets[0]);
 
-        size_t prop_count = prop_vec.size();
+        std::vector<VkWriteDescriptorSet> write_sets_test{};
+        VkDescriptorBufferInfo descriptor_buffer_infos[10]; // TODO: find limit on descriptor_buffer_infos from shader
+        int buf_counter = 0;
 
-        VkDescriptorBufferInfo buff_infos[prop_count]; //TODO replace with vector
-        VkWriteDescriptorSet write_desc_sets[prop_count]; //TODO replace with vector
+        for(auto& prop : prop_vec) {
+            //if(prop.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
+                //image    
+            //} else {
+                //storage/uniform
+                descriptor_buffer_infos[buf_counter] = {
+                    .buffer = buffer.buffer,
+                    .offset = prop.offset,
+                    .range = prop.size * prop.count,
+                };
 
-        std::cout << "Allocating descriptor set storage of " << prop_count << std::endl;
+                std::cout << "Prop Id: " << prop.id << std::endl;
+                std::cout << "Buffer Info: offset: " << descriptor_buffer_infos[buf_counter].offset << ", range: " << descriptor_buffer_infos[buf_counter].range << std::endl;
 
-        for (size_t i = 0; i < prop_count; i++) {
-            auto& property = prop_vec.at(i);
-            auto& binding = property.descriptorBinding;
+                write_sets_test.push_back(
+                    nvkg::descriptors::write_descriptor_set(
+                        descriptor_sets[prop.set],
+                        prop.type,
+                        prop.binding,
+                        &descriptor_buffer_infos[buf_counter]
+                    )
+                );
 
-            // TODO: bindings MUST be unique for all bound shaders. This means that
-            // TODO: new bindings on a new shader must follow a consecutive order.
-            auto layoutBinding = Utils::Descriptor::CreateLayoutBinding(
-                property.binding, 
-                1, 
-                binding.type,
-                property.stage
-            );
-
-            auto stage = property.stage == VK_SHADER_STAGE_VERTEX_BIT ? "vertex" : 
-                property.stage == VK_SHADER_STAGE_FRAGMENT_BIT ? "fragment" : "unknown";
-
-            std::cout << "Creating a layout binding for binding " << property.binding << " at stage: " << stage << std::endl;
-
-            // Create all layouts
-            
-            NVKG_ASSERT(Utils::Descriptor::CreateLayout(device->device(), OUT binding.layout, &layoutBinding, 1),
-            "Failed to create descriptor set!");
-
-            uint64_t offset = property.offset;
-
-            buff_infos[i] = Utils::Descriptor::CreateBufferInfo(buffer.buffer, offset, property.size * property.count);
-            std::cout << "Property Size: " << property.size * property.count << std::endl;
-
-            std::cout << "Allocating descriptor set for binding " << property.binding << std::endl;
-            Utils::Descriptor::AllocateSets(device->device(), &binding.descriptorSet, descriptorPool, 1, &binding.layout);
-
-            desc_sets.push_back(binding.descriptorSet);
-            
-            write_desc_sets[i] = (
-                Utils::Descriptor::CreateBufferWriteSet(
-                    property.binding, 
-                    binding.descriptorSet, 
-                    1, 
-                    (VkDescriptorType)binding.type,
-                    &buff_infos[i]
-            ));
+                buf_counter++;
+            //}
         }
 
-        std::cout << "Successfully created all required layouts!" << std::endl;
-
-        std::cout << "Total descriptor sets: " <<  desc_sets.size() << std::endl;
-
-        Utils::Descriptor::WriteSets(device->device(), &write_desc_sets[0], prop_count);
+        vkUpdateDescriptorSets(VulkanDevice::get_device_instance()->device(), static_cast<uint32_t>(write_sets_test.size()), write_sets_test.data(), 0, NULL);
     }
 
     void NVKGMaterial::add_shader(ShaderModule* shader) {
@@ -227,41 +212,37 @@ namespace nvkg {
     }
 
     void NVKGMaterial::set_shader_props(ShaderModule* shader, uint64_t& offset) {
-        auto uniforms = shader->uniforms;
+        auto shader_resources = shader->shader_resources;
 
-        for(auto& uniform : uniforms) {
-            if (has_prop(uniform.id)) {
-                std::cout << "Property already exists!" << std::endl;
-                auto& property = get_prop(uniform.id);
+        for(auto& res : shader_resources) {
+            if (has_prop(res.id)) {
+                auto& property = get_prop(res.id);
                 property.stage = property.stage | (VkShaderStageFlags) shader->shader_stage;
                 continue;
             };
 
             Property property = {
-                uniform.binding, 
-                uniform.id, 
-                (VkShaderStageFlags)shader->shader_stage, 
-                offset,  
-                uniform.size * uniform.arraySize,
-                uniform.dyn_count
+                res.set,
+                res.binding,
+                res.id,
+                (VkShaderStageFlags)shader->shader_stage,
+                offset,
+                res.size * res.arraySize,
+                res.dyn_count,
+                res.type
             };
 
-            property.descriptorBinding = { VK_NULL_HANDLE, VK_NULL_HANDLE, uniform.type };
             prop_vec.push_back(property);
 
-            std::cout << "Added new uniform to binding: " << uniform.binding << std::endl;
-
-            std::cout << "Added new property of size: " << uniform.size << " with buffer offset: " << offset << std::endl;
-
-            offset += (uniform.size * uniform.arraySize) * uniform.dyn_count;
+            offset += (res.size * res.arraySize) * res.dyn_count;
         }
     }
     
     void NVKGMaterial::destroy_material() {
         auto device = VulkanDevice::get_device_instance();
 
-        for (auto& property : prop_vec) {
-            vkDestroyDescriptorSetLayout(device->device(), property.descriptorBinding.layout, nullptr);
+        for (auto& layout : descriptor_set_layouts) {
+            vkDestroyDescriptorSetLayout(device->device(), layout, nullptr);
         }
 
         pipeline.DestroyPipeline();
@@ -284,6 +265,8 @@ namespace nvkg {
                 return;
             }
         }
+
+        std::cout << "Error while setting uniform data" << std::endl;
     }
 
     bool NVKGMaterial::has_prop(Utils::StringId id) {
@@ -304,10 +287,8 @@ namespace nvkg {
                 return;
             }
         }
-    }
 
-    void NVKGMaterial::set_texture(SampledTexture* tex, std::string tex_name, uint32_t binding, VkShaderStageFlagBits shader_stage) {
-        
+        std::cout << "Error while setting uniform data" << std::endl;
     }
 
     void NVKGMaterial::create_materials(std::initializer_list<NVKGMaterial*> materials) {
@@ -337,23 +318,35 @@ namespace nvkg {
 
         uint64_t offset = 0;
 
-        if (vert_shader_new && is_new_shader_class) {
-            std::cout << "Using new vertex shader class" << std::endl;
-            add_shader(vert_shader_new);
-            set_shader_props(vert_shader_new, OUT offset);
+        if (vert_shader) {
+            add_shader(vert_shader);
+            set_shader_props(vert_shader, OUT offset);
         }
 
-        if (frag_shader_new && is_new_shader_class) {
-            std::cout << "Using new frag shader class" << std::endl;
-            add_shader(frag_shader_new);
-            set_shader_props(frag_shader_new, OUT offset);
+        if (frag_shader) {
+            add_shader(frag_shader);
+            set_shader_props(frag_shader, OUT offset);
+        }
+
+        std::sort(prop_vec.begin(), prop_vec.end(),
+            [](Property &l, Property &r) {
+                if( l.set != r.set)
+                    return (l.set < r.set);
+                return (l.binding < r.binding);
+            }
+        );
+
+        max_set = prop_vec.at(prop_vec.size() - 1).set;
+
+        for(auto& prop : prop_vec) {
+            prop_vec_sorted[prop.set].push_back(prop);
         }
         
-        std::cout << "Total properties: " << prop_vec.size() << std::endl;
-        
-        init_descriptors();
+        std::cout << "Total properties: " << prop_vec.size() << " and highest set " << max_set << std::endl;
 
-        create_pipeline();
+        prepare_desc_set_layouts();
+        prepare_pipeline();
+        setup_descriptor_sets();
         
         std::cout << "Built material with size: " << buffer_size << std::endl;
 
