@@ -70,7 +70,7 @@ namespace nvkg {
         prepare_pipeline();
     }
 
-    void NVKGMaterial::set_texture(SampledTexture* tex, std::string tex_name, uint32_t binding, VkShaderStageFlagBits shader_stage) {
+    void NVKGMaterial::set_texture(SampledTexture* tex, std::string tex_name, VkShaderStageFlagBits shader_stage) {
         //TODO
     }
 
@@ -80,10 +80,10 @@ namespace nvkg {
         descriptor_set_layouts = std::vector<VkDescriptorSetLayout>(max_set + 1);
 
         for(int i = 0; i < (max_set + 1); i++) {
-            if(prop_vec_sorted[i].size() > 0) {
+            if(!res_sorted_by_set[i].empty()) {
                 std::vector<VkDescriptorSetLayoutBinding> set_layout_bindings{};
 
-                for(auto& prop : prop_vec_sorted[i]) {
+                for(auto& prop : res_sorted_by_set[i]) {
                     set_layout_bindings.push_back(nvkg::descriptors::descriptor_set_layout_binding(
                         prop.type,
                         prop.stage,
@@ -101,7 +101,7 @@ namespace nvkg {
                         static_cast<uint32_t>(set_layout_bindings.size()));
 
                 NVKG_ASSERT(vkCreateDescriptorSetLayout(VulkanDevice::get_device_instance()->device(), &descriptor_layout, nullptr, &descriptor_set_layouts[i]) == VK_SUCCESS, "Failed to create descriptor set layout");
-            }      
+            } //TODO check for possibility that inbetween sets are empty
         }
 
         std::vector<VkPushConstantRange> vpc{}, fpc{};
@@ -155,38 +155,41 @@ namespace nvkg {
 
         vkAllocateDescriptorSets(VulkanDevice::get_device_instance()->device(), &alloc_info, &descriptor_sets[0]);
 
-        std::vector<VkWriteDescriptorSet> write_sets_test{};
+        std::vector<VkWriteDescriptorSet> write_sets{};
         VkDescriptorBufferInfo descriptor_buffer_infos[10]; // TODO: find limit on descriptor_buffer_infos from shader
         int buf_counter = 0;
 
-        for(auto& prop : prop_vec) {
-            //if(prop.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
-                //image    
-            //} else {
-                //storage/uniform
-                descriptor_buffer_infos[buf_counter] = {
-                    .buffer = buffer.buffer,
-                    .offset = prop.offset,
-                    .range = prop.size * prop.count,
-                };
+        for(auto& v : res_sorted_by_set) {
+            if(v.empty()) continue;
+            for(auto& prop : v) {
+                //if(prop.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
+                    //image    
+                //} else {
+                    //storage/uniform
+                    descriptor_buffer_infos[buf_counter] = {
+                        .buffer = buffer.buffer,
+                        .offset = prop.offset,
+                        .range = prop.size * prop.dyn_count,
+                    };
 
-                std::cout << "Prop Id: " << prop.id << std::endl;
-                std::cout << "Buffer Info: offset: " << descriptor_buffer_infos[buf_counter].offset << ", range: " << descriptor_buffer_infos[buf_counter].range << std::endl;
+                    std::cout << "Prop Id: " << prop.id << std::endl;
+                    std::cout << "Buffer Info: offset: " << descriptor_buffer_infos[buf_counter].offset << ", range: " << descriptor_buffer_infos[buf_counter].range << std::endl;
 
-                write_sets_test.push_back(
-                    nvkg::descriptors::write_descriptor_set(
-                        descriptor_sets[prop.set],
-                        prop.type,
-                        prop.binding,
-                        &descriptor_buffer_infos[buf_counter]
-                    )
-                );
+                    write_sets.push_back(
+                        nvkg::descriptors::write_descriptor_set(
+                            descriptor_sets[prop.set],
+                            prop.type,
+                            prop.binding,
+                            &descriptor_buffer_infos[buf_counter]
+                        )
+                    );
 
-                buf_counter++;
-            //}
+                    buf_counter++;
+                //}
+            }
         }
 
-        vkUpdateDescriptorSets(VulkanDevice::get_device_instance()->device(), static_cast<uint32_t>(write_sets_test.size()), write_sets_test.data(), 0, NULL);
+        vkUpdateDescriptorSets(VulkanDevice::get_device_instance()->device(), static_cast<uint32_t>(write_sets.size()), write_sets.data(), 0, NULL);
     }
 
     void NVKGMaterial::add_shader(ShaderModule* shader) {
@@ -216,25 +219,21 @@ namespace nvkg {
 
         for(auto& res : shader_resources) {
             if (has_prop(res.id)) {
-                auto& property = get_prop(res.id);
+                auto& property = get_res(res.id);
                 property.stage = property.stage | (VkShaderStageFlags) shader->shader_stage;
                 continue;
             };
 
-            Property property = {
-                res.set,
-                res.binding,
-                res.id,
-                (VkShaderStageFlags)shader->shader_stage,
-                offset,
-                res.size * res.arraySize,
-                res.dyn_count,
-                res.type
-            };
+            NVKG_ASSERT(res.set < MAX_DESCRIPTOR_SETS, "Aborting with invalid descriptor set count...");
+            NVKG_ASSERT(res.binding < MAX_DESCRIPTOR_BINDINGS_PER_SET, "Aborting with invalid descriptor binding...");
 
-            prop_vec.push_back(property);
+            res.offset = offset;
+
+            res_sorted_by_set[res.set].push_back(res);
 
             offset += (res.size * res.arraySize) * res.dyn_count;
+
+            if(res.set > max_set) max_set = res.set;
         }
     }
     
@@ -259,10 +258,13 @@ namespace nvkg {
     }
 
     void NVKGMaterial::set_uniform_data(Utils::StringId id, VkDeviceSize dataSize, const void* data) {
-        for(auto& property : prop_vec) {
-            if (id == property.id) {
-                Buffer::copy_data(buffer, dataSize, data, property.offset);
-                return;
+        for(auto& v : res_sorted_by_set) {
+            if(v.empty()) continue;
+            for(auto& prop : v) {
+                if(prop.id == id) {
+                    Buffer::copy_data(buffer, dataSize, data, prop.offset);
+                    return;
+                }
             }
         }
 
@@ -270,21 +272,37 @@ namespace nvkg {
     }
 
     bool NVKGMaterial::has_prop(Utils::StringId id) {
-        for(auto& property : prop_vec) {
-            if (id == property.id) {
-                return true;
+        for(auto& v : res_sorted_by_set) {
+            if(v.empty()) continue;
+            for(auto& prop : v) {
+                if(prop.id == id) return true;
             }
         }
+
         return false;
+    }
+
+    ShaderResource& NVKGMaterial::get_res(Utils::StringId id) {
+        for(auto& v : res_sorted_by_set) {
+            if(v.empty()) continue;
+            for(auto& prop : v) {
+                if(prop.id == id) return prop;
+            }
+        }
+
+        NVKG_ASSERT(false, "No property with ID: " << id << " exists!");
     }
 
     void NVKGMaterial::set_uniform_data(const char* name, VkDeviceSize dataSize, const void* data) {
         auto id = INTERN_STR(name);
 
-        for(auto& property : prop_vec) {
-            if (id == property.id) {
-                Buffer::copy_data(buffer, dataSize, data, property.offset);
-                return;
+        for(auto& v : res_sorted_by_set) {
+            if(v.empty()) continue;
+            for(auto& prop : v) {
+                if(prop.id == id) {
+                    Buffer::copy_data(buffer, dataSize, data, prop.offset);
+                    return;
+                }
             }
         }
 
@@ -295,17 +313,9 @@ namespace nvkg {
         for (auto material : materials) material->create_material();
     }
 
-    NVKGMaterial::Property& NVKGMaterial::get_prop(Utils::StringId id) {
-        for(auto& property : prop_vec) {
-            if (id == property.id) return property;
-        }
-
-        NVKG_ASSERT(false, "No property with ID: " << id << " exists!");
-    }
 
     void NVKGMaterial::create_material() {
         // Allocate buffer which can store all the data we need
-
         std::cout << "\nCREATING NEW MATERIAL" << std::endl;
 
         Buffer::create_buffer(
@@ -327,22 +337,6 @@ namespace nvkg {
             add_shader(frag_shader);
             set_shader_props(frag_shader, OUT offset);
         }
-
-        std::sort(prop_vec.begin(), prop_vec.end(),
-            [](Property &l, Property &r) {
-                if( l.set != r.set)
-                    return (l.set < r.set);
-                return (l.binding < r.binding);
-            }
-        );
-
-        max_set = prop_vec.at(prop_vec.size() - 1).set;
-
-        for(auto& prop : prop_vec) {
-            prop_vec_sorted[prop.set].push_back(prop);
-        }
-        
-        std::cout << "Total properties: " << prop_vec.size() << " and highest set " << max_set << std::endl;
 
         prepare_desc_set_layouts();
         prepare_pipeline();

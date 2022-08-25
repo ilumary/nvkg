@@ -8,8 +8,14 @@
 #include <nvkg/Renderer/Texture/TextureManager.hpp>
 
 #include <vector>
+#include <array>
 
 namespace nvkg {
+
+    //TODO get this data from physical device
+    #define MAX_DESCRIPTOR_SETS 8
+    #define MAX_DESCRIPTOR_BINDINGS_PER_SET 4
+
     class NVKGMaterial {
         public:
             
@@ -47,7 +53,7 @@ namespace nvkg {
             bool has_prop(Utils::StringId id);
 
             void push_constant(VkCommandBuffer command_buffer, size_t push_constant_size, const void* data);
-            void set_texture(SampledTexture* tex, std::string tex_name, uint32_t binding, VkShaderStageFlagBits shader_stage);
+            void set_texture(SampledTexture* tex, std::string tex_name, VkShaderStageFlagBits shader_stage);
 
             void bind(VkCommandBuffer commandBuffer);
 
@@ -61,18 +67,7 @@ namespace nvkg {
 
         private:
 
-            struct Property {
-                uint32_t set = 0;
-                uint32_t binding = 0;
-                Utils::StringId id = 0;
-                VkShaderStageFlags stage;
-                uint64_t offset = 0;
-                uint64_t size = 0;
-                size_t count = 0;
-                VkDescriptorType type;
-            };
-
-            Property& get_prop(Utils::StringId id);
+            ShaderResource& get_res(Utils::StringId id);
 
             void add_shader(ShaderModule* shader);
             void set_shader_props(ShaderModule* shader, uint64_t& offset);
@@ -95,14 +90,16 @@ namespace nvkg {
             ShaderModule* vert_shader {nullptr};
             ShaderModule* frag_shader {nullptr};
 
-            std::vector<Property> prop_vec{};
-            std::vector<VkPushConstantRange> push_constants{};
-            std::vector<VertexDescription::Binding> vertex_binds{};
-
             Buffer::Buffer buffer;
             uint64_t buffer_size = 0;
 
-            std::vector<Property> prop_vec_sorted[8];
+            /*  
+            * Holds all shader resources as internal properties
+            */
+            std::array<std::vector<ShaderResource>, MAX_DESCRIPTOR_SETS> res_sorted_by_set{};
+            std::vector<VkPushConstantRange> push_constants{};
+            std::vector<VertexDescription::Binding> vertex_binds{};
+
             uint16_t max_set = 0;
 
             std::vector<VkDescriptorSetLayout> descriptor_set_layouts{};
