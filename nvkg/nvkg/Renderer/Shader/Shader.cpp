@@ -35,10 +35,10 @@ namespace nvkg {
         binary_data = loadSpirVBinary(filepath);
 
         if (stage == "frag")
-            reflect_descriptor_types(convert(binary_data), VK_SHADER_STAGE_FRAGMENT_BIT);
+            reflect_descriptor_types(convert(binary_data));
 
         if (stage == "vert")
-            reflect_descriptor_types(convert(binary_data), VK_SHADER_STAGE_VERTEX_BIT);
+            reflect_descriptor_types(convert(binary_data));
 
         std::cout << "SHADER INFO: " << name << "." << stage << std::endl;
         std::cout << "UBO's: " << shader_resources.size() << " with overall size " << combined_uniform_size << std::endl;
@@ -75,7 +75,7 @@ namespace nvkg {
 		return buffer;
 	}
 
-    void ShaderModule::reflect_descriptor_types(std::vector<uint32_t> spirv_binary, VkShaderStageFlagBits shader_stage) {
+    void ShaderModule::reflect_descriptor_types(std::vector<uint32_t> spirv_binary) {
         spirv_cross::CompilerGLSL glsl(spirv_binary);
         spirv_cross::ShaderResources resources = glsl.get_shader_resources();
 
@@ -97,9 +97,9 @@ namespace nvkg {
             }
         );
 
-        for(auto &resource : shader_resources) {
+        /*for(auto &resource : shader_resources) {
             std::cout << resource.set << " " << resource.binding << std::endl;
-        }
+        }*/
     }
 
     void ShaderModule::reflect_stage_inputs(spirv_cross::CompilerGLSL &glsl) {
@@ -179,7 +179,7 @@ namespace nvkg {
 
             Utils::StringId strId = INTERN_STR(name.c_str());
             auto padded_size = Buffer::pad_uniform_buffer_size(ubo_size);
-            shader_resources.push_back(ShaderResource{strId, set, binding, padded_size, 1, 1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER});
+            shader_resources.push_back(ShaderResource{strId, set, binding, padded_size, 1, 1, 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, (VkShaderStageFlags)shader_stage});
             combined_uniform_size += padded_size;
         }
     }
@@ -213,7 +213,7 @@ namespace nvkg {
 
             Utils::StringId strId = INTERN_STR(name.c_str());
             auto padded_size = Buffer::pad_uniform_buffer_size(ubo_size);
-            shader_resources.push_back(ShaderResource{strId, set, binding, padded_size, 1, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER});
+            shader_resources.push_back(ShaderResource{strId, set, binding, padded_size, 1, 1, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, (VkShaderStageFlags)shader_stage});
             combined_uniform_size += padded_size;
         }
     }

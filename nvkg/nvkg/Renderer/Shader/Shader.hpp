@@ -17,22 +17,24 @@
 
 namespace nvkg {
 
+    struct ShaderResource {
+        Utils::StringId id;
+        uint32_t set = 0;
+        uint32_t binding = 0;
+        uint64_t size = 0;
+        size_t arraySize = 0;
+        size_t dyn_count = 1;
+        uint64_t offset = 0;
+        VkDescriptorType type;
+        VkShaderStageFlags stage;
+    };
+
     class ShaderModule {
         public:
 
             struct VertexBinding {
                 std::vector<VertexDescription::Attribute> attributes{};
                 uint32_t vertexStride = 0;
-            };
-
-            struct ShaderResource {
-                Utils::StringId id;
-                uint32_t set = 0;
-                uint32_t binding = 0;
-                uint64_t size = 0;
-                size_t arraySize = 0;
-                size_t dyn_count = 1;
-                VkDescriptorType type;
             };
 
             VkShaderModule shader_module{};
@@ -83,7 +85,7 @@ namespace nvkg {
             /*
             * Uses SPIRV-Cross to perform runtime reflection of the spriv shader to analyze descriptor binding info.
             */
-            void reflect_descriptor_types(std::vector<uint32_t> spirv_binary, VkShaderStageFlagBits shader_stage);
+            void reflect_descriptor_types(std::vector<uint32_t> spirv_binary);
 
             /*
             * Collects all push constant data from shader.
