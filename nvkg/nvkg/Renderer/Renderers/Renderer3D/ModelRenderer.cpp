@@ -51,6 +51,7 @@ namespace nvkg {
     }
 
     void ModelRenderer::RecreateMaterials() {
-        if (currentMaterial) currentMaterial->recreate_pipeline();
+        //if (currentMaterial) currentMaterial->recreate_pipeline();
+        std::cout << "ups" << std::endl;
     }
 }

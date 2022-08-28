@@ -101,7 +101,7 @@ namespace nvkg {
             == VK_SUCCESS, "Failed to create graphics pipeline!")
     }
 
-    void Pipeline::RecreatePipeline(
+    void Pipeline::recreate_pipeline(
         const PipelineConfig::ShaderConfig* shaders,
         uint32_t shaderCount,
         const PipelineConfigInfo& configInfo) {

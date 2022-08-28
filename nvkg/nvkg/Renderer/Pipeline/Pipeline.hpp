@@ -83,13 +83,13 @@ namespace nvkg {
              **/
             void bind(VkCommandBuffer commandBuffer);
 
-            void RecreatePipeline(
+            void recreate_pipeline(
                 const char* vertFilePath, 
                 const char* fragFilePath, 
                 const PipelineConfigInfo& configInfo
             );
 
-            void RecreatePipeline(
+            void recreate_pipeline(
                 const PipelineConfig::ShaderConfig* shaders,
                 uint32_t shaderCount,
                 const PipelineConfigInfo& configInfo

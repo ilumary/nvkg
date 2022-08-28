@@ -68,10 +68,16 @@ namespace nvkg {
 
         private:
 
+            struct MaterialTexture {
+                Utils::StringId id;
+                VkShaderStageFlagBits stages;
+                SampledTexture* texture = nullptr;
+            };
+
             ShaderResource& get_res(Utils::StringId id);
 
             void add_shader(ShaderModule* shader);
-            void set_shader_props(ShaderModule* shader, uint64_t& offset);
+            void set_shader_props(ShaderModule* shader, uint64_t& offset, uint16_t& res_counter);
 
             void create_layout(
                 VkDescriptorSetLayout* layouts = nullptr, 
@@ -102,6 +108,8 @@ namespace nvkg {
 
             const unsigned short set_mask = 0x00FF;
             const unsigned short index_mask = 0xFF00;
+
+            std::map<uint32_t, MaterialTexture> textures{};
 
             std::vector<VkPushConstantRange> push_constants{};
             std::vector<VertexDescription::Binding> vertex_binds{};

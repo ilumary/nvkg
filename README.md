@@ -11,11 +11,11 @@ The dependencies are reduced to a minimum as the majority of external code is in
 Current highlights are:
   - Automated descriptor creation using SPIRV-Cross reflection
   - Material based rendering
-  - plug-and-play architecture
-  - model loading
+  - Plug-and-play architecture
+  - Model loading
+  - Texture support
 
 Still to be done are:
-  - Texture support
   - Compute pipeline builder
   - Examples
   - Skybox, (sdf)-text and billboard renderers

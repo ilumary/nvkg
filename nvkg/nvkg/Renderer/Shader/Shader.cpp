@@ -147,6 +147,19 @@ namespace nvkg {
             unsigned set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
             unsigned binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
             std::string name = glsl.get_name(resource.id);
+
+            Utils::StringId strId = INTERN_STR(name.c_str());
+            shader_resources.push_back(ShaderResource{
+                .id = strId, 
+                .set = set,
+                .binding = binding,
+                .size =  0,
+                .arraySize = 0,
+                .dyn_count = 1,
+                .offset = 0,
+                .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .stage = (VkShaderStageFlags)shader_stage,
+            });
         }
     }
 

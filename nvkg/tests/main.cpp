@@ -90,7 +90,7 @@ int main() {
     nvkg::NVKGMaterial diffuse_mat_new(vert_shader, frag_shader); // 3D diffuse test material
 
     nvkg::SampledTexture* tex = tex_mng->load_2d_img("../assets/textures/tex1.png");
-    //diffuse_mat_new.set_texture(tex, "penguin", 2, VK_SHADER_STAGE_FRAGMENT_BIT);
+    diffuse_mat_new.set_texture(tex, "texSampler", VK_SHADER_STAGE_FRAGMENT_BIT);
 
     nvkg::NVKGMaterial::create_materials({&diffuse_mat_new});
 

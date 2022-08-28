@@ -33,9 +33,9 @@ layout (std140, set = 0, binding = 0) readonly buffer ObjectBuffer {
     ObjectData objects[1000];
 } objectBuffer;
 
-layout (set = 1, binding = 1) uniform GlobalData {
+layout (set = 1, binding = 0) uniform GlobalData {
     CameraData cameraData;
-    LightData lightData;
+    LightData lightData[10];
     int light_index;
 } globalData;
 

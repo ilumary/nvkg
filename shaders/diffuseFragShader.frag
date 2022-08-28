@@ -5,7 +5,7 @@ layout (location = 1) in vec3 fragPosWorld;
 layout (location = 2) in vec3 fragNormalWorld;
 layout (location = 3) in vec2 fragUV;
 
-//layout(binding = 2) uniform sampler2D texSampler;
+layout(set = 2, binding = 0) uniform sampler2D texSampler;
 
 layout(location = 0) out vec4 outColor;
 
@@ -20,7 +20,7 @@ struct LightData {
     vec3 position;
 };
 
-layout (set = 1, binding = 1) uniform GlobalData {
+layout (set = 1, binding = 0) uniform GlobalData {
     CameraData cameraData;
     LightData lightData[10];
     int light_index;
@@ -42,7 +42,8 @@ void main() {
         diffuseLight += intensity * cosAngIncidence;
     }
     
-    outColor = vec4(diffuseLight * fragColor, 1.0);
+    //outColor = vec4(diffuseLight * fragColor, 1.0);
+    outColor = texture(texSampler, fragUV) + vec4(diffuseLight * fragColor, 1.0);
 
     /*vec3 directionToLight = lightData.position - fragPosWorld;
     float attenuation = 1.0 / dot(directionToLight, directionToLight); // distance squared

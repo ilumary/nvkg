@@ -72,7 +72,9 @@ namespace nvkg {
     }
 
     void NVKGMaterial::set_texture(SampledTexture* tex, std::string tex_name, VkShaderStageFlagBits shader_stage) {
-        //TODO
+        auto id = INTERN_STR(tex_name.c_str());
+        std::cout << "Added texture with id " << id << " to material" << std::endl;
+        textures[id] = {id, shader_stage, tex};
     }
 
     void NVKGMaterial::prepare_desc_set_layouts() {
@@ -84,17 +86,17 @@ namespace nvkg {
                 unsigned short set = (si & set_mask);
                 unsigned short index = (si & index_mask) >> 8;
 
-                for(auto& prop : res_vec) {
+                for(auto& res : res_vec) {
                     set_layout_bindings.push_back(nvkg::descriptors::descriptor_set_layout_binding(
-                        prop.type,
-                        prop.stage,
-                        prop.binding
+                        res.type,
+                        res.stage,
+                        res.binding
                     ));
 
-                    std::cout << "Set Layout Binding for set " << set << ", binding " << prop.binding << ", stage " << prop.stage << ", type " << prop.type << std::endl;
+                    std::cout << "Set Layout Binding for set " << set << ", binding " << res.binding << ", stage " << res.stage << ", type " << res.type << std::endl;
                 }
 
-                std::cout << "Creating Set Layout " << set << " with " << set_layout_bindings.size() << " bindings" << std::endl;
+                std::cout << "Creating Set Layout " << set << " with " << set_layout_bindings.size() << " bindings and index " << index << std::endl;
 
                 VkDescriptorSetLayoutCreateInfo descriptor_layout =
                     nvkg::descriptors::descriptor_set_layout_create_info(
@@ -156,7 +158,9 @@ namespace nvkg {
 
         std::vector<VkWriteDescriptorSet> write_sets{};
         VkDescriptorBufferInfo descriptor_buffer_infos[10]; // TODO: find limit on descriptor_buffer_infos from shader
-        int buf_counter = 0;
+        VkDescriptorImageInfo descriptor_image_infos[10]; // TODO: find limit on descriptor_image_infos from shader
+
+        int buf_counter = 0, img_counter = 0;
 
         for(const auto& [k, v] : resources_per_set) {
 
@@ -164,9 +168,31 @@ namespace nvkg {
             unsigned short index = (k & index_mask) >> 8;
             
             for(auto& prop : v) {
-                //if(prop.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
-                    //image    
-                //} else {
+                if(prop.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
+                    //image
+                    if (textures.find(prop.id) == textures.end()) {
+                        std::cout << "Unable to find texture with id " << prop.id << ". Continuing..." << std::endl;
+                        continue;
+                    }
+
+                    descriptor_image_infos[img_counter] = {
+                        .sampler = textures[prop.id].texture->sampler->sampler,
+                        .imageView = textures[prop.id].texture->image_view->image_view,
+                        .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                    };
+
+                    write_sets.push_back(
+                        nvkg::descriptors::write_descriptor_set(
+                            descriptor_sets[index],
+                            prop.type,
+                            prop.binding,
+                            &descriptor_image_infos[img_counter]
+                        )
+                    );
+
+                    img_counter++;
+
+                } else {
                     //storage/uniform
                     descriptor_buffer_infos[buf_counter] = {
                         .buffer = buffer.buffer,
@@ -187,7 +213,7 @@ namespace nvkg {
                     );
 
                     buf_counter++;
-                //}
+                }
             }
         }
 
@@ -214,9 +240,8 @@ namespace nvkg {
         }
     }
 
-    void NVKGMaterial::set_shader_props(ShaderModule* shader, uint64_t& offset) {
+    void NVKGMaterial::set_shader_props(ShaderModule* shader, uint64_t& offset, uint16_t& res_counter) {
         auto shader_resources = shader->shader_resources;
-        uint16_t counter = 0;
 
         for(auto& res : shader_resources) {
             if (has_prop(res.id)) {
@@ -228,16 +253,16 @@ namespace nvkg {
             NVKG_ASSERT(res.set < MAX_DESCRIPTOR_SETS, "Aborting with invalid descriptor set count...");
             NVKG_ASSERT(res.binding < MAX_DESCRIPTOR_BINDINGS_PER_SET, "Aborting with invalid descriptor binding...");
 
-            res.offset = offset;
+            uint16_t map_index = 0;
+            map_index = ((map_index & index_mask) | (res_counter << 8)) | ((map_index & set_mask) | res.set);
 
-            uint16_t map_index = 0x0000;
-            map_index = ((map_index & index_mask) | (counter << 8)) | ((map_index & set_mask) | res.set);
+            res.offset = offset;
 
             resources_per_set[map_index].push_back(res);
 
             offset += (res.size * res.arraySize) * res.dyn_count;
 
-            counter++;
+            res_counter++;
         }
     }
     
@@ -314,11 +339,11 @@ namespace nvkg {
         for (auto material : materials) material->create_material();
     }
 
-
     void NVKGMaterial::create_material() {
         // Allocate buffer which can store all the data we need
         std::cout << "\nCREATING NEW MATERIAL" << std::endl;
 
+        //TODO set buffer size after resource collection to prevent doubled allocations 
         Buffer::create_buffer(
             buffer_size,
             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
@@ -328,16 +353,19 @@ namespace nvkg {
         );
 
         uint64_t offset = 0;
+        uint16_t counter = 0;
 
         if (vert_shader) {
             add_shader(vert_shader);
-            set_shader_props(vert_shader, OUT offset);
+            set_shader_props(vert_shader, OUT offset, counter);
         }
 
         if (frag_shader) {
             add_shader(frag_shader);
-            set_shader_props(frag_shader, OUT offset);
+            set_shader_props(frag_shader, OUT offset, counter);
         }
+
+        std::cout << "Retrieved " << resources_per_set.size() << " resources from shaders" << std::endl;
 
         prepare_desc_set_layouts();
         prepare_pipeline();
