@@ -9,6 +9,7 @@
 
 #include <vector>
 #include <array>
+#include <map>
 
 namespace nvkg {
 
@@ -84,7 +85,6 @@ namespace nvkg {
                 Topology topology = Topology::TRIANGLE_LIST;
             } shader_config;
 
-            size_t vert_count = 0;
             uint32_t shader_count = 0;
 
             ShaderModule* vert_shader {nullptr};
@@ -95,12 +95,16 @@ namespace nvkg {
 
             /*  
             * Holds all shader resources as internal properties
+            * First 8 bits are continuous index, last 8 bits are actual descriptor set
+            * This is needed if one descriptor set is left empty, i.e. descriptor sets 0,1 and 3 are used, but 2 is not
             */
-            std::array<std::vector<ShaderResource>, MAX_DESCRIPTOR_SETS> res_sorted_by_set{};
+            std::map<uint16_t, std::vector<ShaderResource>> resources_per_set{};
+
+            const unsigned short set_mask = 0x00FF;
+            const unsigned short index_mask = 0xFF00;
+
             std::vector<VkPushConstantRange> push_constants{};
             std::vector<VertexDescription::Binding> vertex_binds{};
-
-            uint16_t max_set = 0;
 
             std::vector<VkDescriptorSetLayout> descriptor_set_layouts{};
             std::vector<VkDescriptorSet> descriptor_sets{};

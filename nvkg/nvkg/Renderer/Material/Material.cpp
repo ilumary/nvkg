@@ -61,6 +61,7 @@ namespace nvkg {
     }
 
     void NVKGMaterial::push_constant(VkCommandBuffer command_buffer, size_t push_constant_size, const void* data) {
+        //TODO make sure multiple different push constants can be pushed individually
         vkCmdPushConstants(command_buffer, pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, push_constant_size, data);
     }
 
@@ -75,33 +76,32 @@ namespace nvkg {
     }
 
     void NVKGMaterial::prepare_desc_set_layouts() {
-        //TODO add security checks for empty sets, no sets etc, also check for maximum number of sets
+        descriptor_set_layouts = std::vector<VkDescriptorSetLayout>(resources_per_set.size());
 
-        descriptor_set_layouts = std::vector<VkDescriptorSetLayout>(max_set + 1);
-
-        for(int i = 0; i < (max_set + 1); i++) {
-            if(!res_sorted_by_set[i].empty()) {
+        for(const auto& [si, res_vec] : resources_per_set) {
                 std::vector<VkDescriptorSetLayoutBinding> set_layout_bindings{};
 
-                for(auto& prop : res_sorted_by_set[i]) {
+                unsigned short set = (si & set_mask);
+                unsigned short index = (si & index_mask) >> 8;
+
+                for(auto& prop : res_vec) {
                     set_layout_bindings.push_back(nvkg::descriptors::descriptor_set_layout_binding(
                         prop.type,
                         prop.stage,
                         prop.binding
                     ));
 
-                    std::cout << "Set Layout Binding for set " << i << ", binding " << prop.binding << ", stage " << prop.stage << ", type " << prop.type << std::endl;
+                    std::cout << "Set Layout Binding for set " << set << ", binding " << prop.binding << ", stage " << prop.stage << ", type " << prop.type << std::endl;
                 }
 
-                std::cout << "Creating Set Layout " << i << " with " << set_layout_bindings.size() << " bindings" << std::endl;
+                std::cout << "Creating Set Layout " << set << " with " << set_layout_bindings.size() << " bindings" << std::endl;
 
                 VkDescriptorSetLayoutCreateInfo descriptor_layout =
                     nvkg::descriptors::descriptor_set_layout_create_info(
                         set_layout_bindings.data(),
                         static_cast<uint32_t>(set_layout_bindings.size()));
 
-                NVKG_ASSERT(vkCreateDescriptorSetLayout(VulkanDevice::get_device_instance()->device(), &descriptor_layout, nullptr, &descriptor_set_layouts[i]) == VK_SUCCESS, "Failed to create descriptor set layout");
-            } //TODO check for possibility that inbetween sets are empty
+                NVKG_ASSERT(vkCreateDescriptorSetLayout(VulkanDevice::get_device_instance()->device(), &descriptor_layout, nullptr, &descriptor_set_layouts[index]) == VK_SUCCESS, "Failed to create descriptor set layout");
         }
 
         std::vector<VkPushConstantRange> vpc{}, fpc{};
@@ -134,7 +134,7 @@ namespace nvkg {
         pipelineConfig.renderPass = SwapChain::GetInstance()->GetRenderPass()->GetRenderPass();
         pipelineConfig.pipelineLayout = pipeline_layout;
         
-        pipelineConfig.vertexData = VertexDescription::CreateDescriptions(vert_count, vertex_binds.data());
+        pipelineConfig.vertexData = VertexDescription::CreateDescriptions(vertex_binds.size(), vertex_binds.data());
 
         pipeline.recreate_pipeline(
             shader_configs.data(),
@@ -144,8 +144,7 @@ namespace nvkg {
     }
 
     void NVKGMaterial::setup_descriptor_sets() {
-
-        descriptor_sets = std::vector<VkDescriptorSet>(max_set + 1);
+        descriptor_sets = std::vector<VkDescriptorSet>(resources_per_set.size());
 
         VkDescriptorSetAllocateInfo alloc_info =
 			nvkg::descriptors::descriptor_set_allocate_info(
@@ -159,8 +158,11 @@ namespace nvkg {
         VkDescriptorBufferInfo descriptor_buffer_infos[10]; // TODO: find limit on descriptor_buffer_infos from shader
         int buf_counter = 0;
 
-        for(auto& v : res_sorted_by_set) {
-            if(v.empty()) continue;
+        for(const auto& [k, v] : resources_per_set) {
+
+            //unsigned short set = (k & set_mask);
+            unsigned short index = (k & index_mask) >> 8;
+            
             for(auto& prop : v) {
                 //if(prop.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
                     //image    
@@ -177,7 +179,7 @@ namespace nvkg {
 
                     write_sets.push_back(
                         nvkg::descriptors::write_descriptor_set(
-                            descriptor_sets[prop.set],
+                            descriptor_sets[index],
                             prop.type,
                             prop.binding,
                             &descriptor_buffer_infos[buf_counter]
@@ -194,8 +196,6 @@ namespace nvkg {
 
     void NVKGMaterial::add_shader(ShaderModule* shader) {
         auto& vertices = shader->vertex_bindings;
-
-        vert_count += vertices.size();
 
         for(size_t i = 0; i < vertices.size(); i++) {
             auto& binding = vertices.at(i);
@@ -216,6 +216,7 @@ namespace nvkg {
 
     void NVKGMaterial::set_shader_props(ShaderModule* shader, uint64_t& offset) {
         auto shader_resources = shader->shader_resources;
+        uint16_t counter = 0;
 
         for(auto& res : shader_resources) {
             if (has_prop(res.id)) {
@@ -229,11 +230,14 @@ namespace nvkg {
 
             res.offset = offset;
 
-            res_sorted_by_set[res.set].push_back(res);
+            uint16_t map_index = 0x0000;
+            map_index = ((map_index & index_mask) | (counter << 8)) | ((map_index & set_mask) | res.set);
+
+            resources_per_set[map_index].push_back(res);
 
             offset += (res.size * res.arraySize) * res.dyn_count;
 
-            if(res.set > max_set) max_set = res.set;
+            counter++;
         }
     }
     
@@ -258,8 +262,7 @@ namespace nvkg {
     }
 
     void NVKGMaterial::set_uniform_data(Utils::StringId id, VkDeviceSize dataSize, const void* data) {
-        for(auto& v : res_sorted_by_set) {
-            if(v.empty()) continue;
+        for(const auto& [k, v] : resources_per_set) {
             for(auto& prop : v) {
                 if(prop.id == id) {
                     Buffer::copy_data(buffer, dataSize, data, prop.offset);
@@ -272,8 +275,7 @@ namespace nvkg {
     }
 
     bool NVKGMaterial::has_prop(Utils::StringId id) {
-        for(auto& v : res_sorted_by_set) {
-            if(v.empty()) continue;
+        for(const auto& [k, v] : resources_per_set) {
             for(auto& prop : v) {
                 if(prop.id == id) return true;
             }
@@ -283,8 +285,7 @@ namespace nvkg {
     }
 
     ShaderResource& NVKGMaterial::get_res(Utils::StringId id) {
-        for(auto& v : res_sorted_by_set) {
-            if(v.empty()) continue;
+        for(auto& [k, v] : resources_per_set) {
             for(auto& prop : v) {
                 if(prop.id == id) return prop;
             }
@@ -296,7 +297,7 @@ namespace nvkg {
     void NVKGMaterial::set_uniform_data(const char* name, VkDeviceSize dataSize, const void* data) {
         auto id = INTERN_STR(name);
 
-        for(auto& v : res_sorted_by_set) {
+        for(const auto& [k, v] : resources_per_set) {
             if(v.empty()) continue;
             for(auto& prop : v) {
                 if(prop.id == id) {
