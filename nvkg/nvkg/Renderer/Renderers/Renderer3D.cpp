@@ -7,8 +7,6 @@ namespace nvkg {
     Utils::StringId Renderer3D::globalDataId;
 
     ModelRenderer Renderer3D::modelRenderer;
-    //DebugRenderer3D Renderer3D::debugRenderer;
-    //BillboardRenderer Renderer3D::billboardRenderer;
     LightRenderer Renderer3D::lightRenderer;
 
     Renderer3D::GlobalData Renderer3D::global3DData;
