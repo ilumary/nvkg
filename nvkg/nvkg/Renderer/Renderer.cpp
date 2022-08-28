@@ -15,6 +15,7 @@ namespace nvkg {
         DescriptorPool::add_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 10);
         DescriptorPool::add_pool_size(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10);
         DescriptorPool::add_pool_size(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 10);
+        DescriptorPool::add_pool_size(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 10);
 
         DescriptorPool::build_pool();
 
