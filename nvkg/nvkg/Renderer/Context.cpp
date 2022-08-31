@@ -1,15 +1,12 @@
-#include <nvkg/Renderer/Renderer.hpp>
+#include <nvkg/Renderer/Context.hpp>
 
 namespace nvkg {
 
-    std::vector<VkCommandBuffer> Renderer::commandBuffers;
-    VulkanDevice* Renderer::deviceInstance = nullptr;
+    std::vector<VkCommandBuffer> Context::command_buffers;
 
-    Renderer::Renderer(Window& window) : window{window}, swapchain{SwapChain(device_)} {
+    Context::Context(Window& window) : window{window}, swapchain{SwapChain(device_)} {
         device_.set_window_ptr(&window);
         swapchain.SetWindowExtents(window.get_window_extent());
-
-        if (deviceInstance == nullptr) deviceInstance = &device_;
 
         DescriptorPool::add_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10);
         DescriptorPool::add_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 10);
@@ -19,40 +16,40 @@ namespace nvkg {
 
         DescriptorPool::build_pool();
 
-        Renderer3D::init();
+        Renderer::init();
 
         create_cmdbf();
     }
 
-    Renderer::~Renderer() {
+    Context::~Context() {
         DescriptorPool::destroy_pool();
-        Renderer3D::destroy();
+        Renderer::destroy();
     }
 
-    void Renderer::create_cmdbf() {
-        commandBuffers = std::vector<VkCommandBuffer>(SwapChain::MAX_FRAMES_IN_FLIGHT);
+    void Context::create_cmdbf() {
+        command_buffers = std::vector<VkCommandBuffer>(SwapChain::MAX_FRAMES_IN_FLIGHT);
 
         VkCommandBufferAllocateInfo allocInfo {
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
             .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
             .commandPool = device_.get_command_pool(),
-            .commandBufferCount = static_cast<uint32_t>(commandBuffers.size()),
+            .commandBufferCount = static_cast<uint32_t>(command_buffers.size()),
         };
         
 
-        NVKG_ASSERT(vkAllocateCommandBuffers(device_.device(), &allocInfo, OUT commandBuffers.data()) == VK_SUCCESS,
+        NVKG_ASSERT(vkAllocateCommandBuffers(device_.device(), &allocInfo, OUT command_buffers.data()) == VK_SUCCESS,
             "Failed to allocate command buffer");
     }
 
-    void Renderer::DrawFrame() {
+    void Context::draw_frame() {
         auto commandBuffer = get_crnt_cmdbf();
 
         CameraData cameraData = { main_camera->get_proj(), main_camera->get_view()};
 
-        Renderer3D::render(commandBuffer, cameraData);
+        Renderer::render(commandBuffer, cameraData);
     }
 
-    void Renderer::recreate_swapchain() {
+    void Context::recreate_swapchain() {
         clear_device_queue();
         auto extent = window.get_window_extent();
         while(extent.width == 0 || extent.height == 0) {
@@ -69,19 +66,19 @@ namespace nvkg {
         // Re-create the pipeline once the swapchain renderpass 
         // becomes available again.
         if (!swapchain.CompareSwapFormats(oldImageFormat, oldDepthFormat)) {
-            Renderer3D::recreate_materials();
+            Renderer::recreate_materials();
         }
     }
 
-    void Renderer::free_cmdbf() {
+    void Context::free_cmdbf() {
         vkFreeCommandBuffers(
             device_.device(), 
             device_.get_command_pool(), 
             SwapChain::GetImageCount(),
-            commandBuffers.data());
+            command_buffers.data());
     }
 
-    bool Renderer::start_frane() {
+    bool Context::start_frane() {
         NVKG_ASSERT(!is_frame_started, "Can't start a frame when a frame is already in progress!");
 
         auto result = swapchain.AcquireNextImage(&current_image_index);
@@ -110,10 +107,10 @@ namespace nvkg {
         return true;
     }
 
-    void Renderer::end_frame() {
+    void Context::end_frame() {
         NVKG_ASSERT(is_frame_started, "Can't end frame while frame is not in progress!");
 
-        DrawFrame();
+        draw_frame();
 
         VkCommandBuffer commandBuffer = get_crnt_cmdbf();
 
@@ -134,10 +131,10 @@ namespace nvkg {
         is_frame_started = false;
         current_frame_index = (current_frame_index + 1) % SwapChain::MAX_FRAMES_IN_FLIGHT; 
 
-        Renderer3D::flush();
+        Renderer::flush();
     }
 
-    void Renderer::begin_swapchain_renderpass(VkCommandBuffer commandBuffer) {
+    void Context::begin_swapchain_renderpass(VkCommandBuffer commandBuffer) {
 
         NVKG_ASSERT(is_frame_started, "Can't start render pass while the frame hasn't started!");
         NVKG_ASSERT(commandBuffer == get_crnt_cmdbf(), "Can't begin a render pass on a command buffer from another frame!");
@@ -168,8 +165,7 @@ namespace nvkg {
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
     }
 
-    void Renderer::end_swapchain_renderpass(VkCommandBuffer commandBuffer)
-    {
+    void Context::end_swapchain_renderpass(VkCommandBuffer commandBuffer) {
         NVKG_ASSERT(is_frame_started, "Can't end render pass while the frame hasn't started!");
         NVKG_ASSERT(commandBuffer == get_crnt_cmdbf(), "Can't begin a render pass on a command buffer from another frame!");
         

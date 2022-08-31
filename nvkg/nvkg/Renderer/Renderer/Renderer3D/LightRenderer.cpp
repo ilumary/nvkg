@@ -1,4 +1,4 @@
-#include <nvkg/Renderer/Renderers/Renderer3D/LightRenderer.hpp>
+#include <nvkg/Renderer/Renderer/Renderer3D/LightRenderer.hpp>
 
 namespace nvkg {
     LightRenderer::LightRenderer() {}

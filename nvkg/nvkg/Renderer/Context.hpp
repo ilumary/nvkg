@@ -7,17 +7,16 @@
 #include <nvkg/Renderer/Camera/Camera.hpp>
 #include <nvkg/Renderer/Material/Material.hpp>
 #include <nvkg/Renderer/Lights/PointLight.hpp>
-#include <nvkg/Renderer/Renderers/Renderer3D.hpp>
-#include <nvkg/Renderer/Renderers/Renderer2D.hpp>
+#include <nvkg/Renderer/Renderer/Renderer.hpp>
 #include <nvkg/Renderer/DescriptorPool/DescriptorPool.hpp>
 
 namespace nvkg {
 
-    class Renderer {
+    class Context {
         public:
 
-            Renderer(Window& window);
-            ~Renderer();
+            Context(Window& window);
+            ~Context();
 
             void destroy_renderer();
 
@@ -37,7 +36,7 @@ namespace nvkg {
 
             VkCommandBuffer get_crnt_cmdbf() const { 
                 NVKG_ASSERT(is_frame_started, "Can't get command buffer when frame is not in progress!");
-                return commandBuffers[current_frame_index]; 
+                return command_buffers[current_frame_index]; 
             }
 
             bool start_frane();
@@ -45,13 +44,10 @@ namespace nvkg {
 
             void clear_device_queue() { vkDeviceWaitIdle(device_.device()); } 
 
-            void SetClearValue(float r, float g, float b, float a) { clearValue = {r, g, b, a}; }
+            void set_clear_value(float r, float g, float b, float a) { clearValue = {r, g, b, a}; }
 
-        private:
-            static constexpr size_t MAX_OBJECT_TRANSFORMS = 1000;
-            
-            static VulkanDevice* deviceInstance;
-            static std::vector<VkCommandBuffer> commandBuffers;
+        private:            
+            static std::vector<VkCommandBuffer> command_buffers;
             
             VkClearColorValue clearValue {0, 0, 0, 1.f};
 
@@ -64,7 +60,7 @@ namespace nvkg {
             void begin_swapchain_renderpass(VkCommandBuffer commandBuffer);
             void end_swapchain_renderpass(VkCommandBuffer commandBuffer);
 
-            void DrawFrame();
+            void draw_frame();
 
             nvkg::Window& window;
             
@@ -75,6 +71,7 @@ namespace nvkg {
             bool is_frame_started{false};
             int current_frame_index{0};
 
+            //TODO move to scene outside of renderer
             Camera* main_camera;
     };
 }

@@ -6,12 +6,12 @@
 #include <nvkg/Renderer/Utils/Math.hpp>
 #include <nvkg/Renderer/Lights/PointLight.hpp>
 #include <nvkg/Renderer/Camera/Camera.hpp>
-#include <nvkg/Renderer/Renderers/Renderer3D/LightRenderer.hpp>
-#include <nvkg/Renderer/Renderers/Renderer3D/ModelRenderer.hpp>
+#include <nvkg/Renderer/Renderer/Renderer3D/LightRenderer.hpp>
+#include <nvkg/Renderer/Renderer/Renderer3D/ModelRenderer.hpp>
 
 namespace nvkg {
 
-    class Renderer3D {
+    class Renderer {
 
         #define MAX_LIGHTS 10
 
@@ -34,6 +34,8 @@ namespace nvkg {
             static void recreate_materials();
 
             static void render(VkCommandBuffer& commandBuffer, const CameraData& globalData);
+
+            //TODO need to change this, inefficient to flush rendered data every frame
             static void flush();
 
             static void destroy();
@@ -42,8 +44,8 @@ namespace nvkg {
         
             static Utils::StringId globalDataId;
 
-            static ModelRenderer modelRenderer;
-            static LightRenderer lightRenderer;
+            static ModelRenderer model_renderer;
+            static LightRenderer light_renderer;
 
             static GlobalData global3DData;
     };
