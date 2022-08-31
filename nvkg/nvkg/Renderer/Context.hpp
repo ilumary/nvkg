@@ -9,6 +9,7 @@
 #include <nvkg/Renderer/Lights/PointLight.hpp>
 #include <nvkg/Renderer/Renderer/Renderer.hpp>
 #include <nvkg/Renderer/DescriptorPool/DescriptorPool.hpp>
+#include <nvkg/Renderer/Scene/Scene.hpp>
 
 namespace nvkg {
 
@@ -30,7 +31,7 @@ namespace nvkg {
 
             float get_aspect_ratio() const { return swapchain.ExtentAspectRatio(); }
 
-            void set_camera(Camera* camera) { main_camera = camera; }
+            void set_scene(Scene* scene) { active_scene = scene; }
             
             bool frame_started() { return is_frame_started; }
 
@@ -60,7 +61,7 @@ namespace nvkg {
             void begin_swapchain_renderpass(VkCommandBuffer commandBuffer);
             void end_swapchain_renderpass(VkCommandBuffer commandBuffer);
 
-            void draw_frame();
+            void render_frame();
 
             nvkg::Window& window;
             
@@ -71,7 +72,6 @@ namespace nvkg {
             bool is_frame_started{false};
             int current_frame_index{0};
 
-            //TODO move to scene outside of renderer
-            Camera* main_camera;
+            Scene* active_scene;
     };
 }

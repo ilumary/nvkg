@@ -7,23 +7,22 @@ namespace nvkg {
         shapes3d = std::vector<Components::Shape>();
         shapes2d = std::vector<Components::Shape>();
         billboards = std::vector<Billboard>();
-        point_lights = std::vector<PointLightInit>();
         lines = std::vector<Line>();
     }
 
     void Scene::draw() {
         for (auto& shape : shapes3d) {
-            nvkg::Renderer3D::draw_model(shape.GetModel(), shape.get_pos(), shape.get_scale(), shape.get_rot());
+            nvkg::Renderer::draw_model(shape.GetModel(), shape.get_pos(), shape.get_scale(), shape.get_rot());
         }
         /*for(auto& plight : point_lights) {
-            nvkg::Renderer3D::add_point_light(plight.position, plight.radius, plight.colour, plight.ambientColor);
-        }*/
+            nvkg::Renderer::add_point_light(plight.position, plight.radius, plight.colour, plight.ambientColor);
+        }
         for(auto& bboard : billboards) {
-            nvkg::Renderer3D::draw_billboard(bboard.position, bboard.scale, bboard.colour);
+            nvkg::Renderer::draw_billboard(bboard.position, bboard.scale, bboard.colour);
         }
         for(auto& line : lines) {
-            nvkg::Renderer3D::draw_line(line.origin, line.destination, line.colour);
-        }
+            nvkg::Renderer::draw_line(line.origin, line.destination, line.colour);
+        }*/
     }
 
     void Scene::add_shape_3d(Components::Shape* shapes, uint16_t count) {
@@ -46,8 +45,7 @@ namespace nvkg {
 
     void Scene::add_pointlight(PointLightInit* pointlight, uint16_t count) {
         for(uint16_t i = 0; i < count; ++i) {
-            //point_lights.push_back(pointlight[i]);
-            nvkg::Renderer3D::add_point_light(pointlight->position, pointlight->radius, pointlight->colour, pointlight->ambientColor);
+            nvkg::Renderer::add_point_light(pointlight->position, pointlight->radius, pointlight->colour, pointlight->ambientColor);
         }
     }
 

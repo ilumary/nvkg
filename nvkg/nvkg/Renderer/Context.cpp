@@ -41,10 +41,10 @@ namespace nvkg {
             "Failed to allocate command buffer");
     }
 
-    void Context::draw_frame() {
+    void Context::render_frame() {
         auto commandBuffer = get_crnt_cmdbf();
 
-        CameraData cameraData = { main_camera->get_proj(), main_camera->get_view()};
+        CameraData cameraData = active_scene->get_camera_data();
 
         Renderer::render(commandBuffer, cameraData);
     }
@@ -110,7 +110,7 @@ namespace nvkg {
     void Context::end_frame() {
         NVKG_ASSERT(is_frame_started, "Can't end frame while frame is not in progress!");
 
-        draw_frame();
+        render_frame();
 
         VkCommandBuffer commandBuffer = get_crnt_cmdbf();
 
