@@ -6,7 +6,6 @@ namespace nvkg {
 
     void LightRenderer::init(const char* globalDataAttributeName, const uint64_t& globalDataSize) {
         glob_data_id = INTERN_STR(globalDataAttributeName);
-        //light_data_id = INTERN_STR("lightUBO");
 
         nvkg::ShaderModule *light_vert_shader = new nvkg::ShaderModule();
         light_vert_shader->create("pointLight", "vert");
@@ -14,10 +13,10 @@ namespace nvkg {
         nvkg::ShaderModule *light_frag_shader = new nvkg::ShaderModule();
         light_frag_shader->create("pointLight", "frag");
 
-        light_material_new.set_vert_shader_new(light_vert_shader);
-        light_material_new.set_frag_shader_new(light_frag_shader);
+        light_material.set_vert_shader_new(light_vert_shader);
+        light_material.set_frag_shader_new(light_frag_shader);
 
-        light_material_new.create_material();
+        light_material.create_material();
 
         point_light_vertices.insert(point_light_vertices.end(), {{1.f, 1.f}, {1.f, -1.f}, {-1.f, -1.f}, {-1.f, 1.f}});
         point_light_indices.insert(point_light_indices.end(), {0, 1, 3, 1, 2, 3});
@@ -30,11 +29,11 @@ namespace nvkg {
             static_cast<uint32_t>(point_light_indices.size())
         });
 
-        light_model.set_material(&light_material_new);
+        light_model.set_material(&light_material);
     }
 
     void LightRenderer::destroy() {
-        light_material_new.destroy_material();
+        light_material.destroy_material();
         light_model.DestroyModel();
     }
 
@@ -47,18 +46,25 @@ namespace nvkg {
 
         PointLightPushConstants push{};
 
-        light_material_new.set_uniform_data(glob_data_id, globalDataSize, globalData);
-        light_material_new.bind(commandBuffer);
+        light_material.set_uniform_data(glob_data_id, globalDataSize, globalData);
+        light_material.bind(commandBuffer);
 
         for(auto& light : point_lights) {
             push.position = glm::vec4(light.position, 1.f);
             push.color = light.color;
             push.radius = 0.05f;
 
-            light_material_new.push_constant(commandBuffer, sizeof(PointLightPushConstants), &push);
+            light_material.push_constant(commandBuffer, sizeof(PointLightPushConstants), &push);
 
             light_model.bind(commandBuffer);
             light_model.draw(commandBuffer, 0);
+        }
+    }
+
+    void LightRenderer::update_point_lights(PointLightData* data, uint16_t count) {
+        point_lights.clear();
+        for(int i = 0; i < count; i++) {
+            point_lights.push_back(data[i]);
         }
     }
 

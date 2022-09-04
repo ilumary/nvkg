@@ -21,6 +21,7 @@ Still to be done are:
   - Skybox, (sdf)-text and billboard renderers
   - LUA scripting support
   - Complete refactor of code base
+  - External config file for various settings
   - lots more...
 
 ## Contents

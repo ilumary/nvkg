@@ -16,14 +16,15 @@ namespace nvkg {
 
         DescriptorPool::build_pool();
 
-        Renderer::init();
+        //Renderer::init();
+        renderer = new Renderer();
 
         create_cmdbf();
     }
 
     Context::~Context() {
         DescriptorPool::destroy_pool();
-        Renderer::destroy();
+        renderer->destroy();
     }
 
     void Context::create_cmdbf() {
@@ -44,9 +45,7 @@ namespace nvkg {
     void Context::render_frame() {
         auto commandBuffer = get_crnt_cmdbf();
 
-        CameraData cameraData = active_scene->get_camera_data();
-
-        Renderer::render(commandBuffer, cameraData);
+        renderer->render(commandBuffer, active_scene);
     }
 
     void Context::recreate_swapchain() {
@@ -66,7 +65,7 @@ namespace nvkg {
         // Re-create the pipeline once the swapchain renderpass 
         // becomes available again.
         if (!swapchain.CompareSwapFormats(oldImageFormat, oldDepthFormat)) {
-            Renderer::recreate_materials();
+            renderer->recreate_materials();
         }
     }
 
@@ -78,7 +77,7 @@ namespace nvkg {
             command_buffers.data());
     }
 
-    bool Context::start_frane() {
+    bool Context::start_frame() {
         NVKG_ASSERT(!is_frame_started, "Can't start a frame when a frame is already in progress!");
 
         auto result = swapchain.AcquireNextImage(&current_image_index);
@@ -130,8 +129,6 @@ namespace nvkg {
 
         is_frame_started = false;
         current_frame_index = (current_frame_index + 1) % SwapChain::MAX_FRAMES_IN_FLIGHT; 
-
-        Renderer::flush();
     }
 
     void Context::begin_swapchain_renderpass(VkCommandBuffer commandBuffer) {

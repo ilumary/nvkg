@@ -1,8 +1,10 @@
-#pragma once
+#ifndef NVKG_MODEL_RENDERER_HPP
+#define NVKG_MODEL_RENDERER_HPP
 
 #include <nvkg/Renderer/Core.hpp>
 #include <nvkg/Renderer/Model/Model.hpp>
 #include <nvkg/Renderer/Utils/Math.hpp>
+#include <nvkg/Components/Shape.hpp>
 
 namespace nvkg {
     class ModelRenderer {
@@ -18,13 +20,13 @@ namespace nvkg {
 
             void render(VkCommandBuffer& commandBuffer, const uint64_t& globalDataSize, const void* globalData);
 
+            void update_models(Components::Shape* shapes, uint16_t count);
+
             void flush();
 
             void recreate_materials();
 
         private:
-
-            static constexpr size_t MAX_OBJECT_TRANSFORMS = 1000;
 
             Utils::StringId globalDataId;
             Utils::StringId transformId;
@@ -36,3 +38,5 @@ namespace nvkg {
             Model* currentModel {nullptr};
     };
 }
+
+#endif

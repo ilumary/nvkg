@@ -20,6 +20,18 @@ namespace nvkg {
         transforms.push_back({transform, normal});
     }
 
+    void ModelRenderer::update_models(Components::Shape* shapes, uint16_t count) {
+        flush();
+        
+        for(uint16_t i = 0; i < count; ++i) {
+            models.push_back(shapes[i].get_model());
+
+            auto transform = Utils::Math::calc_transform_3d(shapes[i].get_pos(), shapes[i].get_rot(), shapes[i].get_scale());
+            auto normal = Utils::Math::calc_normal_matrix(shapes[i].get_rot(), shapes[i].get_scale());
+            transforms.push_back({transform, normal});
+        }
+    }
+
     void ModelRenderer::render(VkCommandBuffer& commandBuffer, const uint64_t& globalDataSize, const void* globalData) {
         if (models.size() == 0) return;
 
@@ -31,7 +43,7 @@ namespace nvkg {
                 currentMaterial->set_uniform_data(transformId, sizeof(transforms[0]) * transforms.size(), transforms.data());
                 currentMaterial->set_uniform_data(globalDataId, globalDataSize, globalData);
                 currentMaterial->bind(commandBuffer);
-            } 
+            }
 
             if (currentModel != model) {
                 currentModel = model;

@@ -3,56 +3,42 @@
 namespace nvkg {
 
     Scene::Scene(std::string name) {
-        identifier = name;
-        shapes3d = std::vector<Components::Shape>();
-        shapes2d = std::vector<Components::Shape>();
-        billboards = std::vector<Billboard>();
-        lines = std::vector<Line>();
+        identifier = INTERN_STR(name.c_str());
+        shapes_3d = std::vector<Components::Shape>();
     }
 
     void Scene::draw() {
-        for (auto& shape : shapes3d) {
-            nvkg::Renderer::draw_model(shape.GetModel(), shape.get_pos(), shape.get_scale(), shape.get_rot());
+        for (auto& shape : shapes_3d) {
+            //nvkg::Renderer::draw_model(shape.GetModel(), shape.get_pos(), shape.get_scale(), shape.get_rot());
         }
-        /*for(auto& plight : point_lights) {
-            nvkg::Renderer::add_point_light(plight.position, plight.radius, plight.colour, plight.ambientColor);
-        }
-        for(auto& bboard : billboards) {
-            nvkg::Renderer::draw_billboard(bboard.position, bboard.scale, bboard.colour);
-        }
-        for(auto& line : lines) {
-            nvkg::Renderer::draw_line(line.origin, line.destination, line.colour);
-        }*/
+    }
+
+    void Scene::update() {
+
     }
 
     void Scene::add_shape_3d(Components::Shape* shapes, uint16_t count) {
         for(uint16_t i = 0; i < count; ++i) {
-            shapes3d.push_back(shapes[i]);
+            shapes_3d.push_back(shapes[i]);
         }
+        updated = true;
     }
 
-    void Scene::add_shape_2d(Components::Shape* shapes, uint16_t count) {
+    void Scene::add_pointlight(LightRenderer::PointLightData* pointlight, uint16_t count) {
         for(uint16_t i = 0; i < count; ++i) {
-            shapes2d.push_back(shapes[i]);
+            pointlights.push_back(pointlight[i]);
+            //nvkg::Renderer::add_point_light(pointlight->position, pointlight->radius, pointlight->colour, pointlight->ambientColor);
         }
+        updated = true;
     }
 
-    void Scene::add_billboard(Billboard* billboard, uint16_t count) {
-        for(uint16_t i = 0; i < count; ++i) {
-            billboards.push_back(billboard[i]);
-        }
+    Components::Shape* Scene::get_3d_shapes(uint16_t& count) {
+        count = shapes_3d.size();
+        return shapes_3d.data();
     }
 
-    void Scene::add_pointlight(PointLightInit* pointlight, uint16_t count) {
-        for(uint16_t i = 0; i < count; ++i) {
-            nvkg::Renderer::add_point_light(pointlight->position, pointlight->radius, pointlight->colour, pointlight->ambientColor);
-        }
+    LightRenderer::PointLightData* Scene::get_pointlights(uint16_t& count) {
+        count = pointlights.size();
+        return pointlights.data();
     }
-
-    void Scene::add_line(Line* line, uint16_t count) {
-        for(uint16_t i = 0; i < count; ++i) {
-            lines.push_back(line[i]);
-        }
-    }
-
 }

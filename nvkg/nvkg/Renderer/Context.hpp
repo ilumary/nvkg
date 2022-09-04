@@ -1,15 +1,13 @@
-#pragma once
+#ifndef NVKG_CONTEXT_HPP
+#define NVKG_CONTEXT_HPP
 
 #include <nvkg/Renderer/Device/VulkanDevice.hpp>
 #include <nvkg/Renderer/Swapchain/Swapchain.hpp>
 #include <nvkg/Renderer/Pipeline/Pipeline.hpp>
-#include <nvkg/Renderer/Model/Model.hpp>
-#include <nvkg/Renderer/Camera/Camera.hpp>
 #include <nvkg/Renderer/Material/Material.hpp>
 #include <nvkg/Renderer/Lights/PointLight.hpp>
 #include <nvkg/Renderer/Renderer/Renderer.hpp>
 #include <nvkg/Renderer/DescriptorPool/DescriptorPool.hpp>
-#include <nvkg/Renderer/Scene/Scene.hpp>
 
 namespace nvkg {
 
@@ -40,7 +38,7 @@ namespace nvkg {
                 return command_buffers[current_frame_index]; 
             }
 
-            bool start_frane();
+            bool start_frame();
             void end_frame();
 
             void clear_device_queue() { vkDeviceWaitIdle(device_.device()); } 
@@ -68,6 +66,8 @@ namespace nvkg {
             VulkanDevice device_;
             SwapChain swapchain;
 
+            Renderer* renderer;
+
             uint32_t current_image_index;
             bool is_frame_started{false};
             int current_frame_index{0};
@@ -75,3 +75,5 @@ namespace nvkg {
             Scene* active_scene;
     };
 }
+
+#endif

@@ -1,7 +1,7 @@
 #define VOLK_IMPLEMENTATION
 
 #include <nvkg/Window/Window.hpp>
-#include <nvkg/Renderer/Renderer.hpp>
+#include <nvkg/Renderer/Context.hpp>
 #include <nvkg/Renderer/Model/Model.hpp>
 #include <nvkg/Components/Shape.hpp>
 #include <nvkg/Input/Input.hpp>
@@ -70,15 +70,16 @@ int main() {
     window.disable_cursor();
     Input::init_with_window_pointer(&window);
 
-    nvkg::Renderer renderer(window);
+    nvkg::Context context(window);
 
     nvkg::TextureManager* tex_mng = new nvkg::TextureManager();
-    tex_mng->init(&renderer.get_device());
+    tex_mng->init(&context.get_device());
 
     nvkg::Camera camera;
     Components::Shape cam_obj;
 
     nvkg::Scene* scene = new nvkg::Scene("scene1");
+    scene->set_camera(&camera);
 
     nvkg::ShaderModule *vert_shader = new nvkg::ShaderModule();
     vert_shader->create("simpleShader", "vert");
@@ -89,6 +90,7 @@ int main() {
     // Material Declaration
     nvkg::NVKGMaterial diffuse_mat_new(vert_shader, frag_shader); // 3D diffuse test material
 
+    // Load and apply texture to material
     nvkg::SampledTexture* tex = tex_mng->load_2d_img("../assets/textures/tex1.png");
     diffuse_mat_new.set_texture(tex, "texSampler", VK_SHADER_STAGE_FRAGMENT_BIT);
 
@@ -123,25 +125,25 @@ int main() {
 
     cam_obj.set_pos({0.f, -1.f, -2.5f});
 
-    nvkg::PointLightInit light1 = {
-        {1.0f, -1.5f, -1.5f}, 
-        0.05f, 
-        {1.f, 0.f, 0.f, 1.f}, 
+    nvkg::LightRenderer::PointLightData light1 = {
+        {1.f, 0.f, 0.f, 1.f},
         {1.f, 1.f, 1.f, .02f},
+        {1.0f, -1.5f, -1.5f}, 
+        0.05f,
     };
 
-    nvkg::PointLightInit light2 = {
-        {-1.f, -1.5f, -1.5f}, 
-        0.05f, 
+    nvkg::LightRenderer::PointLightData light2 = {
         {0.f, 1.f, 0.f, 1.f}, 
         {1.f, 1.f, 1.f, .02f},
+        {-1.f, -1.5f, -1.5f}, 
+        0.05f, 
     };
 
-    nvkg::PointLightInit light3 = {
-        {-0.f, -1.5f, 1.5f}, 
-        0.05f, 
+    nvkg::LightRenderer::PointLightData light3 = {
         {0.f, 0.f, 1.f, 1.f}, 
         {1.f, 1.f, 1.f, .02f},
+        {-0.f, -1.5f, 1.5f}, 
+        0.05f, 
     };
 
     scene->add_shape_3d(&shapes[0], 3);
@@ -153,7 +155,7 @@ int main() {
 
     bool input_enabled = true;
 
-    renderer.set_camera(&camera);
+    context.set_scene(scene);
 
     while(!window.window_should_close()) {
         
@@ -170,7 +172,7 @@ int main() {
             window.toggle_cursor(input_enabled);
         }
 
-        float aspect = renderer.get_aspect_ratio();
+        float aspect = context.get_aspect_ratio();
 
         camera.set_perspective_proj(glm::radians(50.f), aspect, 0.1f, 100.f);
 
@@ -179,14 +181,15 @@ int main() {
             camera.set_view_xyz(cam_obj.get_pos(), cam_obj.get_rot());
         }
 
-        if (!renderer.start_frane()) continue;
+        if (!context.start_frame()) continue;
 
+        scene->update();
         scene->draw();
         
-        renderer.end_frame();
+        context.end_frame();
     }
 
-    renderer.clear_device_queue();
+    context.clear_device_queue();
 
     return 0;
 }

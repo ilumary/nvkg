@@ -1,19 +1,16 @@
-#pragma once
+#ifndef NVKG_RENDERER_HPP
+#define NVKG_RENDERER_HPP
 
 #include <nvkg/Renderer/Core.hpp>
+#include <nvkg/Renderer/Scene/Scene.hpp>
 #include <nvkg/Renderer/Model/Model.hpp>
-#include <nvkg/Renderer/Material/Material.hpp>
-#include <nvkg/Renderer/Utils/Math.hpp>
 #include <nvkg/Renderer/Lights/PointLight.hpp>
-#include <nvkg/Renderer/Camera/Camera.hpp>
 #include <nvkg/Renderer/Renderer/Renderer3D/LightRenderer.hpp>
 #include <nvkg/Renderer/Renderer/Renderer3D/ModelRenderer.hpp>
 
 namespace nvkg {
 
     class Renderer {
-
-        #define MAX_LIGHTS 10
 
         public:
 
@@ -23,30 +20,25 @@ namespace nvkg {
                 int light_index;
             };
 
-            static void init();
+            Renderer();
+            ~Renderer();
 
-            static void draw_model(Model* model, const glm::vec3& position, const glm::vec3& scale = glm::vec3{1.f}, const glm::vec3& rotation = glm::vec3{0.f});
-            static void draw_billboard(const glm::vec3& position, const glm::vec2& scale, const glm::vec4& colour);
-            static void draw_line(const glm::vec3& origin, const glm::vec3& destination, const glm::vec3& colour);
-            static void draw_rect(const glm::vec3& position, const glm::vec2& scale, glm::vec3 color);
-            static void add_point_light(const glm::vec3& position, const float& radius, const glm::vec4& colour, const glm::vec4& ambientColor);
+            void render(VkCommandBuffer& command_buffer, Scene* active_scene);
 
-            static void recreate_materials();
+            void recreate_materials();
 
-            static void render(VkCommandBuffer& commandBuffer, const CameraData& globalData);
-
-            //TODO need to change this, inefficient to flush rendered data every frame
-            static void flush();
-
-            static void destroy();
+            void destroy();
 
         private:
-        
-            static Utils::StringId globalDataId;
 
-            static ModelRenderer model_renderer;
-            static LightRenderer light_renderer;
+            Utils::StringId global_data_id;
+            GlobalData global_3d_data{};
 
-            static GlobalData global3DData;
+            ModelRenderer* model_renderer;
+            LightRenderer* light_renderer;
+
+            void update_renderers(Scene* scene);
     };
 }
+
+#endif
