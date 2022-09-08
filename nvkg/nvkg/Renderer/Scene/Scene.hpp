@@ -16,7 +16,6 @@ namespace nvkg {
             Utils::StringId identifier;
             bool updated;
 
-            void draw();
             void update();
 
             void add_shape_3d(Components::Shape* shapes, uint16_t count = 1);

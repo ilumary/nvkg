@@ -75,10 +75,12 @@ int main() {
     nvkg::TextureManager* tex_mng = new nvkg::TextureManager();
     tex_mng->init(&context.get_device());
 
+    //TODO need to update camera
     nvkg::Camera camera;
     Components::Shape cam_obj;
 
-    nvkg::Scene* scene = new nvkg::Scene("scene1");
+    //TODO request scene from context
+    nvkg::Scene* scene = context.create_scene("scene1");
     scene->set_camera(&camera);
 
     nvkg::ShaderModule *vert_shader = new nvkg::ShaderModule();
@@ -155,8 +157,6 @@ int main() {
 
     bool input_enabled = true;
 
-    context.set_scene(scene);
-
     while(!window.window_should_close()) {
         
         auto newTime = std::chrono::high_resolution_clock::now();
@@ -184,7 +184,6 @@ int main() {
         if (!context.start_frame()) continue;
 
         scene->update();
-        scene->draw();
         
         context.end_frame();
     }

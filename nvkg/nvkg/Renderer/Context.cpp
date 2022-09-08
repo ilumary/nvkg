@@ -16,7 +16,6 @@ namespace nvkg {
 
         DescriptorPool::build_pool();
 
-        //Renderer::init();
         renderer = new Renderer();
 
         create_cmdbf();
@@ -167,5 +166,15 @@ namespace nvkg {
         NVKG_ASSERT(commandBuffer == get_crnt_cmdbf(), "Can't begin a render pass on a command buffer from another frame!");
         
         RenderPass::End(commandBuffer);
+    }
+
+    Scene* Context::create_scene(std::string name, bool set_active) {
+        scenes[name] = new Scene(name);
+        if(set_active) { active_scene = scenes[name]; }
+        return scenes[name];
+    }
+    
+    Scene* Context::get_scene(std::string name) {
+        return scenes[name];
     }
 }

@@ -7,14 +7,13 @@ namespace nvkg {
         shapes_3d = std::vector<Components::Shape>();
     }
 
-    void Scene::draw() {
-        for (auto& shape : shapes_3d) {
-            //nvkg::Renderer::draw_model(shape.GetModel(), shape.get_pos(), shape.get_scale(), shape.get_rot());
-        }
-    }
-
     void Scene::update() {
+        pointlights.at(2).position.x += .01f;
+        updated = true;
 
+        //TODO make pointers from main to scene to update components from main
+        // figure out how to check for variable updated
+        // maybe add map with id for each game object to update
     }
 
     void Scene::add_shape_3d(Components::Shape* shapes, uint16_t count) {
@@ -27,7 +26,6 @@ namespace nvkg {
     void Scene::add_pointlight(LightRenderer::PointLightData* pointlight, uint16_t count) {
         for(uint16_t i = 0; i < count; ++i) {
             pointlights.push_back(pointlight[i]);
-            //nvkg::Renderer::add_point_light(pointlight->position, pointlight->radius, pointlight->colour, pointlight->ambientColor);
         }
         updated = true;
     }

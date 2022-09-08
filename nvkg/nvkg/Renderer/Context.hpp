@@ -29,7 +29,8 @@ namespace nvkg {
 
             float get_aspect_ratio() const { return swapchain.ExtentAspectRatio(); }
 
-            void set_scene(Scene* scene) { active_scene = scene; }
+            Scene* create_scene(std::string name, bool set_active = true);
+            Scene* get_scene(std::string name);
             
             bool frame_started() { return is_frame_started; }
 
@@ -72,7 +73,8 @@ namespace nvkg {
             bool is_frame_started{false};
             int current_frame_index{0};
 
-            Scene* active_scene;
+            Scene* active_scene = nullptr;
+            std::map<std::string, Scene*> scenes;
     };
 }
 
