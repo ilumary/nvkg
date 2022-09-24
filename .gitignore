@@ -7,6 +7,9 @@
 # Environment
 .env
 
+# Language server
+compile_commands.json
+
 # Intermediates
 bin
 lib

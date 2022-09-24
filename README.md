@@ -32,6 +32,7 @@ Still to be done are:
     - [Dependencies](#dependencies)
     - [Setup](#setup)
     - [Building and execution](#building-and-execution)
+    - [Modifications](#modifications)
   - [Contributors](#contributors)
   - [References](#references)
 
@@ -56,6 +57,10 @@ Also make shure to export your environment variables VULKAN_SDK, VK_ICD_FILENAME
 ### Building and execution
 
 Build with ```make app``` and execute with ```./bin/app```.
+
+### Modifications
+
+If you want to modify anything, the ```compile_commands.json``` for the clangd language server can be created using [bear](https://github.com/rizsotto/Bear).
 
 ## Contributors
 
