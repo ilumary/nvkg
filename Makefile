@@ -108,4 +108,3 @@ package: app
 clean: 
 	$(RM) $(call platformpth, $(buildDir))
 	$(RM) $(call platformpth, $(outputDir))
-	$(RM) $(call platformpth, $(libDir))
