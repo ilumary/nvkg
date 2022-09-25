@@ -1,6 +1,8 @@
-#pragma once
+#ifndef NVKG_CORE_HPP
+#define NVKG_CORE_HPP
 
 #include <nvkg/Renderer/Utils/Hash.hpp>
+#include <nvkg/Utils/logger.hpp>
 
 #include <volk/volk.h>
 #include <iostream>
@@ -35,3 +37,5 @@ namespace nvkg {
         glm::mat4 viewMatrix;
     };
 }
+
+#endif
