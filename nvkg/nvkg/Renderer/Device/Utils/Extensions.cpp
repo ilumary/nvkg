@@ -53,18 +53,18 @@ namespace nvkg::Extensions {
         VkExtensionProperties extensions[extensionCount];
         vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, OUT extensions);
 
-        std::cout << "available extensions:" << std::endl;
+        logger::debug() << "available extensions:";
         std::unordered_set<std::string> available;
         for (size_t i = 0; i < extensionCount; i++) {
             VkExtensionProperties extension = extensions[i];
-            std::cout << "\t" << extension.extensionName << std::endl;
+            logger::debug() << "\t" << extension.extensionName;
             available.insert(extension.extensionName);
         }
 
-        std::cout << "required extensions:" << std::endl;
+        logger::debug() << "required extensions:";
         auto requiredExtensions = GetRequiredExtensions(enableValidationLayers);
         for (const auto &required : requiredExtensions) {
-            std::cout << "\t" << required << std::endl;
+            logger::debug() << "\t" << required;
             NVKG_ASSERT(available.find(required) != available.end(), 
                 "Failed to find GLFW Extensions!");
         }

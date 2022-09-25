@@ -40,10 +40,10 @@ namespace nvkg {
         if (stage == "vert")
             reflect_descriptor_types(convert(binary_data));
 
-        std::cout << "SHADER INFO: " << name << "." << stage << std::endl;
-        std::cout << "UBO's: " << shader_resources.size() << " with overall size " << combined_uniform_size << std::endl;
-        std::cout << "Vertex Bindings: " << vertex_bindings.size() << std::endl;
-        std::cout << "Push Constants: " << push_constants.size() << std::endl;
+        logger::debug() << "SHADER INFO: " << name << "." << stage;
+        logger::debug() << "UBO's: " << shader_resources.size() << " with overall size " << combined_uniform_size;
+        logger::debug() << "Vertex Bindings: " << vertex_bindings.size();
+        logger::debug() << "Push Constants: " << push_constants.size();
 
 		VkShaderModuleCreateInfo shader_module_create_info = {};
 		shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

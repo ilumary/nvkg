@@ -26,7 +26,6 @@ namespace nvkg {
         swapchainImages.DestroyFrameImages();
 
         if (!isRecreated && swapChain != nullptr) {
-            std::cout << "Clearing Swapchain" << std::endl;
             vkDestroySwapchainKHR(device.device(), GetSwapChain(), nullptr);
             swapChain = nullptr;
         }
@@ -55,7 +54,7 @@ namespace nvkg {
     }
 
     void SwapChain::RecreateSwapchain() {
-        std::cout << "Re-creating Swapchain" << std::endl;
+        logger::debug() << "Re-creating Swapchain";
         ClearSwapChain(true);
         Init();
     }
@@ -86,14 +85,14 @@ namespace nvkg {
 
         VkExtent2D extent = ChooseSwapExtent(details.capabilities);
 
-        std::cout << "Extent: " << extent.width << "x" << extent.height << std::endl;
+        logger::debug(logger::Level::Info) << "Extent: " << extent.width << "x" << extent.height;
 
         uint32_t imageCount = details.capabilities.minImageCount + 1;
 
         if (details.capabilities.maxImageCount > 0 && imageCount > details.capabilities.maxImageCount) {
             imageCount = details.capabilities.maxImageCount;
         }   
-        std::cout << "FrameImages Count: " << imageCount << std::endl;
+        logger::debug(logger::Level::Info) << "FrameImages Count: " << imageCount;
 
         VkSwapchainCreateInfoKHR createInfo {};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -316,12 +315,12 @@ namespace nvkg {
             VkPresentModeKHR& availablePresentMode = presentModes[i];
 
             if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-                std::cout << "Present Mode: Mailbox" << std::endl;
+                logger::debug(logger::Level::Info) << "Present Mode: Mailbox";
                 return availablePresentMode;
             }
         }
 
-        std::cout << "Present Mode: V-Sync" << std::endl;
+        logger::debug(logger::Level::Info) << "Present Mode: V-Sync";
         return VK_PRESENT_MODE_FIFO_KHR;
     }
 

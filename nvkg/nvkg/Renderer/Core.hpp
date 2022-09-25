@@ -16,8 +16,8 @@
 #define EXIT_APP abort();
 
 #define PRINT_ASSERT_FAILURE(expr, file, line, message) \
-    std::cout << "NVKG ASSERTION FAILURE: " << #expr << " in file: " << file << " on line: "  << line << std::endl; \
-    std::cout  << "                        Message: " << message << std::endl; 
+    logger::debug(logger::Level::Fatal) << "NVKG ASSERTION FAILURE: " << #expr << " in file: " << file << " on line: "  << line; \
+    logger::debug(logger::Level::Fatal)  << "                        Message: " << message;
 
 // Custom assert macro
 #define NVKG_ASSERT(expr, message) \

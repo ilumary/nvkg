@@ -18,7 +18,6 @@ namespace nvkg {
 
     Mesh::~Mesh() {
         if (isFreed) return;
-        std::cout << "Destroying Mesh" << std::endl;
         DestroyMesh();
     }
 
@@ -39,7 +38,6 @@ namespace nvkg {
             OUT globalStagingBuffer.buffer,
             OUT globalStagingBuffer.bufferMemory);
 
-        // TODO(Aryeh): Only create this if there actually are indices
         Buffer::create_buffer(
             indexSize * MAX_INDICES,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,

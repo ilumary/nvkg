@@ -110,7 +110,7 @@ namespace nvkg {
 
 		NVKG_ASSERT(deviceCount > 0, "Failed to find GPUs with Vulkan Support!");
 
-		std::cout << "Device count: " << deviceCount << std::endl;
+        logger::debug(logger::Level::Info) << "Device count: " << deviceCount;
 
 		VkPhysicalDevice devices[deviceCount];
 		vkEnumeratePhysicalDevices(instance_, &deviceCount, OUT devices);
@@ -126,8 +126,8 @@ namespace nvkg {
 		NVKG_ASSERT(physical_device_ != VK_NULL_HANDLE, "Failed to find a suitable GPU!");
 
 		vkGetPhysicalDeviceProperties(physical_device_, OUT &properties);
-		std::cout << "physical device: " << properties.deviceName << std::endl;
-		std::cout << "GPU has a minumum buffer alignment of " << properties.limits.minUniformBufferOffsetAlignment << std::endl;
+        logger::debug(logger::Level::Info) << "physical device: " << properties.deviceName;
+        logger::debug(logger::Level::Info) << "GPU has a minumum buffer alignment of " << properties.limits.minUniformBufferOffsetAlignment;
 	}
 
 	void VulkanDevice::create_logical_device() {

@@ -9,7 +9,7 @@ namespace nvkg {
     TextureManager::~TextureManager() {}
 
     void TextureManager::init(VulkanDevice* device) {
-        std::cout << "Initializing Texture Manager" << std::endl;
+        logger::debug(logger::Level::Info) << "Initializing Texture Manager";
         this->device = device;
     }
 
@@ -21,17 +21,17 @@ namespace nvkg {
         texture->image->create(device, extent, format, VK_IMAGE_TYPE_2D, flags, VK_IMAGE_ASPECT_COLOR_BIT, mip_levels,
                             array_layers, VK_IMAGE_LAYOUT_PREINITIALIZED, VK_SAMPLE_COUNT_1_BIT);
         texture->image->update_and_transfer(data, size_in_bytes);
-        std::cout << "Created Vulkan Image" << std::endl;
+        logger::debug() << "Created Vulkan Image";
 
         texture->image_view = new VulkanImageView();
         texture->image_view->create(device, texture->image, image_view_type, 0);
-        std::cout << "Created Vulkan Image View" << std::endl;
+        logger::debug() << "Created Vulkan Image View";
 
         texture->sampler = new VulkanSampler();
         texture->sampler->create(device, VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
             VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, true, 16, VK_SAMPLER_MIPMAP_MODE_LINEAR,
             0.f, 0.f, float(mip_levels - 1), false);
-            std::cout << "Created Vulkan Image Sampler" << std::endl;
+        logger::debug() << "Created Vulkan Image Sampler";
 
         return texture;
     }
@@ -43,7 +43,7 @@ namespace nvkg {
         // loads the image into a 1d array w/ 4 byte channel elements.
         unsigned char *texels = stbi_load(file.c_str(), &width, &height, &channels, stb_format);
 
-        std::cout << "Loaded image file " << file << " with size " << (width * height * channels) << std::endl;
+        logger::debug() << "Loaded image file " << file << " with size " << (width * height * channels);
 
         if (!texels) {
             NVKG_ASSERT(false, "Could not load texture at location: " + file);

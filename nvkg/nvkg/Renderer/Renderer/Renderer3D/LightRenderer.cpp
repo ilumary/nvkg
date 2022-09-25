@@ -70,6 +70,6 @@ namespace nvkg {
 
     void LightRenderer::recreate_materials() {
         //light_material_new.recreate_pipeline();
-        std::cout << "ups" << std::endl;
+        //std::cout << "ups" << std::endl;
     }
 }

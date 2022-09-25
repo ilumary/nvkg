@@ -73,7 +73,7 @@ namespace nvkg {
 
     void NVKGMaterial::set_texture(SampledTexture* tex, std::string tex_name, VkShaderStageFlagBits shader_stage) {
         auto id = INTERN_STR(tex_name.c_str());
-        std::cout << "Added texture with id " << id << " to material" << std::endl;
+        logger::debug() << "Added texture with id " << id << " to material";
         textures[id] = {id, shader_stage, tex};
     }
 
@@ -93,10 +93,10 @@ namespace nvkg {
                         res.binding
                     ));
 
-                    std::cout << "Set Layout Binding for set " << set << ", binding " << res.binding << ", stage " << res.stage << ", type " << res.type << std::endl;
+                    logger::debug() << "Set Layout Binding for set " << set << ", binding " << res.binding << ", stage " << res.stage << ", type " << res.type;
                 }
 
-                std::cout << "Creating Set Layout " << set << " with " << set_layout_bindings.size() << " bindings and index " << index << std::endl;
+                logger::debug() << "Creating Set Layout " << set << " with " << set_layout_bindings.size() << " bindings and index " << index;
 
                 VkDescriptorSetLayoutCreateInfo descriptor_layout =
                     nvkg::descriptors::descriptor_set_layout_create_info(
@@ -171,7 +171,7 @@ namespace nvkg {
                 if(prop.type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
                     //image
                     if (textures.find(prop.id) == textures.end()) {
-                        std::cout << "Unable to find texture with id " << prop.id << ". Continuing..." << std::endl;
+                        logger::debug() << "Unable to find texture with id " << prop.id << ". Continuing...";
                         continue;
                     }
 
@@ -200,8 +200,8 @@ namespace nvkg {
                         .range = prop.size * prop.dyn_count,
                     };
 
-                    std::cout << "Prop Id: " << prop.id << std::endl;
-                    std::cout << "Buffer Info: offset: " << descriptor_buffer_infos[buf_counter].offset << ", range: " << descriptor_buffer_infos[buf_counter].range << std::endl;
+                    logger::debug() << "Prop Id: " << prop.id;
+                    logger::debug() << "Buffer Info: offset: " << descriptor_buffer_infos[buf_counter].offset << ", range: " << descriptor_buffer_infos[buf_counter].range;
 
                     write_sets.push_back(
                         nvkg::descriptors::write_descriptor_set(
@@ -296,7 +296,7 @@ namespace nvkg {
             }
         }
 
-        std::cout << "Error while setting uniform data" << std::endl;
+        logger::debug() << "Error while setting uniform data";
     }
 
     bool NVKGMaterial::has_prop(Utils::StringId id) {
@@ -332,7 +332,7 @@ namespace nvkg {
             }
         }
 
-        std::cout << "Error while setting uniform data" << std::endl;
+        logger::debug(logger::Level::Error) << "Error while setting uniform data";
     }
 
     void NVKGMaterial::create_materials(std::initializer_list<NVKGMaterial*> materials) {
@@ -341,7 +341,7 @@ namespace nvkg {
 
     void NVKGMaterial::create_material() {
         // Allocate buffer which can store all the data we need
-        std::cout << "\nCREATING NEW MATERIAL" << std::endl;
+        logger::debug() << "CREATING NEW MATERIAL";
 
         //TODO set buffer size after resource collection to prevent doubled allocations 
         Buffer::create_buffer(
@@ -365,14 +365,12 @@ namespace nvkg {
             set_shader_props(frag_shader, OUT offset, counter);
         }
 
-        std::cout << "Retrieved " << resources_per_set.size() << " resources from shaders" << std::endl;
+        logger::debug() << "Retrieved " << resources_per_set.size() << " resources from shaders";
 
         prepare_desc_set_layouts();
         prepare_pipeline();
         setup_descriptor_sets();
         
-        std::cout << "Built material with size: " << buffer_size << std::endl;
-
-        std::cout << "\n";
+        logger::debug() << "Built material with size: " << buffer_size;
     }
 }
