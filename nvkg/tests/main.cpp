@@ -10,6 +10,7 @@
 #include <nvkg/Renderer/Shader/Shader.hpp>
 #include <nvkg/Renderer/Scene/Scene.hpp>
 #include <nvkg/Renderer/Texture/TextureManager.hpp>
+#include <nvkg/Components/component.hpp>
 
 #include <vector>
 #include <chrono>
@@ -182,7 +183,7 @@ int main() {
 
         if (!context.start_frame()) continue;
 
-        scene->update();
+        scene->_update();
         
         context.end_frame();
     }
