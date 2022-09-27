@@ -5,7 +5,6 @@
 #include <nvkg/Renderer/Swapchain/Swapchain.hpp>
 #include <nvkg/Renderer/Pipeline/Pipeline.hpp>
 #include <nvkg/Renderer/Material/Material.hpp>
-#include <nvkg/Renderer/Lights/PointLight.hpp>
 #include <nvkg/Renderer/Renderer/Renderer.hpp>
 #include <nvkg/Renderer/DescriptorPool/DescriptorPool.hpp>
 

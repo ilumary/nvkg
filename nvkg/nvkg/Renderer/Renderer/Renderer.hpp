@@ -4,7 +4,6 @@
 #include <nvkg/Renderer/Core.hpp>
 #include <nvkg/Renderer/Scene/Scene.hpp>
 #include <nvkg/Renderer/Model/Model.hpp>
-#include <nvkg/Renderer/Lights/PointLight.hpp>
 #include <nvkg/Renderer/Renderer/Renderer3D/LightRenderer.hpp>
 #include <nvkg/Renderer/Renderer/Renderer3D/ModelRenderer.hpp>
 
@@ -16,7 +15,7 @@ namespace nvkg {
 
             struct GlobalData {
                 CameraData cameraData;
-                PointLight::Data lightData[10];
+                LightRenderer::PointLightShaderData lightData[10];
                 int light_index;
             };
 

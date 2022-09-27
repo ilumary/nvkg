@@ -37,10 +37,6 @@ namespace nvkg {
         light_model.DestroyModel();
     }
 
-    void LightRenderer::add_point_light(const glm::vec3& position, const float& radius, const glm::vec4& colour, const glm::vec4& ambient) {
-        point_lights.push_back({colour, ambient, position, radius});
-    }
-
     void LightRenderer::render(VkCommandBuffer& commandBuffer, const uint64_t& globalDataSize, const void* globalData) {
         if (point_light_vertices.size() == 0) return;
 

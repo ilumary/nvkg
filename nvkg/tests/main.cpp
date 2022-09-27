@@ -8,7 +8,6 @@
 #include <nvkg/Utils/Math.hpp>
 #include <nvkg/Renderer/Material/Material.hpp>
 #include <nvkg/Renderer/Shader/Shader.hpp>
-#include <nvkg/Renderer/Lights/PointLight.hpp>
 #include <nvkg/Renderer/Scene/Scene.hpp>
 #include <nvkg/Renderer/Texture/TextureManager.hpp>
 

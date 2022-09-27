@@ -3,7 +3,6 @@
 
 #include <nvkg/Renderer/Core.hpp>
 #include <nvkg/Renderer/Model/Model.hpp>
-#include <nvkg/Renderer/Lights/PointLight.hpp>
 
 namespace nvkg {
 
@@ -15,6 +14,12 @@ namespace nvkg {
                 glm::vec4 ambient = glm::vec4(1.f, 1.f, 1.f, .02f);
                 glm::vec3 position = glm::vec3(0.f);
                 float radius;
+            };
+
+            struct PointLightShaderData {
+                glm::vec4 light_color = glm::vec4(1.f, 1.f, 1.f, 1.f);
+                glm::vec4 ambient_color = glm::vec4(1.f, 1.f, 1.f, .02f);
+                alignas(16) glm::vec3 position = glm::vec3(0.f);
             };
 
             struct PointLightPushConstants {
@@ -29,8 +34,6 @@ namespace nvkg {
             void init(const char* globalDataAttributeName, const uint64_t& globalDataSize);
 
             void destroy();
-
-            void add_point_light(const glm::vec3& position, const float& radius, const glm::vec4& colour, const glm::vec4& ambient);
 
             void render(VkCommandBuffer& commandBuffer, const uint64_t& globalDataSize, const void* globalData);
 
