@@ -16,11 +16,9 @@ namespace nvkg {
             void init(const char* globalDataAttributeName, const uint64_t& globalDataSize);
             void destroy();
 
-            void draw_model(Model* model, const glm::vec3& position, const glm::vec3& scale, const glm::vec3& rotation);
-
             void render(VkCommandBuffer& commandBuffer, const uint64_t& globalDataSize, const void* globalData);
 
-            void update_models(Components::Shape* shapes, uint16_t count);
+            void update_models(Components::Shape** shapes, uint16_t count);
 
             void flush();
 

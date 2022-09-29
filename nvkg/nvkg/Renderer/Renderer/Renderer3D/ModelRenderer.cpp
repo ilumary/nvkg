@@ -12,22 +12,14 @@ namespace nvkg {
 
     void ModelRenderer::destroy() {}
 
-    void ModelRenderer::draw_model(Model* model, const glm::vec3& position, const glm::vec3& scale, const glm::vec3& rotation) {
-        models.push_back(model);
-
-        auto transform = Utils::Math::calc_transform_3d(position, rotation, scale);
-        auto normal = Utils::Math::calc_normal_matrix(rotation, scale);
-        transforms.push_back({transform, normal});
-    }
-
-    void ModelRenderer::update_models(Components::Shape* shapes, uint16_t count) {
+    void ModelRenderer::update_models(Components::Shape** shapes, uint16_t count) {
         flush();
-        
-        for(uint16_t i = 0; i < count; ++i) {
-            models.push_back(shapes[i].get_model());
 
-            auto transform = Utils::Math::calc_transform_3d(shapes[i].get_pos(), shapes[i].get_rot(), shapes[i].get_scale());
-            auto normal = Utils::Math::calc_normal_matrix(shapes[i].get_rot(), shapes[i].get_scale());
+        for(uint16_t i = 0; i < count; ++i) {
+            models.push_back(shapes[i]->get_model());
+
+            auto transform = Utils::Math::calc_transform_3d(shapes[i]->get_pos(), shapes[i]->get_rot(), shapes[i]->get_scale());
+            auto normal = Utils::Math::calc_normal_matrix(shapes[i]->get_rot(), shapes[i]->get_scale());
             transforms.push_back({transform, normal});
         }
     }

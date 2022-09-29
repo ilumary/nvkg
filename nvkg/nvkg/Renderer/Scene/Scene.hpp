@@ -20,7 +20,7 @@ namespace nvkg {
             void add_shape_3d(Components::Shape* shapes, uint16_t count = 1);
             void add_pointlight(LightRenderer::PointLightData* pointlight, uint16_t count = 1);
 
-            Components::Shape* get_3d_shapes(uint16_t& count);
+            Components::Shape** get_3d_shapes(uint16_t& count);
             LightRenderer::PointLightData** get_pointlights(uint16_t& count);
 
             void set_camera(Camera* camera) { active_camera = camera; }
@@ -30,8 +30,8 @@ namespace nvkg {
 
             Camera* active_camera;
 
-            std::vector<Components::Shape> shapes_3d;
-            std::vector<LightRenderer::PointLightData*> pointlights;
+            std::vector<Components::Shape*> shapes_3d{};
+            std::vector<LightRenderer::PointLightData*> pointlights{};
     };
 
 }
