@@ -44,7 +44,7 @@ namespace nvkg {
 
         global_3d_data.light_index = size;
         for(int i = 0; i < size; ++i) {
-            global_3d_data.lightData[i] = {light_data[i].color, light_data[i].ambient, light_data[i].position};
+            global_3d_data.lightData[i] = {light_data[i]->color, light_data[i]->ambient, light_data[i]->position};
         }
 
         size = 0;

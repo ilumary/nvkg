@@ -46,8 +46,8 @@ namespace nvkg {
         light_material.bind(commandBuffer);
 
         for(auto& light : point_lights) {
-            push.position = glm::vec4(light.position, 1.f);
-            push.color = light.color;
+            push.position = glm::vec4(light->position, 1.f);
+            push.color = light->color;
             push.radius = 0.05f;
 
             light_material.push_constant(commandBuffer, sizeof(PointLightPushConstants), &push);
@@ -57,7 +57,7 @@ namespace nvkg {
         }
     }
 
-    void LightRenderer::update_point_lights(PointLightData* data, uint16_t count) {
+    void LightRenderer::update_point_lights(PointLightData** data, uint16_t count) {
         point_lights.clear();
         for(int i = 0; i < count; i++) {
             point_lights.push_back(data[i]);
