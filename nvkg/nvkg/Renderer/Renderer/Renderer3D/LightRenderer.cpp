@@ -57,7 +57,7 @@ namespace nvkg {
         }
     }
 
-    void LightRenderer::update_point_lights(PointLightData** data, uint16_t count) {
+    void LightRenderer::update_point_lights(PointLight** data, uint16_t count) {
         point_lights.clear();
         for(int i = 0; i < count; i++) {
             point_lights.push_back(data[i]);

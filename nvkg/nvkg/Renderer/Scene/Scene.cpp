@@ -15,7 +15,7 @@ namespace nvkg {
         updated = true;
     }
             
-    void Scene::add_pointlight(LightRenderer::PointLightData* pointlight, uint16_t count) {
+    void Scene::add_pointlight(LightRenderer::PointLight* pointlight, uint16_t count) {
         for(uint16_t i = 0; i < count; ++i) {
             pointlights.push_back(&pointlight[i]);
         }
@@ -27,7 +27,7 @@ namespace nvkg {
         return shapes_3d.data();
     }
 
-    LightRenderer::PointLightData** Scene::get_pointlights(uint16_t& count) {
+    LightRenderer::PointLight** Scene::get_pointlights(uint16_t& count) {
         count = pointlights.size();
         return pointlights.data();
     }

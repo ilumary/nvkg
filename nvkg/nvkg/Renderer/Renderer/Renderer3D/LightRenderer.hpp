@@ -3,17 +3,26 @@
 
 #include <nvkg/Renderer/Core.hpp>
 #include <nvkg/Renderer/Model/Model.hpp>
+#include <nvkg/Components/component.hpp>
 
 namespace nvkg {
 
     class LightRenderer {
         public:
 
-            struct PointLightData {
+            struct PointLight : public Component {
                 glm::vec4 color = glm::vec4(1.f, 1.f, 1.f, 0.2f);
                 glm::vec4 ambient = glm::vec4(1.f, 1.f, 1.f, .02f);
                 glm::vec3 position = glm::vec3(0.f);
                 float radius;
+
+                PointLight(glm::vec4 color, glm::vec4 ambient, glm::vec3 position, float radius) {
+                    this->color = color; this->ambient = ambient; this->position = position; this->radius = radius;
+                }
+
+                virtual bool _on_load() { return true; }
+
+                virtual void _on_delete() {}
             };
 
             struct PointLightShaderData {
@@ -37,7 +46,7 @@ namespace nvkg {
 
             void render(VkCommandBuffer& commandBuffer, const uint64_t& globalDataSize, const void* globalData);
 
-            void update_point_lights(PointLightData** data, uint16_t count);
+            void update_point_lights(PointLight** data, uint16_t count);
 
             void recreate_materials();
 
@@ -52,7 +61,7 @@ namespace nvkg {
 
             Utils::StringId glob_data_id;
 
-            std::vector<PointLightData*> point_lights{};
+            std::vector<PointLight*> point_lights{};
             std::vector<glm::vec2> point_light_vertices = std::vector<glm::vec2>(0);
             std::vector<uint32_t> point_light_indices = std::vector<uint32_t>(0);
     };

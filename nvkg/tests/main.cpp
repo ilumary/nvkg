@@ -127,26 +127,42 @@ int main() {
 
     cam_obj.set_pos({0.f, -1.f, -2.5f});
 
-    nvkg::LightRenderer::PointLightData light1 = {
+    nvkg::LightRenderer::PointLight light1 (
         {1.f, 0.f, 0.f, 1.f},
         {1.f, 1.f, 1.f, .02f},
         {1.0f, -1.5f, -1.5f}, 
-        0.05f,
-    };
+        0.05f
+    );
 
-    nvkg::LightRenderer::PointLightData light2 = {
+    /*light1._on_update([&light1](){
+        light1.position.x -= .01f;
+    });
+
+    light1.name = "light1";
+
+    scene->_attach_component(&light1);*/
+
+    nvkg::LightRenderer::PointLight light2 (
         {0.f, 1.f, 0.f, 1.f}, 
         {1.f, 1.f, 1.f, .02f},
         {-1.f, -1.5f, -1.5f}, 
-        0.05f, 
-    };
+        0.05f 
+    );
 
-    nvkg::LightRenderer::PointLightData light3 = {
+    /*light2._on_update([&light2](){
+        light2.position.x += .01f;
+    });
+
+    light2.name = "light2";
+
+    scene->_attach_component(&light2);*/
+
+    nvkg::LightRenderer::PointLight light3 (
         {0.f, 0.f, 1.f, 1.f}, 
         {1.f, 1.f, 1.f, .02f},
         {-0.f, -1.5f, 1.5f}, 
-        0.05f, 
-    };
+        0.05f 
+    );
 
     scene->add_shape_3d(&shapes[0], 3);
     scene->add_pointlight(&light1);
