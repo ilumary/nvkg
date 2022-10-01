@@ -68,12 +68,12 @@ void mov_cam_xz(float deltaTime, Components::Shape& viewerObject) {
 int main() {
     nvkg::Window window("NVKG", WIDTH, HEIGHT);
     window.disable_cursor();
-    Input::init_with_window_pointer(&window);
+    Input::init_with_window_pointer(&window); //TODO hide
 
     nvkg::Context context(window);
 
-    nvkg::TextureManager* tex_mng = new nvkg::TextureManager();
-    tex_mng->init(&context.get_device());
+    nvkg::TextureManager* tex_mng = new nvkg::TextureManager(); //TODO hide
+    tex_mng->init(&context.get_device()); //also
 
     //TODO need to update camera
     nvkg::Camera camera;
@@ -90,7 +90,7 @@ int main() {
     frag_shader->create("diffuseFragShader", "frag");
 
     // Material Declaration
-    nvkg::NVKGMaterial diffuse_mat_new(vert_shader, frag_shader); // 3D diffuse test material
+    nvkg::NVKGMaterial diffuse_mat_new(vert_shader, frag_shader); // TODO hide shader module creation
 
     // Load and apply texture to material
     nvkg::SampledTexture* tex = tex_mng->load_2d_img("../assets/textures/tex1.png");
@@ -128,6 +128,7 @@ int main() {
     cam_obj.set_pos({0.f, -1.f, -2.5f});
 
     nvkg::LightRenderer::PointLight light1 (
+        "light1",
         {1.f, 0.f, 0.f, 1.f},
         {1.f, 1.f, 1.f, .02f},
         {1.0f, -1.5f, -1.5f}, 
@@ -143,21 +144,21 @@ int main() {
     scene->_attach_component(&light1);*/
 
     nvkg::LightRenderer::PointLight light2 (
+        "light2",
         {0.f, 1.f, 0.f, 1.f}, 
         {1.f, 1.f, 1.f, .02f},
         {-1.f, -1.5f, -1.5f}, 
         0.05f 
     );
 
-    /*light2._on_update([&light2](){
+    light2._on_update([&light2](){
         light2.position.x += .01f;
     });
 
-    light2.name = "light2";
-
-    scene->_attach_component(&light2);*/
+    scene->_attach_component(&light2);
 
     nvkg::LightRenderer::PointLight light3 (
+        "light3",
         {0.f, 0.f, 1.f, 1.f}, 
         {1.f, 1.f, 1.f, .02f},
         {-0.f, -1.5f, 1.5f}, 
@@ -168,6 +169,12 @@ int main() {
     scene->add_pointlight(&light1);
     scene->add_pointlight(&light2);
     scene->add_pointlight(&light3);
+
+    uint16_t count = 0;
+    auto list = scene->get_pointlights(count);
+    for(int i = 0; i < count; ++i) {
+        logger::debug() << list[i]->name;
+    }
 
     auto currentTime = std::chrono::high_resolution_clock::now();
 

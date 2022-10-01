@@ -27,7 +27,7 @@ namespace nvkg {
     void Renderer::render(VkCommandBuffer& commandBuffer, Scene* scene) {
         if(scene->updated) {
             update_renderers(scene);
-            scene->updated = false;
+            //scene->updated = false;
         }
 
         global_3d_data.cameraData = scene->get_camera_data();
@@ -37,6 +37,7 @@ namespace nvkg {
         light_renderer->render(commandBuffer, globalDataSize, &global_3d_data);
     }
 
+    //TODO this needs to change to something more dynamic
     void Renderer::update_renderers(Scene* scene) {
         uint16_t size = 0;
         auto light_data = scene->get_pointlights(size);

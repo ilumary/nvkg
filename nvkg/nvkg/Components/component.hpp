@@ -11,6 +11,7 @@
 class Component {
     public:
 
+        Component(std::string s) : name(s) {};
         virtual ~Component() {};
 
         //every BaseType implements basic methods, TODO make scriptable
@@ -29,7 +30,7 @@ class Component {
 
     //private:
 
-        std::string name;
+        const std::string name;
 
         //Component* parent = nullptr;
         //std::vector<Component*> components{};
@@ -41,7 +42,20 @@ class RootComponent {
         virtual ~RootComponent() {};
 
         void _on_update(std::function<void(RootComponent*)> func) { _root_update = func; }
-        void _update();
+        void _update() {
+            _root_update(this);
+            for(auto& c : components) {
+                c.second->_update();
+            }
+        }
+
+        void _attach_component(Component* c) {
+            if(!c->_on_load()) {
+                logger::debug() << "Failed to load " << c->name;
+                return;
+            }
+            components[c->name] = c;
+        }
 
         std::function<void (RootComponent*)> _root_update = [](RootComponent*){};
 

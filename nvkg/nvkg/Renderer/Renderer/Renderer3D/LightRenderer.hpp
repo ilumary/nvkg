@@ -16,7 +16,8 @@ namespace nvkg {
                 glm::vec3 position = glm::vec3(0.f);
                 float radius;
 
-                PointLight(glm::vec4 color, glm::vec4 ambient, glm::vec3 position, float radius) {
+                PointLight(std::string name, glm::vec4 color, glm::vec4 ambient, glm::vec3 position, float radius)
+                    : Component(name) {
                     this->color = color; this->ambient = ambient; this->position = position; this->radius = radius;
                 }
 
