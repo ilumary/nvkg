@@ -2,9 +2,7 @@
 
 namespace nvkg {
 
-    Scene::Scene(std::string name) {
-        identifier = INTERN_STR(name.c_str());
-    }
+    Scene::Scene(std::string name) : Component(name) {}
 
     Scene::~Scene() {}
 

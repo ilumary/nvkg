@@ -8,11 +8,14 @@
 
 namespace nvkg {
 
-    class Scene : public RootComponent {
+    class Scene : public Component {
         public:
 
             Scene(std::string name);
             virtual ~Scene();
+
+            virtual bool _on_load() { return true; }
+            virtual void _on_delete() {}
 
             Utils::StringId identifier;
             bool updated;
