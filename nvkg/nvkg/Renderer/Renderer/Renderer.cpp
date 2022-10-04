@@ -34,14 +34,14 @@ namespace nvkg {
         uint64_t globalDataSize = sizeof(global_3d_data);
 
         model_renderer->render(commandBuffer, globalDataSize, &global_3d_data);
-        light_renderer->render(commandBuffer, globalDataSize, &global_3d_data);
+        light_renderer->render(commandBuffer, globalDataSize, &global_3d_data, scene->get_pointlights());
     }
 
     //TODO this needs to change to something more dynamic
     void Renderer::update_renderers(Scene* scene) {
         uint16_t size = 0;
-        auto light_data = scene->get_pointlights(size);
-        light_renderer->update_point_lights(light_data, size);
+        auto light_data = scene->get_pointlights();
+        size = light_data.size();
 
         global_3d_data.light_index = size;
         for(int i = 0; i < size; ++i) {

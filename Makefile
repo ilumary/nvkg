@@ -32,7 +32,7 @@ depends := $(patsubst %.o, %.d, $(objects))
 
 includes = -I $(abspath nvkg) -I $(externDir)/vulkan/include -I $(externDir)/glfw/include -I $(externDir)/glm -I $(externDir)/tinyobjloader -I $(externDir)/stb -I $(externDir)/vulkan/SPIRV-Cross/
 linkFlags = -L $(libDir) -lglfw3 -L $(libDir) -lspirv-cross
-compileFlags := -std=c++17 $(includes)
+compileFlags := -std=c++20 $(includes)
 
 glfwLib := $(libDir)/libglfw3.a
 

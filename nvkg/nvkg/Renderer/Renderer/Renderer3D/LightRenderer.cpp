@@ -37,7 +37,7 @@ namespace nvkg {
         light_model.DestroyModel();
     }
 
-    void LightRenderer::render(VkCommandBuffer& commandBuffer, const uint64_t& globalDataSize, const void* globalData) {
+    void LightRenderer::render(VkCommandBuffer& commandBuffer, const uint64_t& globalDataSize, const void* globalData, std::span<PointLight*> pnt_lgts) {
         if (point_light_vertices.size() == 0) return;
 
         PointLightPushConstants push{};
@@ -45,7 +45,7 @@ namespace nvkg {
         light_material.set_uniform_data(glob_data_id, globalDataSize, globalData);
         light_material.bind(commandBuffer);
 
-        for(auto& light : point_lights) {
+        for(auto& light : pnt_lgts) {
             push.position = glm::vec4(light->position, 1.f);
             push.color = light->color;
             push.radius = 0.05f;
@@ -54,13 +54,6 @@ namespace nvkg {
 
             light_model.bind(commandBuffer);
             light_model.draw(commandBuffer, 0);
-        }
-    }
-
-    void LightRenderer::update_point_lights(PointLight** data, uint16_t count) {
-        point_lights.clear();
-        for(int i = 0; i < count; i++) {
-            point_lights.push_back(data[i]);
         }
     }
 

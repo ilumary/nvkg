@@ -17,14 +17,13 @@ namespace nvkg {
             virtual bool _on_load() { return true; }
             virtual void _on_delete() {}
 
-            Utils::StringId identifier;
             bool updated;
 
             void add_shape_3d(Components::Shape* shapes, uint16_t count = 1);
             void add_pointlight(LightRenderer::PointLight* pointlight, uint16_t count = 1);
 
             Components::Shape** get_3d_shapes(uint16_t& count);
-            LightRenderer::PointLight** get_pointlights(uint16_t& count);
+            inline std::span<LightRenderer::PointLight*> get_pointlights() { return pointlights; }
 
             void set_camera(Camera* camera) { active_camera = camera; }
             CameraData get_camera_data() { return { active_camera->get_proj(), active_camera->get_view()}; };

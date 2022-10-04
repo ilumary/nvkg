@@ -5,6 +5,8 @@
 #include <nvkg/Renderer/Model/Model.hpp>
 #include <nvkg/Components/component.hpp>
 
+#include <span>
+
 namespace nvkg {
 
     class LightRenderer {
@@ -45,9 +47,7 @@ namespace nvkg {
 
             void destroy();
 
-            void render(VkCommandBuffer& commandBuffer, const uint64_t& globalDataSize, const void* globalData);
-
-            void update_point_lights(PointLight** data, uint16_t count);
+            void render(VkCommandBuffer& commandBuffer, const uint64_t& globalDataSize, const void* globalData, std::span<PointLight*> pnt_lgts);
 
             void recreate_materials();
 
@@ -62,7 +62,6 @@ namespace nvkg {
 
             Utils::StringId glob_data_id;
 
-            std::vector<PointLight*> point_lights{};
             std::vector<glm::vec2> point_light_vertices = std::vector<glm::vec2>(0);
             std::vector<uint32_t> point_light_indices = std::vector<uint32_t>(0);
     };

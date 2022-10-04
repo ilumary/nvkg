@@ -170,12 +170,6 @@ int main() {
     scene->add_pointlight(&light2);
     scene->add_pointlight(&light3);
 
-    uint16_t count = 0;
-    auto list = scene->get_pointlights(count);
-    for(int i = 0; i < count; ++i) {
-        logger::debug() << list[i]->name;
-    }
-
     auto currentTime = std::chrono::high_resolution_clock::now();
 
     bool input_enabled = true;

@@ -24,9 +24,4 @@ namespace nvkg {
         count = shapes_3d.size();
         return shapes_3d.data();
     }
-
-    LightRenderer::PointLight** Scene::get_pointlights(uint16_t& count) {
-        count = pointlights.size();
-        return pointlights.data();
-    }
 }
