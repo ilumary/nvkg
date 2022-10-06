@@ -30,6 +30,8 @@ namespace nvkg {
 
             Scene* create_scene(std::string name, bool set_active = true);
             Scene* get_scene(std::string name);
+
+            void render();
             
             bool frame_started() { return is_frame_started; }
 

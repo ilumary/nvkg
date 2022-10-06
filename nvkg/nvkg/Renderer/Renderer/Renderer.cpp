@@ -26,19 +26,18 @@ namespace nvkg {
 
     void Renderer::render(VkCommandBuffer& commandBuffer, Scene* scene) {
         if(scene->updated) {
-            update_renderers(scene);
-            //scene->updated = false;
+            update_global_ubo(scene);
+            scene->updated = false;
         }
 
         global_3d_data.cameraData = scene->get_camera_data();
         uint64_t globalDataSize = sizeof(global_3d_data);
 
-        model_renderer->render(commandBuffer, globalDataSize, &global_3d_data);
+        model_renderer->render(commandBuffer, globalDataSize, &global_3d_data, scene->get_3d_shapes());
         light_renderer->render(commandBuffer, globalDataSize, &global_3d_data, scene->get_pointlights());
     }
 
-    //TODO this needs to change to something more dynamic
-    void Renderer::update_renderers(Scene* scene) {
+    void Renderer::update_global_ubo(Scene* scene) {
         uint16_t size = 0;
         auto light_data = scene->get_pointlights();
         size = light_data.size();
@@ -47,9 +46,5 @@ namespace nvkg {
         for(int i = 0; i < size; ++i) {
             global_3d_data.lightData[i] = {light_data[i]->color, light_data[i]->ambient, light_data[i]->position};
         }
-
-        size = 0;
-        auto model_data = scene->get_3d_shapes(size);
-        model_renderer->update_models(model_data, size);
     }
 }

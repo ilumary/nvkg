@@ -6,6 +6,8 @@
 #include <nvkg/Renderer/Utils/Math.hpp>
 #include <nvkg/Components/Shape.hpp>
 
+#include <span>
+
 namespace nvkg {
     class ModelRenderer {
         public:
@@ -16,9 +18,7 @@ namespace nvkg {
             void init(const char* globalDataAttributeName, const uint64_t& globalDataSize);
             void destroy();
 
-            void render(VkCommandBuffer& commandBuffer, const uint64_t& globalDataSize, const void* globalData);
-
-            void update_models(Components::Shape** shapes, uint16_t count);
+            void render(VkCommandBuffer& commandBuffer, const uint64_t& globalDataSize, const void* globalData, std::span<Components::Shape*> shapes);
 
             void flush();
 

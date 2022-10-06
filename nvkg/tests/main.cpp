@@ -198,11 +198,7 @@ int main() {
             camera.set_view_xyz(cam_obj.get_pos(), cam_obj.get_rot());
         }
 
-        if (!context.start_frame()) continue;
-
-        scene->_update();
-        
-        context.end_frame();
+        context.render();
     }
 
     context.clear_device_queue();

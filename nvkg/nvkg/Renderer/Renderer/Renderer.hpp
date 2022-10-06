@@ -36,7 +36,7 @@ namespace nvkg {
             ModelRenderer* model_renderer;
             LightRenderer* light_renderer;
 
-            void update_renderers(Scene* scene);
+            void update_global_ubo(Scene* scene);
     };
 }
 

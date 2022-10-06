@@ -11,21 +11,18 @@ namespace nvkg {
     }
 
     void ModelRenderer::destroy() {}
-
-    void ModelRenderer::update_models(Components::Shape** shapes, uint16_t count) {
+    
+    //TODO this needs to be heavily optimised
+    void ModelRenderer::render(VkCommandBuffer& commandBuffer, const uint64_t& globalDataSize, const void* globalData, std::span<Components::Shape*> shapes) {
         flush();
-
-        for(uint16_t i = 0; i < count; ++i) {
+        
+        for(uint16_t i = 0; i < shapes.size(); ++i) {
             models.push_back(shapes[i]->get_model());
 
             auto transform = Utils::Math::calc_transform_3d(shapes[i]->get_pos(), shapes[i]->get_rot(), shapes[i]->get_scale());
             auto normal = Utils::Math::calc_normal_matrix(shapes[i]->get_rot(), shapes[i]->get_scale());
             transforms.push_back({transform, normal});
         }
-    }
-
-    void ModelRenderer::render(VkCommandBuffer& commandBuffer, const uint64_t& globalDataSize, const void* globalData) {
-        if (models.size() == 0) return;
 
         for (size_t i = 0; i < models.size(); i++) {
             auto& model = models.at(i);

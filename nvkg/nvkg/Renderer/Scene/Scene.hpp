@@ -22,7 +22,7 @@ namespace nvkg {
             void add_shape_3d(Components::Shape* shapes, uint16_t count = 1);
             void add_pointlight(LightRenderer::PointLight* pointlight, uint16_t count = 1);
 
-            Components::Shape** get_3d_shapes(uint16_t& count);
+            inline std::span<Components::Shape*> get_3d_shapes() { return shapes_3d; } 
             inline std::span<LightRenderer::PointLight*> get_pointlights() { return pointlights; }
 
             void set_camera(Camera* camera) { active_camera = camera; }
