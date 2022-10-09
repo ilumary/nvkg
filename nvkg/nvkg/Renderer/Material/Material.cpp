@@ -343,14 +343,16 @@ namespace nvkg {
         // Allocate buffer which can store all the data we need
         logger::debug() << "CREATING NEW MATERIAL";
 
-        //TODO set buffer size after resource collection to prevent doubled allocations 
-        Buffer::create_buffer(
-            buffer_size,
-            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            OUT buffer.buffer,
-            OUT buffer.bufferMemory
-        );
+        //TODO set buffer size after resource collection to prevent doubled allocations
+        if(buffer_size > 0) {
+            Buffer::create_buffer(
+                buffer_size,
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                OUT buffer.buffer,
+                OUT buffer.bufferMemory
+            );
+        }
 
         uint64_t offset = 0;
         uint16_t counter = 0;
