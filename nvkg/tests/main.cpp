@@ -19,6 +19,20 @@
 static const constexpr int WIDTH = 1280;
 static const constexpr int HEIGHT = 720;
 
+nvkg::Vertex2D tv[] = {
+    {{-1.f, -1.f}, {0.f, 1.f}, {1.f, 0.f, 0.f, 1.f}},
+    {{0.f, -1.f}, {0.f, 1.f}, {0.f, 1.f, 0.f, 1.f}}, 
+    {{-1.f, 0.f}, {0.f, 1.f}, {0.f, 0.f, 1.f, 1.f}}
+};
+
+uint32_t indices[] = {
+    0, 2, 1
+};
+
+nvkg::Mesh::MeshData tmd {
+    sizeof(nvkg::Vertex2D), tv, 3, indices, 3
+};
+
 void mov_cam_xz(float deltaTime, Components::Shape& viewerObject) {
     static auto oldMousePos = Input::get_cursor_pos();
     auto mousePos = Input::get_cursor_pos();
@@ -151,11 +165,11 @@ int main() {
         0.05f 
     );
 
-    light2._on_update([&light2](){
+    /*light2._on_update([&light2](){
         light2.position.x += .01f;
     });
 
-    scene->_attach_component(&light2);
+    scene->_attach_component(&light2);*/
 
     nvkg::LightRenderer::PointLight light3 (
         "light3",
@@ -165,10 +179,16 @@ int main() {
         0.05f 
     );
 
+    nvkg::UIRenderer::UIComponent ui_test (
+        "ui_test",
+        &tmd
+    );
+
     scene->add_shape_3d(&shapes[0], 3);
     scene->add_pointlight(&light1);
     scene->add_pointlight(&light2);
     scene->add_pointlight(&light3);
+    scene->add_ui_component(&ui_test);
 
     auto currentTime = std::chrono::high_resolution_clock::now();
 

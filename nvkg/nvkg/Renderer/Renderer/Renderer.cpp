@@ -12,6 +12,9 @@ namespace nvkg {
 
         light_renderer = new LightRenderer();
         light_renderer->init("globalData", sizeof(GlobalData));
+
+        ui_renderer = new UIRenderer();
+        ui_renderer->init();
     }
 
     void Renderer::recreate_materials() {
@@ -35,12 +38,12 @@ namespace nvkg {
 
         model_renderer->render(commandBuffer, globalDataSize, &global_3d_data, scene->get_3d_shapes());
         light_renderer->render(commandBuffer, globalDataSize, &global_3d_data, scene->get_pointlights());
+        ui_renderer->render(commandBuffer, scene->get_ui_components());
     }
 
     void Renderer::update_global_ubo(Scene* scene) {
-        uint16_t size = 0;
         auto light_data = scene->get_pointlights();
-        size = light_data.size();
+        uint16_t size = light_data.size();
 
         global_3d_data.light_index = size;
         for(int i = 0; i < size; ++i) {

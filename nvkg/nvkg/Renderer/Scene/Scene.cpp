@@ -18,4 +18,10 @@ namespace nvkg {
         }
         updated = true;
     }
+            
+    void Scene::add_ui_component(UIRenderer::UIComponent* ui_component, uint16_t count) {
+        for(uint16_t i = 0; i < count; ++i) {
+            ui_components.push_back(&ui_component[i]);
+        }
+    }
 }

@@ -6,6 +6,7 @@
 #include <nvkg/Renderer/Model/Model.hpp>
 #include <nvkg/Renderer/Renderer/Renderer3D/LightRenderer.hpp>
 #include <nvkg/Renderer/Renderer/Renderer3D/ModelRenderer.hpp>
+#include <nvkg/Renderer/Renderer/Renderer2D/ui_renderer.hpp>
 
 namespace nvkg {
 
@@ -35,6 +36,7 @@ namespace nvkg {
 
             ModelRenderer* model_renderer;
             LightRenderer* light_renderer;
+            UIRenderer* ui_renderer;
 
             void update_global_ubo(Scene* scene);
     };

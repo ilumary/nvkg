@@ -12,6 +12,7 @@
 #include <array>
 
 namespace nvkg {
+
     struct Vertex {
         glm::vec3 position;
         glm::vec3 color;
@@ -21,7 +22,8 @@ namespace nvkg {
 
     struct Vertex2D {
         glm::vec2 position;
-        glm::vec3 color;
+        glm::vec2 uv;
+        glm::vec4 color;
     };
 
     bool operator==(const Vertex& left, const Vertex& right);

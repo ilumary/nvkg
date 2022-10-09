@@ -79,15 +79,10 @@ namespace nvkg {
     void Context::render() {
         if(!start_frame()) return;
         
-        begin_swapchain_renderpass(get_crnt_cmdbf());
-
         active_scene->_update();
-
+        
         render_frame();
-
         //render_ui();
-
-        end_swapchain_renderpass(get_crnt_cmdbf());
 
         end_frame();
     }
@@ -116,13 +111,17 @@ namespace nvkg {
         NVKG_ASSERT(vkBeginCommandBuffer(OUT commandBuffer, &beginInfo) == VK_SUCCESS,
             "Failed to begin recording command buffer");
         
+        begin_swapchain_renderpass(commandBuffer);
+        
         return true;
     }
 
     void Context::end_frame() {
         NVKG_ASSERT(is_frame_started, "Can't end frame while frame is not in progress!");
-
+        
         VkCommandBuffer commandBuffer = get_crnt_cmdbf();
+        
+        end_swapchain_renderpass(commandBuffer);
 
         NVKG_ASSERT(vkEndCommandBuffer(OUT commandBuffer) == VK_SUCCESS,
             "Failed to record command buffer!");

@@ -51,7 +51,7 @@ namespace nvkg {
 
             void recreate_materials();
 
-        private: 
+        private:
 
             struct PointLightVertex {
                 alignas(16) glm::vec2 position;
