@@ -108,14 +108,20 @@ namespace nvkg {
         uint32_t inputs_size = 0, locations = 0;
         VertexBinding n_binding{};
 
-        for(auto& resource : resources.stage_inputs) {
-            locations += 1;
-            unsigned set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
-            unsigned binding = glsl.get_decoration(resource.id, spv::DecorationBinding);
-            unsigned location = glsl.get_decoration(resource.id, spv::DecorationLocation);
-            std::string name = glsl.get_name(resource.id);
+        std::map<uint16_t, spirv_cross::Resource> sorted_stage_inputs;
 
-            const spirv_cross::SPIRType &type = glsl.get_type(resource.type_id);
+        for(auto& resource : resources.stage_inputs) {
+            unsigned location = glsl.get_decoration(resource.id, spv::DecorationLocation);
+            sorted_stage_inputs[location] = resource;
+        }
+
+        for(auto& resource : sorted_stage_inputs) {
+            locations += 1;
+            unsigned set = glsl.get_decoration(resource.second.id, spv::DecorationDescriptorSet);
+            unsigned binding = glsl.get_decoration(resource.second.id, spv::DecorationBinding);
+            std::string name = glsl.get_name(resource.second.id);
+
+            const spirv_cross::SPIRType &type = glsl.get_type(resource.second.type_id);
 
             auto attrib_type = VertexDescription::AttributeType::VEC2;
             if(type.vecsize == 3) {

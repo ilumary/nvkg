@@ -26,7 +26,7 @@ nvkg::Vertex2D tv[] = {
 };
 
 uint32_t indices[] = {
-    0, 2, 1
+    0, 1, 2
 };
 
 nvkg::Mesh::MeshData tmd {
