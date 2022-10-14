@@ -7,6 +7,8 @@
 #include <functional>
 
 #include <nvkg/Utils/logger.hpp>
+#include <nvkg/Renderer/Core.hpp>
+#include <nvkg/Renderer/Model/Model.hpp>
 
 class Component {
     public:
@@ -50,5 +52,45 @@ class Component {
         //fixed update method for physics
         std::function<void (float)> _fixed_update = [](float){};
 };
+
+namespace nvkg {
+
+    class PointLight : public Component {
+        public:
+            glm::vec4 color = glm::vec4(1.f, 1.f, 1.f, 0.2f);
+            glm::vec4 ambient = glm::vec4(1.f, 1.f, 1.f, .02f);
+            glm::vec3 position = glm::vec3(0.f);
+            float radius;
+
+            PointLight(std::string name, glm::vec4 color, glm::vec4 ambient, glm::vec3 position, float radius)
+                : Component(name) {
+                this->color = color; this->ambient = ambient; this->position = position; this->radius = radius;
+            }
+
+            virtual bool _on_load() { return true; }
+
+            virtual void _on_delete() {}
+    };
+
+    class UIComponent : public Component {
+        public:
+            const Mesh::MeshData* mesh;
+            Model ui_model;
+
+            // construct with either Vertex2D or MeshData where size == sizeof(Vertex2D) => should be 28
+            UIComponent(std::string name, const Mesh::MeshData* mesh) : Component(name) {
+                if(mesh->vertexSize != sizeof(Vertex2D)) {
+                    logger::debug(logger::Level::Error) << "UIComponent " << name << " has wrong vertex type and will probably malfunction";
+                }
+                this->mesh = mesh;
+                ui_model.set_mesh(*mesh);
+            }
+            
+            virtual bool _on_load() { return true; }
+
+            virtual void _on_delete() {}
+    };
+
+}
 
 #endif // COMPONENT_HPP

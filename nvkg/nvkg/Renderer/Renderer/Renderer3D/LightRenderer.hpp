@@ -12,22 +12,6 @@ namespace nvkg {
     class LightRenderer {
         public:
 
-            struct PointLight : public Component {
-                glm::vec4 color = glm::vec4(1.f, 1.f, 1.f, 0.2f);
-                glm::vec4 ambient = glm::vec4(1.f, 1.f, 1.f, .02f);
-                glm::vec3 position = glm::vec3(0.f);
-                float radius;
-
-                PointLight(std::string name, glm::vec4 color, glm::vec4 ambient, glm::vec3 position, float radius)
-                    : Component(name) {
-                    this->color = color; this->ambient = ambient; this->position = position; this->radius = radius;
-                }
-
-                virtual bool _on_load() { return true; }
-
-                virtual void _on_delete() {}
-            };
-
             struct PointLightShaderData {
                 glm::vec4 light_color = glm::vec4(1.f, 1.f, 1.f, 1.f);
                 glm::vec4 ambient_color = glm::vec4(1.f, 1.f, 1.f, .02f);

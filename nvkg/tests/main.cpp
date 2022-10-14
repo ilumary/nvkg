@@ -141,7 +141,7 @@ int main() {
 
     cam_obj.set_pos({0.f, -1.f, -2.5f});
 
-    nvkg::LightRenderer::PointLight light1 (
+    nvkg::PointLight light1 (
         "light1",
         {1.f, 0.f, 0.f, 1.f},
         {1.f, 1.f, 1.f, .02f},
@@ -157,7 +157,7 @@ int main() {
 
     scene->_attach_component(&light1);*/
 
-    nvkg::LightRenderer::PointLight light2 (
+    nvkg::PointLight light2 (
         "light2",
         {0.f, 1.f, 0.f, 1.f}, 
         {1.f, 1.f, 1.f, .02f},
@@ -171,7 +171,7 @@ int main() {
 
     scene->_attach_component(&light2);*/
 
-    nvkg::LightRenderer::PointLight light3 (
+    nvkg::PointLight light3 (
         "light3",
         {0.f, 0.f, 1.f, 1.f}, 
         {1.f, 1.f, 1.f, .02f},
@@ -179,7 +179,7 @@ int main() {
         0.05f 
     );
 
-    nvkg::UIRenderer::UIComponent ui_test (
+    nvkg::UIComponent ui_test (
         "ui_test",
         &tmd
     );
