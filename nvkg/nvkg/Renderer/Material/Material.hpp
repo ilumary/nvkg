@@ -53,7 +53,7 @@ namespace nvkg {
 
             bool has_prop(Utils::StringId id);
 
-            void push_constant(VkCommandBuffer command_buffer, size_t push_constant_size, const void* data);
+            void push_constant(VkCommandBuffer command_buffer, std::string name, size_t push_constant_size, const void* data);
             void set_texture(SampledTexture* tex, std::string tex_name, VkShaderStageFlagBits shader_stage);
 
             void bind(VkCommandBuffer commandBuffer);
@@ -111,7 +111,7 @@ namespace nvkg {
 
             std::map<uint32_t, MaterialTexture> textures{};
 
-            std::vector<VkPushConstantRange> push_constants{};
+            std::map<std::string, VkPushConstantRange> push_constants_new{}; //
             std::vector<VertexDescription::Binding> vertex_binds{};
 
             std::vector<VkDescriptorSetLayout> descriptor_set_layouts{};

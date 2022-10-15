@@ -60,9 +60,11 @@ namespace nvkg {
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
     }
 
-    void NVKGMaterial::push_constant(VkCommandBuffer command_buffer, size_t push_constant_size, const void* data) {
-        //TODO make sure multiple different push constants can be pushed individually
-        vkCmdPushConstants(command_buffer, pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, push_constant_size, data);
+    void NVKGMaterial::push_constant(VkCommandBuffer command_buffer, std::string name, size_t push_constant_size, const void* data) {
+        if(push_constants_new.count(name) > 0) {
+            const auto& pc = push_constants_new[name]; 
+            vkCmdPushConstants(command_buffer, pipeline_layout, pc.stageFlags, 0, push_constant_size, data);
+        }
     }
 
     void NVKGMaterial::recreate_pipeline() {
@@ -106,19 +108,32 @@ namespace nvkg {
                 NVKG_ASSERT(vkCreateDescriptorSetLayout(VulkanDevice::get_device_instance()->device(), &descriptor_layout, nullptr, &descriptor_set_layouts[index]) == VK_SUCCESS, "Failed to create descriptor set layout");
         }
 
-        std::vector<VkPushConstantRange> vpc{}, fpc{};
+        for(const auto& [s, v] : vert_shader->push_constants_new) {
+            if(push_constants_new.count(s) > 0) {
+                push_constants_new[s].stageFlags = push_constants_new[s].stageFlags | v.stageFlags; 
+                continue;
+            }
+            push_constants_new[s] = v;
+        }
 
-        if (vert_shader) vpc = vert_shader->push_constants;
-        if (frag_shader) fpc = frag_shader->push_constants;
+        for(const auto& [s, v] : frag_shader->push_constants_new) {
+            if(push_constants_new.count(s) > 0) {
+                push_constants_new[s].stageFlags = push_constants_new[s].stageFlags | v.stageFlags; 
+                continue;
+            }
+            push_constants_new[s] = v;
+        }
 
-        push_constants.reserve(vpc.size() + fpc.size());
-        push_constants.insert(push_constants.end(), vpc.begin(), vpc.end());
-        push_constants.insert(push_constants.end(), fpc.begin(), fpc.end());
+        std::vector<VkPushConstantRange> tmp_push_constants(push_constants_new.size());
+
+        for(const auto& pc : push_constants_new) {
+            tmp_push_constants.push_back(pc.second);
+        }
 
         void* push_constant_data;
-        if(push_constants.size() == 0) { push_constant_data = nullptr; } else { push_constant_data = &push_constants[0]; }
+        if(tmp_push_constants.size() == 0) { push_constant_data = nullptr; } else { push_constant_data = &tmp_push_constants[0]; }
 
-        create_layout(&descriptor_set_layouts[0], descriptor_set_layouts.size(), (VkPushConstantRange*)push_constant_data, push_constants.size());
+        create_layout(&descriptor_set_layouts[0], descriptor_set_layouts.size(), (VkPushConstantRange*)push_constant_data, tmp_push_constants.size());
 
         NVKG_ASSERT(pipeline_layout != nullptr, "Cannot create pipeline without a valid layout!");
     }

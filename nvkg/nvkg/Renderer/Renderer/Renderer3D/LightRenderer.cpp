@@ -50,7 +50,7 @@ namespace nvkg {
             push.color = light->color;
             push.radius = 0.05f;
 
-            light_material.push_constant(commandBuffer, sizeof(PointLightPushConstants), &push);
+            light_material.push_constant(commandBuffer, "push", sizeof(PointLightPushConstants), &push);
 
             light_model.bind(commandBuffer);
             light_model.draw(commandBuffer, 0);

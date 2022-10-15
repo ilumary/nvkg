@@ -43,7 +43,7 @@ namespace nvkg {
         logger::debug() << "SHADER INFO: " << name << "." << stage;
         logger::debug() << "UBO's: " << shader_resources.size() << " with overall size " << combined_uniform_size;
         logger::debug() << "Vertex Bindings: " << vertex_bindings.size();
-        logger::debug() << "Push Constants: " << push_constants.size();
+        logger::debug() << "Push Constants: " << push_constants_new.size();
 
 		VkShaderModuleCreateInfo shader_module_create_info = {};
 		shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -244,6 +244,8 @@ namespace nvkg {
             auto ranges = glsl.get_active_buffer_ranges(resource.id);
             std::string name = glsl.get_name(resource.id);
 
+            logger::debug() << "Push constant name: " << name;
+
             VkPushConstantRange push_constant_range = {};
 
             const spirv_cross::SPIRType &type = glsl.get_type(resource.base_type_id);
@@ -254,14 +256,14 @@ namespace nvkg {
                 push_constant_range.size = push_size;
                 push_constant_range.stageFlags = shader_stage;
 
-                push_constants.push_back(push_constant_range);
+                push_constants_new[name] = push_constant_range;
             } else {
                 for (auto &r : ranges) {
                     push_constant_range.offset = r.offset;
                     push_constant_range.size = r.range;
                     push_constant_range.stageFlags = shader_stage;
 
-                    push_constants.push_back(push_constant_range);
+                    push_constants_new[name] = push_constant_range;
                 }
             }
         }

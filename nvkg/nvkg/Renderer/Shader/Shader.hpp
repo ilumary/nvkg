@@ -42,7 +42,7 @@ namespace nvkg {
             std::string entrance_function;
 
             // specifies the binding order of the model descriptor.
-            std::vector<VkPushConstantRange> push_constants{};
+            std::map<std::string, VkPushConstantRange> push_constants_new{}; //
             std::vector<VertexBinding> vertex_bindings{};
             std::vector<ShaderResource> shader_resources{};
 

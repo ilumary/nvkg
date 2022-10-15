@@ -70,3 +70,4 @@ If you want to modify anything, the ```compile_commands.json``` for the clangd l
 
 - [canonical project structure](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1204r0.html)
 - [sascha willem's examples](https://github.com/SaschaWillems/Vulkan)
+- [using spirv-cross with vulkan](https://www.khronos.org/assets/uploads/developers/library/2016-vulkan-devday-uk/4-Using-spir-v-with-spirv-cross.pdf)
