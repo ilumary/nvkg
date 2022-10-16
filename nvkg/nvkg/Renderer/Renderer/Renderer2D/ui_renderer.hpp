@@ -12,6 +12,11 @@ namespace nvkg {
 
         public:
 
+            struct UIPushConstant {
+                glm::vec2 scale;
+                glm::vec2 translate;
+            };
+
             UIRenderer();
             ~UIRenderer();
 

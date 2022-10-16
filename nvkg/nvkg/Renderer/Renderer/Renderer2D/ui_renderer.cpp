@@ -25,10 +25,17 @@ namespace nvkg {
     void UIRenderer::render(VkCommandBuffer& cmdb, std::span<UIComponent*> uic) {
         if(uic.empty()) return;
 
+        UIPushConstant push{};
+
         ui_material.bind(cmdb);
 
         //TODO merge meshes because its all the same pipeline and we can save some draw calls
         for(auto& u : uic) {
+            push.scale = u->scale;
+            push.translate = u->translate;
+
+            ui_material.push_constant(cmdb, "st", sizeof(UIPushConstant), &push);
+
             u->ui_model.bind(cmdb);
             u->ui_model.draw(cmdb, 0); 
         }

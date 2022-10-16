@@ -68,7 +68,6 @@ namespace nvkg {
             }
 
             virtual bool _on_load() { return true; }
-
             virtual void _on_delete() {}
     };
 
@@ -77,6 +76,13 @@ namespace nvkg {
             const Mesh::MeshData* mesh;
             Model ui_model;
 
+            glm::vec2 scale;
+            glm::vec2 translate;
+
+            //add transform, scale, options to move by [x, y],...
+            //create static functions which return mesh of desired object:
+            //  UIComponent c ("button", UIComponent::Button(height, width, _on_press))...
+
             // construct with either Vertex2D or MeshData where size == sizeof(Vertex2D) => should be 28
             UIComponent(std::string name, const Mesh::MeshData* mesh) : Component(name) {
                 if(mesh->vertexSize != sizeof(Vertex2D)) {
@@ -84,11 +90,25 @@ namespace nvkg {
                 }
                 this->mesh = mesh;
                 ui_model.set_mesh(*mesh);
+
+                scale = {1.f, 1.f};
+                translate = {0.f, 0.f};
             }
             
             virtual bool _on_load() { return true; }
-
             virtual void _on_delete() {}
+    };
+
+    class SDFText : public Component {
+        public:
+            
+            SDFText(std::string name, std::string text) : Component(name) {
+
+            }
+
+            virtual bool _on_load() { return true; }
+            virtual void _on_delete() {}
+
     };
 
 }
