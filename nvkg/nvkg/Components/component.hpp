@@ -80,8 +80,10 @@ namespace nvkg {
             glm::vec2 translate;
 
             //add transform, scale, options to move by [x, y],...
+            //add option for outline
             //create static functions which return mesh of desired object:
             //  UIComponent c ("button", UIComponent::Button(height, width, _on_press))...
+            //  Make UiComponents in external header, bounding box without renderable content
 
             // construct with either Vertex2D or MeshData where size == sizeof(Vertex2D) => should be 28
             UIComponent(std::string name, const Mesh::MeshData* mesh) : Component(name) {

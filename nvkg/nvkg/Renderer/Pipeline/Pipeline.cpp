@@ -5,190 +5,104 @@
 #include <iostream>
 
 namespace nvkg {
-    Pipeline::Pipeline(
-        const PipelineConfig::ShaderConfig* shaders,
-        uint32_t shaderCount,
-        const PipelineConfigInfo& configInfo
-    ) : Pipeline() {
-        CreateGraphicsPipeline(shaders, shaderCount, configInfo);
-    }
 
     Pipeline::Pipeline() {}
 
     Pipeline::~Pipeline() {
-        if (isFreed) return;
-
-        ClearPipeline();
-
-        isFreed = true;
+        if (freed) return;
+        clear();
+        freed = true;
     }
 
-    void Pipeline::CreateGraphicsPipeline(
-        const PipelineConfig::ShaderConfig* shaders,
-        uint32_t shaderCount,
-        const PipelineConfigInfo& configInfo) {
+    void Pipeline::create_graphics_pipeline( const PipelineConfig::ShaderConfig* shaders, uint32_t shader_count,
+                const PipelineInit& p_config ) {
 
-        NVKG_ASSERT(configInfo.pipelineLayout != VK_NULL_HANDLE, 
+        NVKG_ASSERT(p_config.pipeline_layout != VK_NULL_HANDLE, 
                 "Cannot create graphics pipeline: no pipeline config provided in configInfo");
         
-        NVKG_ASSERT(configInfo.renderPass != VK_NULL_HANDLE, 
+        NVKG_ASSERT(p_config.render_pass != VK_NULL_HANDLE, 
                 "Cannot create graphics pipeline: no renderpass config provided in configInfo");
         
-        NVKG_ASSERT(shaderCount <= MAX_SHADER_MODULES, "Max allowed shader modules has been reached.");
+        NVKG_ASSERT(shader_count <= MAX_SHADER_MODULES, "Max allowed shader modules has been reached.");
 
-        shaderModuleCount = shaderCount;
-        
-        VkPipelineShaderStageCreateInfo shaderStages[shaderCount];
+        shader_module_count = shader_count;
 
-        PipelineConfig::PipelineStage stages[shaderCount];
+        VkPipelineShaderStageCreateInfo shader_stages[shader_count];
 
-        for (size_t i = 0; i < shaderCount; i++) {
+        PipelineConfig::PipelineStage stages[shader_count];
+
+        for (size_t i = 0; i < shader_count; i++) {
             if(shaders[i].filePath == nullptr) {
-                shaderModules[i] = shaders[i].shader_module;
-            } else {
-                //auto shaderCode = ReadFile(shaders[i].filePath);
-                //CreateShaderModule(shaderCode, OUT &shaderModules[i]);
-            }
-
+                shader_modules[i] = shaders[i].shader_module;
+            } 
             stages[i] = shaders[i].stage;
         }
 
-        PipelineConfig::CreateDefaultPipelineStages(OUT shaderStages, stages, shaderModules, shaderCount);
+        PipelineConfig::CreateDefaultPipelineStages(OUT shader_stages, stages, shader_modules, shader_count);
 
-        // In order to pass in vertex information, we must assign a set of descriptions to the shader.
-        // These descriptions detail all data binding and which locations these bindings must be set to. 
-        // In our case, we have a generic set of descriptions for our Vertex structs. 
+        auto binding_descriptions = p_config.vertex_data.bindings;
+        auto attribute_descriptions = p_config.vertex_data.attributes;
 
-        // TODO: Maybe inject these into the config. Right now the pipeline is highly coupled 
-        // to the models. 
-        
-        auto bindingDescriptions = configInfo.vertexData.bindings;
-        auto attributeDescriptions = configInfo.vertexData.attributes;
+        VkPipelineVertexInputStateCreateInfo vertex_input_create_info{};
+        vertex_input_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        vertex_input_create_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(attribute_descriptions.size());
+        vertex_input_create_info.vertexBindingDescriptionCount = static_cast<uint32_t>(binding_descriptions.size());
+        vertex_input_create_info.pVertexAttributeDescriptions = attribute_descriptions.data();
+        vertex_input_create_info.pVertexBindingDescriptions = binding_descriptions.data();
 
-        // Bind the descriptions to the pipeline to allow us to pass in vertex info via 
-        // vertex buffers.
-        VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo{};
-        vertexInputCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-        vertexInputCreateInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
-        vertexInputCreateInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
-        vertexInputCreateInfo.pVertexBindingDescriptions = bindingDescriptions.data();
+        VkGraphicsPipelineCreateInfo pipelineCI = pipeline::pipeline_create_info(p_config.pipeline_layout, p_config.render_pass, 0);
 
-        // Pass in all pipeline config details to the pipeline create info struct. 
-        VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
-        pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineCreateInfo.stageCount = shaderCount;
-        pipelineCreateInfo.pStages = shaderStages;
-        pipelineCreateInfo.pVertexInputState = &vertexInputCreateInfo;
-        pipelineCreateInfo.pInputAssemblyState = &configInfo.inputAssemblyInfo;
-        pipelineCreateInfo.pViewportState = &configInfo.viewportInfo;
-        pipelineCreateInfo.pRasterizationState = &configInfo.rasterizationInfo;
-        pipelineCreateInfo.pMultisampleState = &configInfo.multisampleInfo;
-        pipelineCreateInfo.pColorBlendState = &configInfo.colorBlendInfo;
-        pipelineCreateInfo.pDynamicState = &configInfo.dynamicStateInfo;
-        pipelineCreateInfo.pDepthStencilState = &configInfo.depthStencilInfo;
+        pipelineCI.pInputAssemblyState = &p_config.input_assembly_state;
+		pipelineCI.pRasterizationState = &p_config.rasterization_state;
+		pipelineCI.pColorBlendState = &p_config.color_blend_state;
+		pipelineCI.pMultisampleState = &p_config.multisample_state;
+		pipelineCI.pViewportState = &p_config.viewport_state;
+		pipelineCI.pDepthStencilState = &p_config.depth_stencil_state;
+		pipelineCI.pDynamicState = &p_config.dynamic_state;
+        pipelineCI.pVertexInputState = &vertex_input_create_info;
+        pipelineCI.stageCount = shader_count;
+        pipelineCI.pStages = shader_stages;
 
-        pipelineCreateInfo.layout = configInfo.pipelineLayout;
-        pipelineCreateInfo.renderPass = configInfo.renderPass;
-        pipelineCreateInfo.subpass = configInfo.subPass;
+        pipelineCI.basePipelineHandle = VK_NULL_HANDLE;
+        pipelineCI.basePipelineIndex = -1;
 
-        pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
-        pipelineCreateInfo.basePipelineIndex = -1;
-
-        auto device = VulkanDevice::get_device_instance();
-
-        NVKG_ASSERT(vkCreateGraphicsPipelines(device->device(), VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, OUT &graphicsPipeline) 
+        NVKG_ASSERT(vkCreateGraphicsPipelines(VulkanDevice::get_device_instance()->device(), VK_NULL_HANDLE, 1, &pipelineCI, nullptr, OUT &pipeline) 
             == VK_SUCCESS, "Failed to create graphics pipeline!")
     }
 
-    void Pipeline::recreate_pipeline(
-        const PipelineConfig::ShaderConfig* shaders,
-        uint32_t shaderCount,
-        const PipelineConfigInfo& configInfo) {
-        CreateGraphicsPipeline(shaders, shaderCount, configInfo);
-    }
-
-    void Pipeline::ClearPipeline() {
+    void Pipeline::clear() {
         auto device = VulkanDevice::get_device_instance();
 
-        for (size_t i = 0; i < shaderModuleCount; i++) {
-            vkDestroyShaderModule(device->device(), shaderModules[i], nullptr);
+        for (size_t i = 0; i < shader_module_count; i++) {
+            vkDestroyShaderModule(device->device(), shader_modules[i], nullptr);
         }
         
-        vkDestroyPipeline(device->device(), graphicsPipeline, nullptr);
+        vkDestroyPipeline(device->device(), pipeline, nullptr);
     }
 
-    void Pipeline::DestroyPipeline() {
-        ClearPipeline();
-        isFreed = true;
+    void Pipeline::destroy() {
+        clear();
+        freed = true;
     }
 
     void Pipeline::bind(VkCommandBuffer commandBuffer) {
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
     }
 
-    PipelineConfigInfo Pipeline::DefaultPipelineConfig() {
-        PipelineConfigInfo configInfo {};
+    PipelineInit Pipeline::default_pipeline_init() {
+        PipelineInit pc{};
 
-        configInfo.inputAssemblyInfo = PipelineConfig::InitInputAssemblyStateCreateInfo();
-        
-        configInfo.viewportInfo = 
-                PipelineConfig::InitViewPortCreateInfo(1, nullptr, 1, nullptr);
-        
-        configInfo.rasterizationInfo = PipelineConfig::InitRasterizationCreateInfo(
-            VK_FALSE, 
-            VK_FALSE, 
-            VK_POLYGON_MODE_FILL, 
-            VK_CULL_MODE_NONE, 
-            VK_FRONT_FACE_CLOCKWISE,
-            VK_FALSE
-        );
+        pc.input_assembly_state = pipeline::pipeline_input_assembly_state_create_info(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 0, VK_FALSE);
+        pc.rasterization_state = pipeline::pipeline_rasterization_state_create_info(VK_POLYGON_MODE_FILL, VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_CLOCKWISE, 0);
+        pc.blend_attachment_state = pipeline::pipeline_color_blend_attachment_state(0xf, VK_FALSE);
+		pc.color_blend_state = pipeline::pipeline_color_blend_state_create_info(1, &pc.blend_attachment_state);
+        pc.depth_stencil_state = pipeline::pipeline_depth_stencil_state_create_info(VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS_OR_EQUAL);
+        pc.viewport_state = pipeline::pipeline_viewport_state_create_info(1, 1, 0);
+        pc.multisample_state = pipeline::pipeline_multisample_state_create_info(VK_SAMPLE_COUNT_1_BIT, 0);
+        pc.dynamic_state_enables = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+        pc.dynamic_state = pipeline::pipeline_dynamic_state_create_info(pc.dynamic_state_enables);
 
-        configInfo.multisampleInfo = PipelineConfig::InitMultiSampleCreateInfo(
-            VK_SAMPLE_COUNT_1_BIT, 
-            VK_FALSE, 
-            1.0f, 
-            nullptr, 
-            VK_FALSE, 
-            VK_FALSE
-        );
-
-        // Configures that types of colors we handle. In our case we allow a 4-part vector containing
-        // an R,G,B, and A value. 
-        configInfo.colorBlendAttachment = PipelineConfig::InitColorBlendAttachment(
-            VK_TRUE,
-            VK_BLEND_FACTOR_SRC_ALPHA,
-            VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-            VK_BLEND_OP_ADD,
-            VK_BLEND_FACTOR_SRC_ALPHA,
-            VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-            VK_BLEND_OP_ADD
-        );
-
-        // Specifies further configurations for color blending
-        configInfo.colorBlendInfo = PipelineConfig::InitColorBlendCreateInfo(
-            VK_FALSE, 
-            VK_LOGIC_OP_COPY, 
-            1, 
-            &configInfo.colorBlendAttachment
-        );
-
-        // Determines how image depth is handled
-        configInfo.depthStencilInfo = PipelineConfig::InitDepthStencilCreateInfo(
-            VK_TRUE, 
-            VK_TRUE, 
-            VK_COMPARE_OP_LESS, 
-            VK_FALSE, 
-            VK_FALSE
-        );
-
-        configInfo.dynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
-
-        configInfo.dynamicStateInfo = PipelineConfig::InitDynamicStateCreateInfo(
-            static_cast<uint32_t>(configInfo.dynamicStateEnables.size()),
-            configInfo.dynamicStateEnables.data()
-        );
-
-        return configInfo;
+        return pc;
     }
+
 }

@@ -45,7 +45,7 @@ namespace nvkg {
     void NVKGMaterial::create_layout( VkDescriptorSetLayout* layouts, uint32_t layoutCount, VkPushConstantRange* pushConstants, uint32_t pushConstantCount) {
         auto device = VulkanDevice::get_device_instance();
 
-        PipelineConfig::CreatePipelineLayout(
+        PipelineConfig::create_pipeline_layout(
             device->device(), 
             OUT &pipeline_layout, 
             layouts, 
@@ -69,7 +69,7 @@ namespace nvkg {
 
     void NVKGMaterial::recreate_pipeline() {
         // Clear our graphics pipeline before swapchain re-creation
-        pipeline.ClearPipeline();
+        pipeline.clear();
         prepare_pipeline();
     }
 
@@ -144,20 +144,14 @@ namespace nvkg {
         if (vert_shader) shader_configs.push_back(PipelineConfig::ShaderConfig { nullptr, PipelineConfig::PipelineStage::VERTEX, vert_shader->shader_module });
         if (frag_shader) shader_configs.push_back(PipelineConfig::ShaderConfig { nullptr, PipelineConfig::PipelineStage::FRAGMENT, frag_shader->shader_module });
 
-        auto pipelineConfig = Pipeline::DefaultPipelineConfig();
-        pipelineConfig.rasterizationInfo.polygonMode = (VkPolygonMode)shader_config.mode;
-        pipelineConfig.inputAssemblyInfo.topology = (VkPrimitiveTopology)shader_config.topology;
-        
-        pipelineConfig.renderPass = SwapChain::GetInstance()->GetRenderPass()->GetRenderPass();
-        pipelineConfig.pipelineLayout = pipeline_layout;
-        
-        pipelineConfig.vertexData = VertexDescription::CreateDescriptions(vertex_binds.size(), vertex_binds.data());
+        PipelineInit pipeline_conf = Pipeline::default_pipeline_init();
+        pipeline_conf.rasterization_state.polygonMode = (VkPolygonMode)shader_config.mode;
+        pipeline_conf.input_assembly_state.topology = (VkPrimitiveTopology)shader_config.topology;
+        pipeline_conf.render_pass = SwapChain::GetInstance()->GetRenderPass()->GetRenderPass();
+        pipeline_conf.pipeline_layout = pipeline_layout;
+        pipeline_conf.vertex_data = VertexDescription::CreateDescriptions(vertex_binds.size(), vertex_binds.data());
 
-        pipeline.recreate_pipeline(
-            shader_configs.data(),
-            shader_count,
-            pipelineConfig
-        );
+        pipeline.create_graphics_pipeline(shader_configs.data(), shader_count, pipeline_conf);
     }
 
     void NVKGMaterial::setup_descriptor_sets() {
@@ -288,7 +282,7 @@ namespace nvkg {
             vkDestroyDescriptorSetLayout(device->device(), layout, nullptr);
         }
 
-        pipeline.DestroyPipeline();
+        pipeline.destroy();
         
         vkDestroyPipelineLayout(device->device(), pipeline_layout, nullptr);
         

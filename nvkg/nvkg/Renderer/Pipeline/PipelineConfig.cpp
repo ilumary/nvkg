@@ -54,189 +54,7 @@ namespace nvkg {
         return { binding, stride, inputRate, attibuteCount, attributes};
     }
 
-    VkPipelineInputAssemblyStateCreateInfo PipelineConfig::InitInputAssemblyStateCreateInfo(
-            const void* pNext, 
-            VkPipelineInputAssemblyStateCreateFlags flags, 
-            VkPrimitiveTopology topology,
-            VkBool32 restartEnabled) {
-        auto sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-
-        return {sType, pNext, flags, topology, restartEnabled};
-    }
-
-    VkPipelineViewportStateCreateInfo PipelineConfig::InitViewPortCreateInfo(
-            uint32_t viewportCount,
-            const VkViewport* pViewports,
-            uint32_t scissorCount,
-            const VkRect2D* pScissors,
-            VkPipelineViewportStateCreateFlags flags,
-            const void* pNext) {
-        auto sType =  VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-        return {sType, pNext, flags, viewportCount, pViewports, scissorCount, pScissors};
-    }
-
-    VkPipelineRasterizationStateCreateInfo PipelineConfig::InitRasterizationCreateInfo(
-            VkBool32 depthClampEnable,
-            VkBool32 rasterizerDiscardEnable,
-            VkPolygonMode polygonMode,
-            VkCullModeFlags cullMode,
-            VkFrontFace frontFace, 
-            VkBool32 depthBiasEnable,
-            float depthBiasConstantFactor,
-            float depthBiasClamp,
-            float depthBiasSlopeFactor,
-            float lineWidth,
-            VkPipelineRasterizationStateCreateFlags flags,
-            const void* pNext)
-    {
-        auto sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        return {
-            sType, 
-            pNext,
-            flags, 
-            depthClampEnable,
-            rasterizerDiscardEnable,
-            polygonMode,
-            cullMode,
-            frontFace,
-            depthBiasEnable,
-            depthBiasConstantFactor,
-            depthBiasClamp,
-            depthBiasSlopeFactor,
-            lineWidth
-        };
-    }
-
-    VkPipelineMultisampleStateCreateInfo PipelineConfig::InitMultiSampleCreateInfo(
-            VkSampleCountFlagBits rasterisationSamples,
-            VkBool32 sampleShadingEnable, 
-            float minSampleShading, 
-            const VkSampleMask* pSampleMask, 
-            VkBool32 alphaToCoverageEnable,
-            VkBool32 alphaToOneEnable,
-            VkPipelineMultisampleStateCreateFlags flags,
-            const void* pNext)
-    {
-        auto sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        return {
-            sType, 
-            pNext, 
-            flags, 
-            rasterisationSamples, 
-            sampleShadingEnable, 
-            minSampleShading, 
-            pSampleMask, 
-            alphaToCoverageEnable, 
-            alphaToOneEnable
-        };
-    }
-
-    VkPipelineColorBlendAttachmentState PipelineConfig::InitColorBlendAttachment(
-            VkBool32 blendEnable,
-            VkBlendFactor srcColorBlendFactor,
-            VkBlendFactor dstColorBlendFactor,
-            VkBlendOp colorBlendOp,
-            VkBlendFactor srcAlphaBlendFactor,
-            VkBlendFactor dstAlphaBlendFactor,
-            VkBlendOp alphaBlendOp,
-            VkColorComponentFlags colorWriteMask)
-    {
-        return {
-            blendEnable, 
-            srcColorBlendFactor,
-            dstColorBlendFactor,
-            colorBlendOp,
-            srcAlphaBlendFactor,
-            dstAlphaBlendFactor,
-            alphaBlendOp,
-            colorWriteMask
-        };
-    }
-
-    VkPipelineColorBlendStateCreateInfo PipelineConfig::InitColorBlendCreateInfo(
-            VkBool32 logicOpEnable,
-            VkLogicOp logicOp, 
-            uint32_t attachmentCount,
-            const VkPipelineColorBlendAttachmentState* pAttachments,
-            float blendConstantR,
-            float blendConstantG,
-            float blendConstantB,
-            float blendConstantA,
-            VkPipelineColorBlendStateCreateFlags flags,
-            const void* pNext)
-    {
-        auto sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-        VkPipelineColorBlendStateCreateInfo createInfo = {
-            sType, 
-            pNext,
-            flags, 
-            logicOpEnable,
-            logicOp,
-            attachmentCount, 
-            pAttachments,
-        };
-
-        createInfo.blendConstants[0] = blendConstantR;
-        createInfo.blendConstants[1] = blendConstantG;
-        createInfo.blendConstants[2] = blendConstantB;
-        createInfo.blendConstants[3] = blendConstantA;
-
-        return createInfo;
-    }
-
-    VkPipelineDepthStencilStateCreateInfo PipelineConfig::InitDepthStencilCreateInfo(
-            VkBool32 depthTestEnable,
-            VkBool32 depthWriteEnable, 
-            VkCompareOp depthCompareOp,
-            VkBool32 depthBoundsTestEnable,
-            VkBool32 stencilTestEnable,
-            VkStencilOpState front,
-            VkStencilOpState back, 
-            float minDepthBounds,
-            float maxDepthBounds,
-            VkPipelineDepthStencilStateCreateFlags flags, 
-            const void* pNext)
-    {
-        auto sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        return 
-        {
-            sType, 
-            pNext, 
-            flags, 
-            depthTestEnable, 
-            depthWriteEnable, 
-            depthCompareOp, 
-            depthBoundsTestEnable, 
-            stencilTestEnable, 
-            front, 
-            back, 
-            minDepthBounds, 
-            maxDepthBounds
-        };
-    }
-
-    VkPipelineDynamicStateCreateInfo PipelineConfig::InitDynamicStateCreateInfo(
-            uint32_t dynamicStateCount,
-            const VkDynamicState* pDynamicStates,
-            VkPipelineDynamicStateCreateFlags flags,
-            const void* pNext)
-    {
-        auto sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-        return 
-        {
-            sType, 
-            pNext, 
-            flags, 
-            dynamicStateCount,
-            pDynamicStates
-        };
-    }
-
-    VkPushConstantRange PipelineConfig::CreatePushConstantRange(VkShaderStageFlags stageflags, uint32_t offset, uint32_t size) {
-        return { stageflags, offset, size};
-    }
-
-    VkPipelineLayoutCreateInfo PipelineConfig::CreatePipelineLayoutCreateInfo(
+    VkPipelineLayoutCreateInfo PipelineConfig::create_pipeline_layout_create_info(
             VkDescriptorSetLayout* layouts, 
             uint32_t layoutCount, 
             VkPushConstantRange* pushConstants, 
@@ -246,7 +64,7 @@ namespace nvkg {
         return { sType, nullptr, 0, layoutCount, layouts, pushConstantCount, pushConstants};
     }
 
-    void PipelineConfig::CreatePipelineLayout(
+    void PipelineConfig::create_pipeline_layout(
             VkDevice device,
             VkPipelineLayout* pipelineLayout,
             VkDescriptorSetLayout* layouts, 
@@ -255,7 +73,7 @@ namespace nvkg {
             uint32_t pushConstantCount
     ) {
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = 
-                CreatePipelineLayoutCreateInfo(layouts, layoutCount, pushConstants, pushConstantCount);
+                create_pipeline_layout_create_info(layouts, layoutCount, pushConstants, pushConstantCount);
 
         NVKG_ASSERT(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, pipelineLayout) == VK_SUCCESS, 
             "Failed to create pipeline layout!");
