@@ -6,11 +6,8 @@ namespace nvkg {
     UIRenderer::~UIRenderer() {}
 
     void UIRenderer::init() {
-        nvkg::ShaderModule *ui_vert_shader = new nvkg::ShaderModule();
-        ui_vert_shader->create("ui", "vert");
-
-        nvkg::ShaderModule *ui_frag_shader = new nvkg::ShaderModule();
-        ui_frag_shader->create("ui", "frag");
+        nvkg::ShaderModule *ui_vert_shader = new nvkg::ShaderModule({"ui", "vert"});
+        nvkg::ShaderModule *ui_frag_shader = new nvkg::ShaderModule({"ui", "frag"});
 
         ui_material.set_vert_shader_new(ui_vert_shader);
         ui_material.set_frag_shader_new(ui_frag_shader);

@@ -97,11 +97,8 @@ int main() {
     nvkg::Scene* scene = context.create_scene("scene1");
     scene->set_camera(&camera);
 
-    nvkg::ShaderModule *vert_shader = new nvkg::ShaderModule();
-    vert_shader->create("simpleShader", "vert");
-
-    nvkg::ShaderModule *frag_shader = new nvkg::ShaderModule();
-    frag_shader->create("diffuseFragShader", "frag");
+    nvkg::ShaderModule *vert_shader = new nvkg::ShaderModule({"simpleShader", "vert"});
+    nvkg::ShaderModule *frag_shader = new nvkg::ShaderModule({"diffuseFragShader", "frag"});
 
     // Material Declaration
     nvkg::NVKGMaterial diffuse_mat_new(vert_shader, frag_shader); // TODO hide shader module creation

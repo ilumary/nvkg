@@ -32,6 +32,16 @@ namespace nvkg {
     class ShaderModule {
         public:
 
+            struct ShaderInit {
+                std::string name, stage, entrance_function = "main";
+            };
+
+            ShaderModule(ShaderInit init) { create(init.name, init.stage, init.entrance_function); };
+            ~ShaderModule() { cleanup(); };
+
+            ShaderModule(const ShaderModule&) = default;
+            ShaderModule& operator=(const ShaderModule&) = default;
+
             struct VertexBinding {
                 std::vector<VertexDescription::Attribute> attributes{};
                 uint32_t vertexStride = 0;
@@ -47,15 +57,6 @@ namespace nvkg {
             std::vector<ShaderResource> shader_resources{};
 
             uint32_t combined_uniform_size = 0;
-
-            ShaderModule() = default;
-            ~ShaderModule() = default;
-            ShaderModule(const ShaderModule&) = default;
-            ShaderModule& operator=(const ShaderModule&) = default;
-            
-            void create(std::string name, std::string stage, std::string entrance_function = "main");
-
-            void cleanup();
 
         private:
             VulkanDevice *device;
@@ -76,6 +77,10 @@ namespace nvkg {
                 "ambient_occlusion_map",
                 "radiance_map"
             };
+
+            void create(std::string name, std::string stage, std::string entrance_function = "main");
+
+            void cleanup();
 
             /*
             * Parses binary data and returns it as an array of chars.

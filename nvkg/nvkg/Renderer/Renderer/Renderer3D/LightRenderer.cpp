@@ -7,11 +7,8 @@ namespace nvkg {
     void LightRenderer::init(const char* globalDataAttributeName, const uint64_t& globalDataSize) {
         glob_data_id = INTERN_STR(globalDataAttributeName);
 
-        nvkg::ShaderModule *light_vert_shader = new nvkg::ShaderModule();
-        light_vert_shader->create("pointLight", "vert");
-
-        nvkg::ShaderModule *light_frag_shader = new nvkg::ShaderModule();
-        light_frag_shader->create("pointLight", "frag");
+        nvkg::ShaderModule *light_vert_shader = new nvkg::ShaderModule({"pointLight", "vert"});
+        nvkg::ShaderModule *light_frag_shader = new nvkg::ShaderModule({"pointLight", "frag"});
 
         light_material.set_vert_shader_new(light_vert_shader);
         light_material.set_frag_shader_new(light_frag_shader);
