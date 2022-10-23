@@ -6,17 +6,13 @@ namespace nvkg {
     UIRenderer::~UIRenderer() {}
 
     void UIRenderer::init() {
-        nvkg::ShaderModule *ui_vert_shader = new nvkg::ShaderModule({"ui", "vert"});
-        nvkg::ShaderModule *ui_frag_shader = new nvkg::ShaderModule({"ui", "frag"});
-
-        ui_material.set_vert_shader_new(ui_vert_shader);
-        ui_material.set_frag_shader_new(ui_frag_shader);
-
-        ui_material.create_material();
+        ui_material = std::unique_ptr<NVKGMaterial>(new NVKGMaterial({
+            .shaders = {{"ui", "vert"}, {"ui", "frag"}},
+        }));
     }
 
     void UIRenderer::destroy() {
-        ui_material.destroy_material();
+        ui_material->destroy_material();
     }
 
     void UIRenderer::render(VkCommandBuffer& cmdb, std::span<UIComponent*> uic) {
@@ -24,17 +20,16 @@ namespace nvkg {
 
         UIPushConstant push{};
 
-        ui_material.bind(cmdb);
+        ui_material->bind(cmdb);
 
-        //TODO merge meshes because its all the same pipeline and we can save some draw calls
         for(auto& u : uic) {
             push.scale = u->scale;
             push.translate = u->translate;
 
-            ui_material.push_constant(cmdb, "st", sizeof(UIPushConstant), &push);
+            ui_material->push_constant(cmdb, "st", sizeof(UIPushConstant), &push);
 
             u->ui_model.bind(cmdb);
-            u->ui_model.draw(cmdb, 0); 
+            u->ui_model.draw(cmdb, 0);
         }
     }
 

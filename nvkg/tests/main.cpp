@@ -97,7 +97,7 @@ int main() {
     nvkg::Scene* scene = context.create_scene("scene1");
     scene->set_camera(&camera);
 
-    nvkg::ShaderModule *vert_shader = new nvkg::ShaderModule({"simpleShader", "vert"});
+    /*nvkg::ShaderModule *vert_shader = new nvkg::ShaderModule({"simpleShader", "vert"});
     nvkg::ShaderModule *frag_shader = new nvkg::ShaderModule({"diffuseFragShader", "frag"});
 
     // Material Declaration
@@ -105,9 +105,14 @@ int main() {
 
     // Load and apply texture to material
     nvkg::SampledTexture* tex = tex_mng->load_2d_img("../assets/textures/tex1.png");
-    diffuse_mat_new.set_texture(tex, "texSampler", VK_SHADER_STAGE_FRAGMENT_BIT);
+    diffuse_mat_new.set_texture(tex, "texSampler");
 
-    nvkg::NVKGMaterial::create_materials({&diffuse_mat_new});
+    diffuse_mat_new.create_material();*/
+
+    nvkg::NVKGMaterial diffuse_mat_new({
+        .shaders = {{"simpleShader", "vert"}, {"diffuseFragShader", "frag"}},
+        .textures = {{"texSampler", tex_mng->load_2d_img("../assets/textures/tex1.png")}},
+    });
 
     // Generating models from .obj files
     nvkg::Model cubeObjModel("assets/models/cube.obj");

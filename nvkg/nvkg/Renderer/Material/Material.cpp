@@ -9,30 +9,26 @@ namespace nvkg {
         vert_shader = nullptr;
         frag_shader = nullptr;
         shader_count = 0;
-        buffer_size = 0;
     }
 
-    NVKGMaterial::NVKGMaterial(ShaderModule* vertex_shader, ShaderModule* fragment_shader) {
-        NVKG_ASSERT(vertex_shader != nullptr && fragment_shader != nullptr, 
-            "Error: the vertex and fragment shaders must be initialised");
+    NVKGMaterial::NVKGMaterial(MaterialConfig config) : NVKGMaterial() {
+        for(auto& shader : config.shaders) {
+            //TODO make more dynamic
+            if(shader.stage == "vert") {
+                vert_shader = new nvkg::ShaderModule({shader.name, shader.stage});
+                buffer_size += vert_shader->combined_uniform_size;
+            } else if(shader.stage == "frag") {
+                frag_shader = new nvkg::ShaderModule({shader.name, shader.stage});
+                buffer_size += frag_shader->combined_uniform_size;
+            }
+            shader_count += 1;
+        }
 
-        vert_shader = vertex_shader;
-        frag_shader = fragment_shader;
-        shader_count = 2;
+        for(auto& texture : config.textures) {
+            set_texture(texture.second, texture.first);
+        }
 
-        buffer_size = vert_shader->combined_uniform_size + frag_shader->combined_uniform_size;
-    }
-
-    void NVKGMaterial::set_vert_shader_new(ShaderModule* shader) {
-        if(vert_shader == nullptr) shader_count++;
-        vert_shader = shader; 
-        buffer_size += shader->combined_uniform_size;
-    }
-
-    void NVKGMaterial::set_frag_shader_new(ShaderModule* shader) {
-        if(frag_shader == nullptr) shader_count++;
-        frag_shader = shader; 
-        buffer_size += shader->combined_uniform_size;
+        create_material();
     }
 
     NVKGMaterial::~NVKGMaterial() {
@@ -73,10 +69,10 @@ namespace nvkg {
         prepare_pipeline();
     }
 
-    void NVKGMaterial::set_texture(SampledTexture* tex, std::string tex_name, VkShaderStageFlagBits shader_stage) {
+    void NVKGMaterial::set_texture(SampledTexture* tex, std::string tex_name) {
         auto id = INTERN_STR(tex_name.c_str());
         logger::debug() << "Added texture with id " << id << " to material";
-        textures[id] = {id, shader_stage, tex};
+        textures[id] = tex;
     }
 
     void NVKGMaterial::prepare_desc_set_layouts() {
@@ -185,8 +181,8 @@ namespace nvkg {
                     }
 
                     descriptor_image_infos[img_counter] = {
-                        .sampler = textures[prop.id].texture->sampler->sampler,
-                        .imageView = textures[prop.id].texture->image_view->image_view,
+                        .sampler = textures[prop.id]->sampler->sampler,
+                        .imageView = textures[prop.id]->image_view->image_view,
                         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                     };
 
@@ -291,10 +287,6 @@ namespace nvkg {
         isFreed = true;
     }
 
-    void NVKGMaterial::set_uniform_data(VkDeviceSize dataSize, const void* data) {
-        Buffer::copy_data(buffer, dataSize, data);
-    }
-
     void NVKGMaterial::set_uniform_data(Utils::StringId id, VkDeviceSize dataSize, const void* data) {
         for(const auto& [k, v] : resources_per_set) {
             for(auto& prop : v) {
@@ -342,10 +334,6 @@ namespace nvkg {
         }
 
         logger::debug(logger::Level::Error) << "Error while setting uniform data";
-    }
-
-    void NVKGMaterial::create_materials(std::initializer_list<NVKGMaterial*> materials) {
-        for (auto material : materials) material->create_material();
     }
 
     void NVKGMaterial::create_material() {

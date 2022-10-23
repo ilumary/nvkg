@@ -42,7 +42,7 @@ namespace nvkg {
             };
 
             Model light_model;
-            NVKGMaterial light_material;
+            std::unique_ptr<NVKGMaterial> light_material;
 
             Utils::StringId glob_data_id;
 

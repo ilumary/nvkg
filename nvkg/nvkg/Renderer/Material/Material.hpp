@@ -19,42 +19,28 @@ namespace nvkg {
 
     class NVKGMaterial {
         public:
-            
-            enum PolygonMode {
-                FILL = 0, 
-                LINE = 1, 
-                POINT = 2
-            };
 
-            enum Topology {
-                LINE_LIST = 1,
-                LINE_STRIP = 2,
-                TRIANGLE_LIST = 3
+            //TODO somehow get pointer to global ubo for continuos update without explicitly calling update from renderer
+            struct MaterialConfig {
+                std::vector<ShaderModule::ShaderInit> shaders;
+                std::map<std::string, SampledTexture*> textures;
             };
 
             NVKGMaterial();
-            NVKGMaterial(ShaderModule* vertex_shader, ShaderModule* fragment_shader);
+            NVKGMaterial(const MaterialConfig config);
 
             NVKGMaterial(const NVKGMaterial&) = delete;
             NVKGMaterial& operator=(const NVKGMaterial&) = delete;
 
             ~NVKGMaterial();
 
-            void set_polygon_mode(PolygonMode mode) { shader_config.mode = mode; }
-            void set_topology(Topology topology) { shader_config.topology = topology; }
-            void create_material();
-
-            void set_uniform_data(VkDeviceSize dataSize, const void* data);
             void set_uniform_data(Utils::StringId id, VkDeviceSize dataSize, const void* data);
             void set_uniform_data(const char* name, VkDeviceSize dataSize, const void* data);
-
-            void set_vert_shader_new(ShaderModule* shader);
-            void set_frag_shader_new(ShaderModule* shader);
 
             bool has_prop(Utils::StringId id);
 
             void push_constant(VkCommandBuffer command_buffer, std::string name, size_t push_constant_size, const void* data);
-            void set_texture(SampledTexture* tex, std::string tex_name, VkShaderStageFlagBits shader_stage);
+            void set_texture(SampledTexture* tex, std::string tex_name);
 
             void bind(VkCommandBuffer commandBuffer);
 
@@ -64,18 +50,11 @@ namespace nvkg {
             void setup_descriptor_sets();
             void destroy_material();
 
-            static void create_materials(std::initializer_list<NVKGMaterial*> materials);
-
         private:
-
-            struct MaterialTexture {
-                Utils::StringId id;
-                VkShaderStageFlagBits stages;
-                SampledTexture* texture = nullptr;
-            };
 
             ShaderResource& get_res(Utils::StringId id);
 
+            void create_material();
             void add_shader(ShaderModule* shader);
             void set_shader_props(ShaderModule* shader, uint64_t& offset, uint16_t& res_counter);
 
@@ -85,11 +64,6 @@ namespace nvkg {
                 VkPushConstantRange* pushConstants = nullptr, 
                 uint32_t pushConstantCount = 0
             );
-
-            struct {
-                PolygonMode mode = PolygonMode::FILL;
-                Topology topology = Topology::TRIANGLE_LIST;
-            } shader_config;
 
             uint32_t shader_count = 0;
 
@@ -109,7 +83,7 @@ namespace nvkg {
             const unsigned short set_mask = 0x00FF;
             const unsigned short index_mask = 0xFF00;
 
-            std::map<uint32_t, MaterialTexture> textures{};
+            std::map<uint32_t, SampledTexture*> textures{};
 
             std::map<std::string, VkPushConstantRange> push_constants_new{}; //
             std::vector<VertexDescription::Binding> vertex_binds{};

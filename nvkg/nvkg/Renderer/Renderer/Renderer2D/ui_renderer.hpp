@@ -30,8 +30,7 @@ namespace nvkg {
 
         private:
 
-            NVKGMaterial ui_material;
-
+            std::unique_ptr<NVKGMaterial> ui_material;
     };
 
 }
