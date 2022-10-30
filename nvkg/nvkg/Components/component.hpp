@@ -10,15 +10,16 @@
 #include <nvkg/Renderer/Core.hpp>
 #include <nvkg/Renderer/Model/Model.hpp>
 
+template <typename T>
 class Component {
     public:
 
         Component(std::string s) : name(s) {};
-        virtual ~Component() {};
+        ~Component() {};
 
-        //every BaseType implements basic methods, TODO make scriptable
-        [[nodiscard]] virtual bool _on_load() = 0;
-        virtual void _on_delete() = 0; 
+        //TODO make scriptable
+        [[nodiscard]] bool _on_load() { static_cast<T*>(this)->_on_load(); }
+        [[nodiscard]] bool _on_delete() { static_cast<T*>(this)->_on_delete(); }
 
         //update logic is passed to child object as lambda
         void _on_update(std::function<void()> func) { _on_update_func = func; }
@@ -55,7 +56,7 @@ class Component {
 
 namespace nvkg {
 
-    class PointLight : public Component {
+    class PointLight : public Component<PointLight> {
         public:
             glm::vec4 color = glm::vec4(1.f, 1.f, 1.f, 0.2f);
             glm::vec4 ambient = glm::vec4(1.f, 1.f, 1.f, .02f);
@@ -67,11 +68,11 @@ namespace nvkg {
                 this->color = color; this->ambient = ambient; this->position = position; this->radius = radius;
             }
 
-            virtual bool _on_load() { return true; }
-            virtual void _on_delete() {}
+            bool _on_load() { return true; }
+            bool _on_delete() { return true; }
     };
 
-    class UIComponent : public Component {
+    class UIComponent : public Component<UIComponent> {
         public:
             const Mesh::MeshData* mesh;
             Model ui_model;
@@ -97,19 +98,19 @@ namespace nvkg {
                 translate = {0.f, 0.f};
             }
             
-            virtual bool _on_load() { return true; }
-            virtual void _on_delete() {}
+            bool _on_load() { return true; }
+            bool _on_delete() { return true; }
     };
 
-    class SDFText : public Component {
+    class SDFText : public Component<SDFText> {
         public:
             
             SDFText(std::string name, std::string text) : Component(name) {
 
             }
 
-            virtual bool _on_load() { return true; }
-            virtual void _on_delete() {}
+            bool _on_load() { return true; }
+            bool _on_delete() { return true; }
 
     };
 

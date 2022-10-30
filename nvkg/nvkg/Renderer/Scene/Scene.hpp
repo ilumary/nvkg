@@ -9,14 +9,14 @@
 
 namespace nvkg {
 
-    class Scene : public Component {
+    class Scene : public Component<Scene> {
         public:
 
             Scene(std::string name);
-            virtual ~Scene();
+            ~Scene();
 
-            virtual bool _on_load() { return true; }
-            virtual void _on_delete() {}
+            bool _on_load() { return true; }
+            bool _on_delete() { return true; }
 
             bool updated;
 
