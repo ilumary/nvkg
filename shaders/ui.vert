@@ -19,5 +19,6 @@ out gl_PerVertex {
 void main() {
 	outUV = inUV;
 	outColor = inColor;
-	gl_Position = vec4(inPos * st.scale + st.translate, 0.0, 1.0);
+	vec2 pos = ((inPos + st.translate) * st.scale * 2) - 1;
+	gl_Position = vec4(pos, 0.0, 1.0);
 }

@@ -20,9 +20,9 @@ static const constexpr int WIDTH = 1280;
 static const constexpr int HEIGHT = 720;
 
 nvkg::Vertex2D tv[] = {
-    {{-1.f, -1.f}, {0.f, 1.f}, {1.f, 0.f, 0.f, 1.f}},
-    {{0.f, -1.f}, {0.f, 1.f}, {0.f, 1.f, 0.f, 1.f}}, 
-    {{-1.f, 0.f}, {0.f, 1.f}, {0.f, 0.f, 1.f, 1.f}}
+    {{.1f, .1f}, {0.f, 1.f}, {1.f, 0.f, 0.f, 1.f}},
+    {{.1f, .4f}, {0.f, 1.f}, {0.f, 1.f, 0.f, 1.f}}, 
+    {{.4f, .1f}, {0.f, 1.f}, {0.f, 0.f, 1.f, 1.f}}
 };
 
 uint32_t indices[] = {
