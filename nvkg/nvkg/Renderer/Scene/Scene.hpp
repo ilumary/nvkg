@@ -9,7 +9,7 @@
 
 namespace nvkg {
 
-    class Scene : public Component<Scene> {
+    class Scene : public component<Scene> {
         public:
 
             Scene(std::string name);

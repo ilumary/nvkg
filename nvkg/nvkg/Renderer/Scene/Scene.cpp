@@ -2,7 +2,7 @@
 
 namespace nvkg {
 
-    Scene::Scene(std::string name) : Component(name) {}
+    Scene::Scene(std::string name) : component(name) {}
 
     Scene::~Scene() {}
 
