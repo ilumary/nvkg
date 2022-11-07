@@ -112,21 +112,20 @@ namespace nvkg {
     void VulkanImage::alloc_mem(VkImageTiling tiling, VkImageUsageFlags usage, VkImageCreateFlags flags, VkImageLayout initial_layout,
                             VkSampleCountFlagBits sample_count, VkMemoryPropertyFlags memory_properties, VkImage &image,
                             VkDeviceMemory &memory) {
-        VkImageCreateInfo image_create_info = {
-            .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-            .flags = flags,
-            .extent.width = static_cast<uint32_t>(this->width),
-            .extent.height = static_cast<uint32_t>(this->height),
-            .extent.depth = static_cast<uint32_t>(this->depth),
-            .imageType = this->type,
-            .mipLevels = this->mip_levels,
-            .arrayLayers = this->array_layers,
-            .format = this->format, // can be changed at a later time
-            .tiling = tiling,
-            .usage = usage,
-            .initialLayout = initial_layout,
-            .samples = sample_count,
-        };
+        VkImageCreateInfo image_create_info = {};
+        image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        image_create_info.flags = flags;
+        image_create_info.extent.width = static_cast<uint32_t>(this->width);
+        image_create_info.extent.height = static_cast<uint32_t>(this->height);
+        image_create_info.extent.depth = static_cast<uint32_t>(this->depth);
+        image_create_info.imageType = this->type;
+        image_create_info.mipLevels = this->mip_levels;
+        image_create_info.arrayLayers = this->array_layers;
+        image_create_info.format = this->format; // can be changed at a later time
+        image_create_info.tiling = tiling;
+        image_create_info.usage = usage;
+        image_create_info.initialLayout = initial_layout;
+        image_create_info.samples = sample_count;
 		
         image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         /*image_create_info.queueFamilyIndexCount = 1;
@@ -189,16 +188,16 @@ namespace nvkg {
 				uint32_t block_count_y = (image_height + (block_height - 1)) / block_height;
 				uint32_t block_count_z = (depth + (block_depth - 1)) / block_depth;
 
-				VkBufferImageCopy buffer_copy_region = {
-                    .imageSubresource.aspectMask = this->aspect_flags,
-                    .imageSubresource.mipLevel = level,
-                    .imageSubresource.baseArrayLayer = layer,
-                    .imageSubresource.layerCount = 1,
-                    .imageExtent.width = image_width,
-                    .imageExtent.height = image_height,
-                    .imageExtent.depth = static_cast<uint32_t>(depth),
-                    .bufferOffset = offset,
-                };
+				VkBufferImageCopy buffer_copy_region = {};
+                buffer_copy_region.imageSubresource.aspectMask = this->aspect_flags;
+                buffer_copy_region.imageSubresource.mipLevel = level;
+                buffer_copy_region.imageSubresource.baseArrayLayer = layer;
+                buffer_copy_region.imageSubresource.layerCount = 1;
+                buffer_copy_region.imageExtent.width = image_width;
+                buffer_copy_region.imageExtent.height = image_height;
+                buffer_copy_region.imageExtent.depth = static_cast<uint32_t>(depth);
+                buffer_copy_region.bufferOffset = offset;
+                
 
 				buffer_copy_regions.push_back(buffer_copy_region);
 				offset += block_count_x * block_count_y * block_count_z * block_size;

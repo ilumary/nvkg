@@ -12,7 +12,8 @@ namespace nvkg {
     }
 
     NVKGMaterial::NVKGMaterial(MaterialConfig config) : NVKGMaterial() {
-        for(auto& shader : config.shaders) {
+        config_ = config;
+        for(auto& shader : config_.shaders) {
             //TODO make more dynamic
             if(shader.stage == "vert") {
                 vert_shader = new nvkg::ShaderModule({shader.name, shader.stage});
@@ -24,7 +25,7 @@ namespace nvkg {
             shader_count += 1;
         }
 
-        for(auto& texture : config.textures) {
+        for(auto& texture : config_.textures) {
             set_texture(texture.second, texture.first);
         }
 
@@ -141,8 +142,7 @@ namespace nvkg {
         if (frag_shader) shader_configs.push_back(PipelineConfig::ShaderConfig { nullptr, PipelineConfig::PipelineStage::FRAGMENT, frag_shader->shader_module });
 
         PipelineInit pipeline_conf = Pipeline::default_pipeline_init();
-        pipeline_conf.rasterization_state.polygonMode = (VkPolygonMode)shader_config.mode;
-        pipeline_conf.input_assembly_state.topology = (VkPrimitiveTopology)shader_config.topology;
+        pipeline_conf.rasterization_state.cullMode = VK_CULL_MODE_NONE;
         pipeline_conf.render_pass = SwapChain::GetInstance()->GetRenderPass()->GetRenderPass();
         pipeline_conf.pipeline_layout = pipeline_layout;
         pipeline_conf.vertex_data = VertexDescription::CreateDescriptions(vertex_binds.size(), vertex_binds.data());

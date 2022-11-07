@@ -24,7 +24,7 @@ namespace nvkg {
             struct MaterialConfig {
                 std::vector<ShaderModule::ShaderInit> shaders;
                 std::map<std::string, SampledTexture*> textures;
-            };
+            } config_;
 
             NVKGMaterial();
             NVKGMaterial(const MaterialConfig config);

@@ -5,13 +5,19 @@
 #include <map>
 #include <string>
 #include <functional>
+#include <span>
+#include <variant>
 
 #include <nvkg/Utils/logger.hpp>
 #include <nvkg/Renderer/Core.hpp>
 #include <nvkg/Renderer/Model/Model.hpp>
 
+template <typename ... Ts>
+using poly_T = std::variant<Ts...>;
+
 template <typename derived_t>
 struct component {
+
     public:
 
         component(std::string s) : name(s) {};

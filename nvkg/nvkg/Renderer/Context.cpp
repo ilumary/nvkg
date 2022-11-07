@@ -31,8 +31,8 @@ namespace nvkg {
 
         VkCommandBufferAllocateInfo allocInfo {
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
             .commandPool = device_.get_command_pool(),
+            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
             .commandBufferCount = static_cast<uint32_t>(command_buffers.size()),
         };
         

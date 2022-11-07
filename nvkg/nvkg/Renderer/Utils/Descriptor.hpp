@@ -15,10 +15,10 @@ namespace nvkg::descriptors {
             uint32_t descriptorCount = 1)
     {
             VkDescriptorSetLayoutBinding setLayoutBinding {
-                .descriptorType = type,
-                .stageFlags = stageFlags,
                 .binding = binding,
+                .descriptorType = type,
                 .descriptorCount = descriptorCount,
+                .stageFlags = stageFlags,
             };
             
             return setLayoutBinding;
@@ -30,8 +30,8 @@ namespace nvkg::descriptors {
     {
 			VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {
                 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-                .pBindings = pBindings,
                 .bindingCount = bindingCount,
+                .pBindings = pBindings,
             };
 			
 			return descriptorSetLayoutCreateInfo;
@@ -45,8 +45,8 @@ namespace nvkg::descriptors {
 			VkDescriptorSetAllocateInfo descriptorSetAllocateInfo {
                 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
                 .descriptorPool = descriptorPool,
-                .pSetLayouts = pSetLayouts,
                 .descriptorSetCount = descriptorSetCount,
+                .pSetLayouts = pSetLayouts,
             };
 			
 			return descriptorSetAllocateInfo;
@@ -62,10 +62,10 @@ namespace nvkg::descriptors {
 			VkWriteDescriptorSet writeDescriptorSet {
                 .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                 .dstSet = dstSet,
-                .descriptorType = type,
                 .dstBinding = binding,
-                .pBufferInfo = bufferInfo,
                 .descriptorCount = descriptorCount,
+                .descriptorType = type,
+                .pBufferInfo = bufferInfo,
             };
 			
 			return writeDescriptorSet;
@@ -81,10 +81,10 @@ namespace nvkg::descriptors {
 			VkWriteDescriptorSet writeDescriptorSet {
                 .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                 .dstSet = dstSet,
-                .descriptorType = type,
                 .dstBinding = binding,
-                .pImageInfo = imageInfo,
                 .descriptorCount = descriptorCount,
+                .descriptorType = type,
+                .pImageInfo = imageInfo,
             };
 			
 			return writeDescriptorSet;
