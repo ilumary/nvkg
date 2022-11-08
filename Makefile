@@ -31,9 +31,8 @@ objects := $(patsubst nvkg/%, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
 depends := $(patsubst %.o, %.d, $(objects))
 
 includes = -I $(abspath nvkg) -I $(externDir)/vulkan/include -I $(externDir)/glfw/include -I $(externDir)/glm -I $(externDir)/tinyobjloader -I $(externDir)/stb -I $(externDir)/vulkan/SPIRV-Cross/
-linkFlags = -L $(libDir) -lglfw3 -L $(libDir) -lspirv-cross
-compileFlags := -std=c++20 $(includes)
-
+linkFlags = -L $(libDir) -lglfw3 -L $(libDir) -lspirv-cross -L/opt/homebrew/opt/gcc/lib/gcc/12/
+compileFlags := -std=c++2b $(includes)
 glfwLib := $(libDir)/libglfw3.a
 
 vertSources = $(call rwildcard,shaders/,*.vert)
@@ -53,7 +52,8 @@ endif
 ifeq ($(UNAMEOS),Darwin)
     
     platform := macos
-    CXX ?= clang++
+    #CXX = /opt/homebrew/opt/llvm/bin/clang++
+	CXX = aarch64-apple-darwin22-c++-12
     volkDefines = VK_USE_PLATFORM_MACOS_MVK
     linkFlags += -framework CoreVideo -framework IOKit -framework Cocoa -framework GLUT
 endif
