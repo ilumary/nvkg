@@ -1,6 +1,6 @@
 # NVKG
 
-NVKG is a rendering engine and my next attempt to finally master vulkan. 
+NVKG is a rendering engine and my next attempt to finally master vulkan (and modern c++). 
 
 Currently (and for the forseeable future) only linux and macos are supported. I simply don't have access to a windows machine.
 
@@ -13,15 +13,13 @@ Current highlights are:
   - Material based rendering
   - Plug-and-play architecture
   - Model loading
-  - Texture support
+  - Fully functional Entity Component System
 
 Still to be done are:
   - Compute pipeline builder
   - Examples
-  - Skybox, (sdf)-text and billboard renderers
   - LUA scripting support
-  - Complete refactor of code base
-  - External config file for various settings
+  - UI Framework
   - lots more...
 
 ## Contents
