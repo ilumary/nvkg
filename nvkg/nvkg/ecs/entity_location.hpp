@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace co_ecs {
+namespace ecs {
 
 // forward declaration
 class archetype;
@@ -11,7 +11,7 @@ class archetype;
 class entity_location {
 public:
     // Non-owning pointer to an archetype this entity belongs to
-    co_ecs::archetype* archetype{};
+    ecs::archetype* archetype{};
 
     // Chunk index
     std::size_t chunk_index{};
@@ -20,4 +20,4 @@ public:
     std::size_t entry_index{};
 };
 
-} // namespace cobalt::ecs
+}

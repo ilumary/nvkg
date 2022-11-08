@@ -8,7 +8,7 @@
 #include <ranges>
 #include <vector>
 
-namespace co_ecs::detail {
+namespace ecs::detail {
 
 /// @brief Dynamically growing bitset
 ///
@@ -92,14 +92,14 @@ private:
     storage_type _blocks;
 };
 
-} // namespace cobalt::asl
+}
 
 namespace std {
 
 /// @brief Hash implementation for dynamic_bitset
 template<typename A>
-struct hash<co_ecs::detail::dynamic_bitset<A>> {
-    std::size_t operator()(const co_ecs::detail::dynamic_bitset<A>& bitset) const {
+struct hash<ecs::detail::dynamic_bitset<A>> {
+    std::size_t operator()(const ecs::detail::dynamic_bitset<A>& bitset) const {
         std::size_t hash = 0;
         for (auto block : bitset._blocks) {
             hash ^= block;
@@ -108,4 +108,4 @@ struct hash<co_ecs::detail::dynamic_bitset<A>> {
     }
 };
 
-} // namespace std
+}

@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace co_ecs::detail {
+namespace ecs::detail {
 
 /// @brief Sparse table implementation.
 /// @details The underlying layout is:
@@ -304,4 +304,4 @@ private:
     size_t _sparse_capacity{};
 };
 
-} // namespace cobalt::asl
+}

@@ -2,7 +2,7 @@
 
 #include <nvkg/ecs/detail/sparse_table.hpp>
 
-namespace co_ecs::detail {
+namespace ecs::detail {
 
 /// @brief Sparse map
 /// @tparam K Key type
@@ -11,4 +11,4 @@ namespace co_ecs::detail {
 template<std::unsigned_integral K, typename T, typename Allocator = std::allocator<std::pair<K, T>>>
 using sparse_map = sparse_table<K, T, true, Allocator>;
 
-} // namespace cobalt::asl
+}

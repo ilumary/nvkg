@@ -4,7 +4,7 @@
 #include <tuple>
 #include <type_traits>
 
-namespace co_ecs::detail {
+namespace ecs::detail {
 
 /// @brief Extracts Nth type parameter from parameter pack
 ///
@@ -83,4 +83,4 @@ struct unique_types<T1, T2> {
     static_assert(!std::is_same<T1, T2>::value, "Types must be unique within parameter pack");
 };
 
-} // namespace co_ecs::detail
+} // namespace ecs::detail

@@ -12,7 +12,7 @@
 #include <nvkg/ecs/detail/type_traits.hpp>
 #include <nvkg/ecs/type_meta.hpp>
 
-namespace co_ecs {
+namespace ecs {
 
 namespace detail {
 
@@ -397,4 +397,4 @@ private:
     storage_type _components_meta;
 };
 
-} // namespace co_ecs
+} // namespace ecs

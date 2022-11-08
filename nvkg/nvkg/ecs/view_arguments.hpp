@@ -2,7 +2,7 @@
 
 #include <nvkg/ecs/component.hpp>
 
-namespace co_ecs {
+namespace ecs {
 
 // Forward declaration of a view class
 template<component_reference... Args>
@@ -37,4 +37,4 @@ struct func_decomposer {
 };
 
 } // namespace detail
-} // namespace co_ecs
+} // namespace ecs

@@ -8,7 +8,7 @@
 #include <nvkg/ecs/view_arguments.hpp>
 
 
-namespace co_ecs {
+namespace ecs {
 
 /// @brief Registry is a container for all our entities and components. Components are stored in continuously in memory
 /// allowing for very fast iterations, a so called SoA approach. A set of unique components form an archetype, where
@@ -189,8 +189,7 @@ public:
     /// @return value_type Components tuple
     template<component_reference... Args>
     [[nodiscard]] std::tuple<Args...> get(entity ent) const
-        requires(!const_component_references_v<Args...>)
-    {
+        requires(!const_component_references_v<Args...>) {
         return get_impl<Args...>(*this, ent);
     }
 
@@ -213,7 +212,7 @@ public:
     /// @tparam Args Component references
     /// @return view<Args...> A view
     template<component_reference... Args>
-    co_ecs::view<Args...> view()
+    ecs::view<Args...> view()
         requires(!const_component_references_v<Args...>);
 
     /// @brief Create a const view based on component query in parameter pack
@@ -221,7 +220,7 @@ public:
     /// @tparam Args Component references
     /// @return view<Args...> A view
     template<component_reference... Args>
-    co_ecs::view<Args...> view() const
+    ecs::view<Args...> view() const
         requires const_component_references_v<Args...>;
 
     /// @brief Run func on every entity that matches the Args requirement
@@ -293,4 +292,4 @@ private:
     friend class view;
 };
 
-} // namespace co_ecs
+} // namespace ecs

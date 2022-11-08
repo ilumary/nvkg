@@ -12,10 +12,7 @@
 #include <nvkg/ecs/exceptions.hpp>
 
 
-namespace co_ecs {
-
-// NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
-// NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+namespace ecs {
 
 /// @brief Block metadata holds pointers where it begins, ends and a component metadata it holds
 struct block_metadata {
@@ -392,7 +389,4 @@ private:
     chunk_type _chunk;
 };
 
-// NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-// NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
-
-} // namespace co_ecs
+} // namespace ecs

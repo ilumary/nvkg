@@ -4,7 +4,7 @@
 
 #include <type_traits>
 
-namespace co_ecs {
+namespace ecs {
 
 /// @brief A view lets you get a viewable range over components of Args out of a registry
 ///
@@ -33,8 +33,7 @@ public:
     ///
     /// @return decltype(auto) Iterator
     decltype(auto) each()
-        requires(!is_const)
-    {
+        requires(!is_const) {
         return chunks(_registry.get_archetypes()) | std::views::join; // join all chunks together
     }
 
@@ -42,8 +41,7 @@ public:
     ///
     /// @return decltype(auto) Iterator
     decltype(auto) each() const
-        requires(is_const)
-    {
+        requires(is_const) {
         return chunks(_registry.get_archetypes()) | std::views::join; // join all chunks together
     }
 
@@ -51,8 +49,7 @@ public:
     ///
     /// @param func A callable to run on entity components
     void each(auto&& func)
-        requires(!is_const)
-    {
+        requires(!is_const) {
         for (auto chunk : chunks(_registry.get_archetypes())) {
             for (auto entry : chunk) {
                 std::apply(func, entry);
@@ -66,8 +63,7 @@ public:
     ///
     /// @param func A callable to run on entity components
     void each(auto&& func) const
-        requires(is_const)
-    {
+        requires(is_const) {
         for (auto chunk : chunks(_registry.get_archetypes())) {
             for (auto entry : chunk) {
                 std::apply(func, entry);
@@ -80,8 +76,7 @@ public:
     /// @param ent Entity to query
     /// @return value_type Components tuple
     value_type get(entity ent)
-        requires(!is_const)
-    {
+        requires(!is_const) {
         return _registry.template get<Args...>(ent);
     }
 
@@ -90,8 +85,7 @@ public:
     /// @param ent Entity to query
     /// @return value_type Components tuple
     value_type get(entity ent) const
-        requires(is_const)
-    {
+        requires(is_const) {
         return _registry.template get<Args...>(ent);
     }
 
@@ -121,17 +115,15 @@ private:
 // Implement registry methods after we have view class defined
 
 template<component_reference... Args>
-co_ecs::view<Args...> registry::view()
-    requires(!const_component_references_v<Args...>)
-{
-    return co_ecs::view<Args...>{ *this };
+ecs::view<Args...> registry::view()
+    requires(!const_component_references_v<Args...>) {
+    return ecs::view<Args...>{ *this };
 }
 
 template<component_reference... Args>
-co_ecs::view<Args...> registry::view() const
-    requires const_component_references_v<Args...>
-{
-    return co_ecs::view<Args...>{ *this };
+ecs::view<Args...> registry::view() const
+    requires const_component_references_v<Args...> {
+    return ecs::view<Args...>{ *this };
 }
 
 template<typename F>
@@ -150,4 +142,4 @@ void registry::each(F&& func) const
     view_t{ *this }.each(std::forward<F>(func));
 }
 
-} // namespace co_ecs
+} // namespace ecs

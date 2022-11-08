@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace co_ecs {
+namespace ecs {
 
 /// @brief Exception raised when accessing non existing entity
 class entity_not_found : public std::exception {
@@ -80,4 +80,4 @@ private:
     std::string _msg;
 };
 
-} // namespace co_ecs
+} // namespace ecs

@@ -4,7 +4,7 @@
 
 #include <string_view>
 
-namespace co_ecs {
+namespace ecs {
 
 template<typename T>
 constexpr static std::string_view type_name() noexcept {
@@ -76,4 +76,4 @@ struct type_meta {
 };
 
 
-} // namespace co_ecs
+} // namespace ecs

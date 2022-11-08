@@ -4,7 +4,7 @@
 #include <vector>
 #include <numeric>
 
-namespace co_ecs {
+namespace ecs {
 
 /// @brief Entity ID type, 32 bit value should be sufficient for all use cases
 using entity_id_t = std::uint32_t;
@@ -117,4 +117,4 @@ private:
     std::vector<typename entity::id_t> _free_ids;
 };
 
-} // namespace cobalt::ecs
+}

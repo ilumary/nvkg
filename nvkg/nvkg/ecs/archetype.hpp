@@ -9,7 +9,7 @@
 #include <nvkg/ecs/entity_location.hpp>
 
 
-namespace co_ecs {
+namespace ecs {
 
 /// @brief Archetype groups entities that share the same types of components. Archetype has a list of fixed size chunks
 /// where entities and their components are stored in a packed arrays, in a so called SoA fashion
@@ -366,21 +366,21 @@ public:
 
 private:
     static decltype(auto) create_archetype(auto&& components_meta) {
-        return std::make_unique<co_ecs::archetype>(std::forward<decltype(components_meta)>(components_meta));
+        return std::make_unique<ecs::archetype>(std::forward<decltype(components_meta)>(components_meta));
     }
 
     template<component... Components>
     static decltype(auto) create_archetype_added(const archetype* anchor_archetype) {
         auto components_meta = anchor_archetype->components();
         (..., components_meta.insert<Components>());
-        return std::make_unique<co_ecs::archetype>(std::move(components_meta));
+        return std::make_unique<ecs::archetype>(std::move(components_meta));
     }
 
     template<component... Components>
     static decltype(auto) create_archetype_removed(const archetype* anchor_archetype) {
         auto components_meta = anchor_archetype->components();
         (..., components_meta.erase<Components>());
-        return std::make_unique<co_ecs::archetype>(std::move(components_meta));
+        return std::make_unique<ecs::archetype>(std::move(components_meta));
     }
 
     // Member component set is here to speed up archetype lookup.
@@ -394,4 +394,4 @@ private:
     storage_type _archetypes{};
 };
 
-} // namespace co_ecs
+} // namespace ecs

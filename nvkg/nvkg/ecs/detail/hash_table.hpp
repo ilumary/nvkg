@@ -7,7 +7,7 @@
 
 #include <nvkg/ecs/detail/bits.hpp>
 
-namespace co_ecs::detail {
+namespace ecs::detail {
 
 /// @brief Approximately calculate 85% of passed value. 85% is used as a reserve threshold.
 ///
@@ -884,4 +884,4 @@ private:
     hasher _hash{};
 };
 
-} // namespace co_ecs::detail
+} // namespace ecs::detail

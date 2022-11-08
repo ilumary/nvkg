@@ -2,7 +2,7 @@
 
 #include <nvkg/ecs/detail/hash_table.hpp>
 
-namespace co_ecs::detail {
+namespace ecs::detail {
 
 /// @brief Hash map
 ///
@@ -18,4 +18,4 @@ template<typename K,
     typename Allocator = std::allocator<std::pair<K, T>>>
 using hash_map = hash_table<K, T, true, Hash, KeyEqual, Allocator>;
 
-} // namespace cobalt::asl
+}
