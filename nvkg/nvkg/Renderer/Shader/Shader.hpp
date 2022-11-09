@@ -56,14 +56,14 @@ namespace nvkg {
             std::vector<VertexBinding> vertex_bindings{};
             std::vector<ShaderResource> shader_resources{};
 
-            uint32_t combined_uniform_size = 0;
-
         private:
             VulkanDevice *device;
 
             std::string filename;
             std::string filepath;
             std::vector<char> binary_data;
+
+            uint32_t combined_uniform_size = 0;
 
             std::vector<const char *> accepted_material_descriptors = {
                 "ambient_map",

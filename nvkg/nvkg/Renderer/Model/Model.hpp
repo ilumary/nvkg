@@ -36,10 +36,10 @@ namespace nvkg {
             void bind(VkCommandBuffer commandBuffer);
             void draw(VkCommandBuffer commandBuffer, uint32_t instance = 0);
 
-            NVKGMaterial* get_material() { return material; }
+            Material* get_material() { return material; }
             void update_mesh(const Mesh::MeshData& meshData);
             void set_mesh(const Mesh::MeshData& meshData);
-            void set_material(NVKGMaterial* newMaterial) { material = newMaterial; }
+            void set_material(Material* newMaterial) { material = newMaterial; }
 
             bool IsIndexed() { return modelMesh.HasIndexBuffer(); }
 
@@ -48,6 +48,6 @@ namespace nvkg {
             void LoadModelFromFile(const char* filePath);
 
             Mesh modelMesh;
-            NVKGMaterial* material{nullptr};
+            Material* material{nullptr};
     };
 }

@@ -32,7 +32,7 @@ namespace nvkg {
             std::vector<Model::Transform> transforms{};
             std::vector<Model*> models{};
 
-            NVKGMaterial* currentMaterial {nullptr}; 
+            Material* currentMaterial {nullptr}; 
             Model* currentModel {nullptr};
     };
 }

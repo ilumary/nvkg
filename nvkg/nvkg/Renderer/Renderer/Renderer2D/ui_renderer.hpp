@@ -24,14 +24,14 @@ namespace nvkg {
 
             void destroy();
 
-            void render(VkCommandBuffer& cmdb, std::span<UIComponent*> uic);
+            void render(VkCommandBuffer& cmdb, std::span<ui_component*> uic);
 
             void recreate_materials();
 
         private:
 
-            std::unique_ptr<NVKGMaterial> ui_material;
-    };
+            std::unique_ptr<Material> ui_material;
+    };*/
 
 }
 

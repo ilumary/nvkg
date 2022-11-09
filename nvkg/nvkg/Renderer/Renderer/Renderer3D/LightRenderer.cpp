@@ -7,7 +7,7 @@ namespace nvkg {
     void LightRenderer::init(const char* globalDataAttributeName, const uint64_t& globalDataSize) {
         glob_data_id = INTERN_STR(globalDataAttributeName);
 
-        light_material = std::unique_ptr<NVKGMaterial>(new NVKGMaterial({
+        light_material = std::unique_ptr<Material>(new Material({
             .shaders = {{"pointLight", "vert"}, {"pointLight", "frag"}},
         }));
 

@@ -97,19 +97,7 @@ int main() {
     nvkg::Scene* scene = context.create_scene("scene1");
     scene->set_camera(&camera);
 
-    /*nvkg::ShaderModule *vert_shader = new nvkg::ShaderModule({"simpleShader", "vert"});
-    nvkg::ShaderModule *frag_shader = new nvkg::ShaderModule({"diffuseFragShader", "frag"});
-
-    // Material Declaration
-    nvkg::NVKGMaterial diffuse_mat_new(vert_shader, frag_shader); // TODO hide shader module creation
-
-    // Load and apply texture to material
-    nvkg::SampledTexture* tex = tex_mng->load_2d_img("../assets/textures/tex1.png");
-    diffuse_mat_new.set_texture(tex, "texSampler");
-
-    diffuse_mat_new.create_material();*/
-
-    nvkg::NVKGMaterial diffuse_mat_new({
+    nvkg::Material diffuse_mat_new({
         .shaders = {{"simpleShader", "vert"}, {"diffuseFragShader", "frag"}},
         .textures = {{"texSampler", tex_mng->load_2d_img("../assets/textures/tex1.png")}},
     });

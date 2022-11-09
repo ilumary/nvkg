@@ -2,11 +2,11 @@
 
 namespace nvkg {
 
-    UIRenderer::UIRenderer() {}
+    /*UIRenderer::UIRenderer() {}
     UIRenderer::~UIRenderer() {}
 
     void UIRenderer::init() {
-        ui_material = std::unique_ptr<NVKGMaterial>(new NVKGMaterial({
+        ui_material = std::unique_ptr<Material>(new Material({
             .shaders = {{"ui", "vert"}, {"ui", "frag"}},
         }));
     }

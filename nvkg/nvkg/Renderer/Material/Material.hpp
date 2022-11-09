@@ -17,7 +17,7 @@ namespace nvkg {
     #define MAX_DESCRIPTOR_SETS 8
     #define MAX_DESCRIPTOR_BINDINGS_PER_SET 4
 
-    class NVKGMaterial {
+    class Material {
         public:
 
             //TODO somehow get pointer to global ubo for continuos update without explicitly calling update from renderer
@@ -26,13 +26,13 @@ namespace nvkg {
                 std::map<std::string, SampledTexture*> textures;
             } config_;
 
-            NVKGMaterial();
-            NVKGMaterial(const MaterialConfig config);
+            Material();
+            Material(const MaterialConfig config);
 
-            NVKGMaterial(const NVKGMaterial&) = delete;
-            NVKGMaterial& operator=(const NVKGMaterial&) = delete;
+            Material(const Material&) = delete;
+            Material& operator=(const Material&) = delete;
 
-            ~NVKGMaterial();
+            ~Material();
 
             void set_uniform_data(Utils::StringId id, VkDeviceSize dataSize, const void* data);
             void set_uniform_data(const char* name, VkDeviceSize dataSize, const void* data);

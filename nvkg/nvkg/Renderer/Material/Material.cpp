@@ -5,22 +5,20 @@
 
 namespace nvkg {
 
-    NVKGMaterial::NVKGMaterial() {
+    Material::Material() {
         vert_shader = nullptr;
         frag_shader = nullptr;
         shader_count = 0;
     }
 
-    NVKGMaterial::NVKGMaterial(MaterialConfig config) : NVKGMaterial() {
+    Material::Material(MaterialConfig config) : Material() {
         config_ = config;
         for(auto& shader : config_.shaders) {
             //TODO make more dynamic
             if(shader.stage == "vert") {
                 vert_shader = new nvkg::ShaderModule({shader.name, shader.stage});
-                buffer_size += vert_shader->combined_uniform_size;
             } else if(shader.stage == "frag") {
                 frag_shader = new nvkg::ShaderModule({shader.name, shader.stage});
-                buffer_size += frag_shader->combined_uniform_size;
             }
             shader_count += 1;
         }
@@ -32,14 +30,14 @@ namespace nvkg {
         create_material();
     }
 
-    NVKGMaterial::~NVKGMaterial() {
+    Material::~Material() {
         if (isFreed) return;
 
         destroy_material();
     }
 
     //TODO remove and replace by somehting les spaghetti like
-    void NVKGMaterial::create_layout( VkDescriptorSetLayout* layouts, uint32_t layoutCount, VkPushConstantRange* pushConstants, uint32_t pushConstantCount) {
+    void Material::create_layout( VkDescriptorSetLayout* layouts, uint32_t layoutCount, VkPushConstantRange* pushConstants, uint32_t pushConstantCount) {
         auto device = VulkanDevice::get_device_instance();
 
         PipelineConfig::create_pipeline_layout(
@@ -51,32 +49,32 @@ namespace nvkg {
             pushConstantCount);
     }
 
-    void NVKGMaterial::bind(VkCommandBuffer commandBuffer) {
+    void Material::bind(VkCommandBuffer commandBuffer) {
         pipeline.bind(commandBuffer);
 
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
     }
 
-    void NVKGMaterial::push_constant(VkCommandBuffer command_buffer, std::string name, size_t push_constant_size, const void* data) {
+    void Material::push_constant(VkCommandBuffer command_buffer, std::string name, size_t push_constant_size, const void* data) {
         if(push_constants_new.count(name) > 0) {
             const auto& pc = push_constants_new[name]; 
             vkCmdPushConstants(command_buffer, pipeline_layout, pc.stageFlags, 0, push_constant_size, data);
         }
     }
 
-    void NVKGMaterial::recreate_pipeline() {
+    void Material::recreate_pipeline() {
         // Clear our graphics pipeline before swapchain re-creation
         pipeline.clear();
         prepare_pipeline();
     }
 
-    void NVKGMaterial::set_texture(SampledTexture* tex, std::string tex_name) {
+    void Material::set_texture(SampledTexture* tex, std::string tex_name) {
         auto id = INTERN_STR(tex_name.c_str());
         logger::debug() << "Added texture with id " << id << " to material";
         textures[id] = tex;
     }
 
-    void NVKGMaterial::prepare_desc_set_layouts() {
+    void Material::prepare_desc_set_layouts() {
         descriptor_set_layouts = std::vector<VkDescriptorSetLayout>(resources_per_set.size());
 
         for(const auto& [si, res_vec] : resources_per_set) {
@@ -135,7 +133,7 @@ namespace nvkg {
         NVKG_ASSERT(pipeline_layout != nullptr, "Cannot create pipeline without a valid layout!");
     }
 
-    void NVKGMaterial::prepare_pipeline() { 
+    void Material::prepare_pipeline() { 
         std::vector<PipelineConfig::ShaderConfig> shader_configs{};
 
         if (vert_shader) shader_configs.push_back(PipelineConfig::ShaderConfig { nullptr, PipelineConfig::PipelineStage::VERTEX, vert_shader->shader_module });
@@ -150,7 +148,7 @@ namespace nvkg {
         pipeline.create_graphics_pipeline(shader_configs.data(), shader_count, pipeline_conf);
     }
 
-    void NVKGMaterial::setup_descriptor_sets() {
+    void Material::setup_descriptor_sets() {
         descriptor_sets = std::vector<VkDescriptorSet>(resources_per_set.size());
 
         VkDescriptorSetAllocateInfo alloc_info =
@@ -225,7 +223,7 @@ namespace nvkg {
         vkUpdateDescriptorSets(VulkanDevice::get_device_instance()->device(), static_cast<uint32_t>(write_sets.size()), write_sets.data(), 0, NULL);
     }
 
-    void NVKGMaterial::add_shader(ShaderModule* shader) {
+    void Material::add_shader(ShaderModule* shader) {
         auto& vertices = shader->vertex_bindings;
 
         for(size_t i = 0; i < vertices.size(); i++) {
@@ -245,7 +243,7 @@ namespace nvkg {
         }
     }
 
-    void NVKGMaterial::set_shader_props(ShaderModule* shader, uint64_t& offset, uint16_t& res_counter) {
+    void Material::set_shader_props(ShaderModule* shader, uint64_t& offset, uint16_t& res_counter) {
         auto shader_resources = shader->shader_resources;
 
         for(auto& res : shader_resources) {
@@ -265,13 +263,13 @@ namespace nvkg {
 
             resources_per_set[map_index].push_back(res);
 
-            offset += (res.size * res.arraySize) * res.dyn_count;
+            offset = buffer_size += (res.size * res.arraySize) * res.dyn_count;
 
             res_counter++;
         }
     }
     
-    void NVKGMaterial::destroy_material() {
+    void Material::destroy_material() {
         auto device = VulkanDevice::get_device_instance();
 
         for (auto& layout : descriptor_set_layouts) {
@@ -287,7 +285,7 @@ namespace nvkg {
         isFreed = true;
     }
 
-    void NVKGMaterial::set_uniform_data(Utils::StringId id, VkDeviceSize dataSize, const void* data) {
+    void Material::set_uniform_data(Utils::StringId id, VkDeviceSize dataSize, const void* data) {
         for(const auto& [k, v] : resources_per_set) {
             for(auto& prop : v) {
                 if(prop.id == id) {
@@ -300,7 +298,7 @@ namespace nvkg {
         logger::debug() << "Error while setting uniform data";
     }
 
-    bool NVKGMaterial::has_prop(Utils::StringId id) {
+    bool Material::has_prop(Utils::StringId id) {
         for(const auto& [k, v] : resources_per_set) {
             for(auto& prop : v) {
                 if(prop.id == id) return true;
@@ -310,7 +308,7 @@ namespace nvkg {
         return false;
     }
 
-    ShaderResource& NVKGMaterial::get_res(Utils::StringId id) {
+    ShaderResource& Material::get_res(Utils::StringId id) {
         for(auto& [k, v] : resources_per_set) {
             for(auto& prop : v) {
                 if(prop.id == id) return prop;
@@ -320,7 +318,7 @@ namespace nvkg {
         NVKG_ASSERT(false, "No property with ID: " << id << " exists!");
     }
 
-    void NVKGMaterial::set_uniform_data(const char* name, VkDeviceSize dataSize, const void* data) {
+    void Material::set_uniform_data(const char* name, VkDeviceSize dataSize, const void* data) {
         auto id = INTERN_STR(name);
 
         for(const auto& [k, v] : resources_per_set) {
@@ -336,20 +334,9 @@ namespace nvkg {
         logger::debug(logger::Level::Error) << "Error while setting uniform data";
     }
 
-    void NVKGMaterial::create_material() {
+    void Material::create_material() {
         // Allocate buffer which can store all the data we need
         logger::debug() << "CREATING NEW MATERIAL";
-
-        //TODO set buffer size after resource collection to prevent doubled allocations
-        if(buffer_size > 0) {
-            Buffer::create_buffer(
-                buffer_size,
-                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                OUT buffer.buffer,
-                OUT buffer.bufferMemory
-            );
-        }
 
         uint64_t offset = 0;
         uint16_t counter = 0;
@@ -362,6 +349,16 @@ namespace nvkg {
         if (frag_shader) {
             add_shader(frag_shader);
             set_shader_props(frag_shader, OUT offset, counter);
+        }
+
+        if(buffer_size > 0) {
+            Buffer::create_buffer(
+                buffer_size,
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                OUT buffer.buffer,
+                OUT buffer.bufferMemory
+            );
         }
 
         logger::debug() << "Retrieved " << resources_per_set.size() << " resources from shaders";
