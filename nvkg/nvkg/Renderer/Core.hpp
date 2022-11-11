@@ -3,6 +3,7 @@
 
 #include <nvkg/Renderer/Utils/Hash.hpp>
 #include <nvkg/Utils/logger.hpp>
+#include <nvkg/ecs/ecs.hpp>
 
 #include <volk/volk.h>
 #include <iostream>

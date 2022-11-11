@@ -20,13 +20,11 @@ namespace nvkg {
 
             bool updated;
 
-            void add_shape_3d(Components::Shape* shapes, uint16_t count = 1);
             void add_pointlight(PointLight* pointlight, uint16_t count = 1);
-            void add_ui_component(UIComponent* ui_component, uint16_t count = 1);
+            //void add_ui_component(ui_component* ui_component, uint16_t count = 1);
 
-            inline std::span<Components::Shape*> get_3d_shapes() { return shapes_3d; } 
             inline std::span<PointLight*> get_pointlights() { return pointlights; }
-            inline std::span<UIComponent*> get_ui_components() { return ui_components; }
+            //inline std::span<ui_component*> get_ui_components() { return ui_components; }
 
             void set_camera(Camera* camera) { active_camera = camera; }
             CameraData get_camera_data() { return { active_camera->get_proj(), active_camera->get_view()}; };
@@ -35,9 +33,8 @@ namespace nvkg {
 
             Camera* active_camera;
 
-            std::vector<Components::Shape*> shapes_3d{};
             std::vector<PointLight*> pointlights{};
-            std::vector<UIComponent*> ui_components{};
+            //std::vector<ui_component*> ui_components{};
     };
 
 }

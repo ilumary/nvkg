@@ -31,6 +31,8 @@ namespace nvkg {
             Scene* create_scene(std::string name, bool set_active = true);
             Scene* get_scene(std::string name);
 
+            ecs::registry& get_registry() { return registry_; }
+
             void render();
             
             bool frame_started() { return is_frame_started; }
@@ -76,6 +78,8 @@ namespace nvkg {
 
             Scene* active_scene = nullptr;
             std::map<std::string, Scene*> scenes;
+
+            ecs::registry registry_;
     };
 }
 

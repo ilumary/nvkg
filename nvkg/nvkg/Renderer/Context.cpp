@@ -44,7 +44,7 @@ namespace nvkg {
     void Context::render_frame() {
         auto commandBuffer = get_crnt_cmdbf();
 
-        renderer->render(commandBuffer, active_scene);
+        renderer->render(commandBuffer, active_scene, registry_);
     }
 
     void Context::recreate_swapchain() {

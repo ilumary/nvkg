@@ -5,8 +5,8 @@
 #include <nvkg/Renderer/Scene/Scene.hpp>
 #include <nvkg/Renderer/Model/Model.hpp>
 #include <nvkg/Renderer/Renderer/Renderer3D/LightRenderer.hpp>
-#include <nvkg/Renderer/Renderer/Renderer3D/ModelRenderer.hpp>
 #include <nvkg/Renderer/Renderer/Renderer2D/ui_renderer.hpp>
+#include <nvkg/Renderer/Utils/Math.hpp>
 
 namespace nvkg {
 
@@ -23,7 +23,7 @@ namespace nvkg {
             Renderer();
             ~Renderer();
 
-            void render(VkCommandBuffer& command_buffer, Scene* active_scene);
+            void render(VkCommandBuffer& command_buffer, Scene* active_scene, const ecs::registry& registry);
 
             void recreate_materials();
 
@@ -31,14 +31,11 @@ namespace nvkg {
 
         private:
 
-            Utils::StringId global_data_id;
-            GlobalData global_3d_data{};
+            Utils::StringId global_data_id, transform_id;
 
-            ModelRenderer* model_renderer;
             LightRenderer* light_renderer;
-            UIRenderer* ui_renderer;
 
-            void update_global_ubo(Scene* scene);
+            void update_global_ubo(Scene* scene, GlobalData* global_3d_data);
     };
 }
 

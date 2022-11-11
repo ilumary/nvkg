@@ -167,20 +167,37 @@ namespace nvkg {
             
             bool _on_load() { return true; }
             bool _on_delete() { return true; }
+    };*/
+
+    /*
+    * New Components desinged around Entity Component System
+    */
+
+    struct render_mesh { //normal rendering
+        std::unique_ptr<Model> model_;
+        std::unique_ptr<Material> material_;
     };
 
-    class SDFText : public component<SDFText> {
-        public:
-            
-            SDFText(std::string name, std::string text) : component(name) {
-
-            }
-
-            bool _on_load() { return true; }
-            bool _on_delete() { return true; }
-
+    struct transform_3d {
+        glm::vec3 position_;
+        glm::vec3 scale_;
+        glm::vec3 rotation_;
     };
 
+    struct transform_2d {
+        glm::vec2 position_;
+        glm::vec2 scale_;
+        glm::vec2 rotation_;
+    };
+
+    struct shared_render_mesh { // instanced rendering, TODO
+        const std::shared_ptr<Mesh::MeshData> mesh_;
+        const std::shared_ptr<Material> material_;
+    };
+
+    struct instance_data {
+        std::shared_ptr<transform_3d> instance_data_;
+    };
 }
 
 #endif // COMPONENT_HPP

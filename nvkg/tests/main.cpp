@@ -85,6 +85,7 @@ int main() {
     Input::init_with_window_pointer(&window); //TODO hide
 
     nvkg::Context context(window);
+    ecs::registry& registry = context.get_registry();
 
     nvkg::TextureManager* tex_mng = new nvkg::TextureManager(); //TODO hide
     tex_mng->init(&context.get_device()); //also
@@ -106,30 +107,28 @@ int main() {
     nvkg::Model cubeObjModel("assets/models/cube.obj");
     nvkg::Model vaseObjModel("assets/models/smooth_vase.obj");
 
-    // Set 3D diffuse material
-    cubeObjModel.set_material(&diffuse_mat_new);
-    vaseObjModel.set_material(&diffuse_mat_new);
-
-    std::vector<Components::Shape> shapes = {
-        Components::Shape(&cubeObjModel),
-        Components::Shape(&cubeObjModel),
-        Components::Shape(&vaseObjModel)
-    };
-
-    shapes[0].set_pos({0.f, -.5f, 0.f});
-    shapes[0].set_scale({.5f, .5f, .5f});
-    shapes[0].set_color({.5f, 0.f, 0.f});
-
-    shapes[1].set_pos({0.f, 0.f, 0.f});
-    shapes[1].set_scale({3.f, 3.f, 0.05f});
-    shapes[1].set_color({.5f, 0.f, 0.f});
-    shapes[1].set_rot_x(1.570796f);
-
-    shapes[2].set_pos({0.f, -1.f, 0.f});
-    shapes[2].set_scale({2.f, 2.f, 2.f});
-    shapes[2].set_color({.5f, .9f, 0.f});
-
     cam_obj.set_pos({0.f, -1.f, -2.5f});
+
+    auto entity = registry.create<nvkg::transform_3d, nvkg::render_mesh>({
+        {0.f, -.5f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}
+    }, {
+        .model_ = std::unique_ptr<nvkg::Model>(&cubeObjModel),
+        .material_ = std::unique_ptr<nvkg::Material>(&diffuse_mat_new)
+    });
+
+    auto entity2 = registry.create<nvkg::transform_3d, nvkg::render_mesh>({
+        {0.f, 0.f, 0.f}, {3.f, 3.f, 0.05f}, {1.570796f, 0.f, 0.f}
+    }, {
+        .model_ = std::unique_ptr<nvkg::Model>(&cubeObjModel),
+        .material_ = std::unique_ptr<nvkg::Material>(&diffuse_mat_new)
+    });
+
+    auto entity3 = registry.create<nvkg::transform_3d, nvkg::render_mesh>({
+        {0.f, -1.f, 0.f}, {2.f, 2.f, 2.f}, {0.f, 0.f, 0.f}
+    }, {
+        .model_ = std::unique_ptr<nvkg::Model>(&vaseObjModel),
+        .material_ = std::unique_ptr<nvkg::Material>(&diffuse_mat_new)
+    });
 
     nvkg::PointLight light1 (
         "light1",
@@ -139,14 +138,6 @@ int main() {
         0.05f
     );
 
-    /*light1._on_update([&light1](){
-        light1.position.x -= .01f;
-    });
-
-    light1.name = "light1";
-
-    scene->_attach_component(&light1);*/
-
     nvkg::PointLight light2 (
         "light2",
         {0.f, 1.f, 0.f, 1.f}, 
@@ -154,12 +145,6 @@ int main() {
         {-1.f, -1.5f, -1.5f}, 
         0.05f 
     );
-
-    /*light2._on_update([&light2](){
-        light2.position.x += .01f;
-    });
-
-    scene->_attach_component(&light2);*/
 
     nvkg::PointLight light3 (
         "light3",
@@ -169,16 +154,9 @@ int main() {
         0.05f 
     );
 
-    nvkg::UIComponent ui_test (
-        "ui_test",
-        &tmd
-    );
-
-    scene->add_shape_3d(&shapes[0], 3);
     scene->add_pointlight(&light1);
     scene->add_pointlight(&light2);
     scene->add_pointlight(&light3);
-    scene->add_ui_component(&ui_test);
 
     auto currentTime = std::chrono::high_resolution_clock::now();
 

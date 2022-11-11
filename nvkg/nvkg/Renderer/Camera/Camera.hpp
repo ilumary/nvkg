@@ -1,4 +1,5 @@
-#pragma once
+#ifndef NVKG_CAMERA_HPP
+#define NVKG_CAMERA_HPP
 
 #include <nvkg/Renderer/Core.hpp>
 
@@ -38,3 +39,5 @@ namespace nvkg {
         glm::mat4 view_matrix{1.f};
     };
 }
+
+#endif
