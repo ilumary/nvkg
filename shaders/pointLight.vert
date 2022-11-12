@@ -11,7 +11,6 @@ struct CameraData {
 
 struct LightData {
     vec4 lightColor;
-    vec4 ambientLightColor;
     vec3 position;
 };
 
@@ -22,9 +21,9 @@ layout (set = 0, binding = 0) uniform GlobalData {
 } globalData;
 
 layout(push_constant) uniform Push {
-  vec4 position;
   vec4 color;
-  float radius;
+  vec3 position;
+  //float radius;
 } push;
 
 const float LIGHT_RADIUS = 0.05;
@@ -36,7 +35,7 @@ void main() {
     fragOffset = position;
 
     // Find the light position in camera space
-    vec4 lightInCameraSpace = view * vec4(push.position);
+    vec4 lightInCameraSpace = view * vec4(push.position, 0.f);
 
     // Find the vertex position in camera space.
     vec4 positionInCameraSpace = lightInCameraSpace + LIGHT_RADIUS * vec4(fragOffset, 0.0, 0.0);

@@ -78,9 +78,7 @@ namespace nvkg {
 
     void Context::render() {
         if(!start_frame()) return;
-        
-        active_scene->_update();
-        
+                
         render_frame();
         //render_ui();
 

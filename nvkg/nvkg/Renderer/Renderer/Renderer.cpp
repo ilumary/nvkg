@@ -6,33 +6,41 @@ namespace nvkg {
         global_data_id = INTERN_STR("globalData");
         transform_id = INTERN_STR("objectBuffer");
 
-        light_renderer = new LightRenderer();
-        light_renderer->init("globalData", sizeof(GlobalData));
+        light_material = std::unique_ptr<Material>(new Material({
+            .shaders = {{"pointLight", "vert"}, {"pointLight", "frag"}},
+        }));
 
-        //ui_renderer = new UIRenderer();
-        //ui_renderer->init();
+        point_light_vertices.insert(point_light_vertices.end(), {{1.f, 1.f}, {1.f, -1.f}, {-1.f, -1.f}, {-1.f, 1.f}});
+        point_light_indices.insert(point_light_indices.end(), {0, 1, 3, 1, 2, 3});
+
+        light_model.set_mesh({ 
+            sizeof(glm::vec2),
+            point_light_vertices.data(),
+            static_cast<uint32_t>(point_light_vertices.size()),
+            point_light_indices.data(),
+            static_cast<uint32_t>(point_light_indices.size())
+        });
     }
 
     void Renderer::recreate_materials() {
-        //model_renderer->recreate_materials();
-        light_renderer->recreate_materials();
+
     }
 
     void Renderer::destroy() {
-        //model_renderer->destroy();
-        light_renderer->destroy();
+
     }
 
     void Renderer::render(VkCommandBuffer& commandBuffer, Scene* scene, const ecs::registry& registry) {
         GlobalData global_3d_data{};
-
-        update_global_ubo(scene, &global_3d_data); // TODO collect pointlight data another way
-
+        global_3d_data.light_index = 0;
         global_3d_data.cameraData = scene->get_camera_data();
-        uint64_t globalDataSize = sizeof(global_3d_data);
 
-        light_renderer->render(commandBuffer, globalDataSize, &global_3d_data, scene->get_pointlights());
-        //ui_renderer->render(commandBuffer, scene->get_ui_components());
+        registry.each([&global_3d_data](const point_light& p){
+            global_3d_data.light_data[global_3d_data.light_index] = p;
+            global_3d_data.light_index += 1;
+        });
+
+        uint64_t globalDataSize = sizeof(global_3d_data);
 
         std::vector<Model::Transform> transforms{};
         Material* tmp; // TODO replace with map of all materials
@@ -56,15 +64,17 @@ namespace nvkg {
             m.model_->draw(commandBuffer, instance);
             instance += 1;
         });
-    }
 
-    void Renderer::update_global_ubo(Scene* scene, GlobalData* global_3d_data) {
-        auto light_data = scene->get_pointlights();
-        uint16_t size = light_data.size();
+        tmp = light_material.get();
+        Model* m = &light_model;
 
-        global_3d_data->light_index = size;
-        for(int i = 0; i < size; ++i) {
-            global_3d_data->lightData[i] = {light_data[i]->color, light_data[i]->ambient, light_data[i]->position};
-        }
+        tmp->set_uniform_data("globalData", sizeof(global_3d_data), &global_3d_data);
+        tmp->bind(commandBuffer);
+
+        registry.each([&commandBuffer, &tmp, &m](const point_light& p){
+            tmp->push_constant(commandBuffer, "push", sizeof(point_light), &p);
+            m->bind(commandBuffer);
+            m->draw(commandBuffer, 0);
+        });
     }
 }

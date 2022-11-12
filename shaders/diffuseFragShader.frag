@@ -16,7 +16,6 @@ struct CameraData {
 
 struct LightData {
     vec4 lightColor;
-    vec4 ambientLightColor;
     vec3 position;
 };
 

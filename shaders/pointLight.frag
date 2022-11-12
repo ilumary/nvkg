@@ -10,7 +10,6 @@ struct CameraData {
 
 struct LightData {
     vec4 lightColor;
-    vec4 ambientLightColor;
     vec3 position;
 };
 
@@ -21,9 +20,9 @@ layout (set = 0, binding = 0) uniform GlobalData {
 } globalData;
 
 layout(push_constant) uniform Push {
-  vec4 position;
   vec4 color;
-  float radius;
+  vec3 position;
+  //float radius;
 } push;
 
 //vec4 lightColor = globalData.lightData.lightColor;

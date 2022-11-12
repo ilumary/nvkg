@@ -4,8 +4,6 @@
 #include <nvkg/Renderer/Core.hpp>
 #include <nvkg/Renderer/Scene/Scene.hpp>
 #include <nvkg/Renderer/Model/Model.hpp>
-#include <nvkg/Renderer/Renderer/Renderer3D/LightRenderer.hpp>
-#include <nvkg/Renderer/Renderer/Renderer2D/ui_renderer.hpp>
 #include <nvkg/Renderer/Utils/Math.hpp>
 
 namespace nvkg {
@@ -16,7 +14,7 @@ namespace nvkg {
 
             struct GlobalData {
                 CameraData cameraData;
-                LightRenderer::PointLightShaderData lightData[10];
+                point_light light_data[10];
                 int light_index;
             };
 
@@ -33,9 +31,13 @@ namespace nvkg {
 
             Utils::StringId global_data_id, transform_id;
 
-            LightRenderer* light_renderer;
-
             void update_global_ubo(Scene* scene, GlobalData* global_3d_data);
+
+            //TODO this needs to change
+            Model light_model;
+            std::unique_ptr<Material> light_material;
+            std::vector<glm::vec2> point_light_vertices = std::vector<glm::vec2>(0);
+            std::vector<uint32_t> point_light_indices = std::vector<uint32_t>(0);
     };
 }
 

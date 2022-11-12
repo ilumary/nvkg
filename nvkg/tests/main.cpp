@@ -19,20 +19,6 @@
 static const constexpr int WIDTH = 1280;
 static const constexpr int HEIGHT = 720;
 
-nvkg::Vertex2D tv[] = {
-    {{.1f, .1f}, {0.f, 1.f}, {1.f, 0.f, 0.f, 1.f}},
-    {{.1f, .4f}, {0.f, 1.f}, {0.f, 1.f, 0.f, 1.f}}, 
-    {{.4f, .1f}, {0.f, 1.f}, {0.f, 0.f, 1.f, 1.f}}
-};
-
-uint32_t indices[] = {
-    0, 1, 2
-};
-
-nvkg::Mesh::MeshData tmd {
-    sizeof(nvkg::Vertex2D), tv, 3, indices, 3
-};
-
 void mov_cam_xz(float deltaTime, Components::Shape& viewerObject) {
     static auto oldMousePos = Input::get_cursor_pos();
     auto mousePos = Input::get_cursor_pos();
@@ -130,33 +116,9 @@ int main() {
         .material_ = std::unique_ptr<nvkg::Material>(&diffuse_mat_new)
     });
 
-    nvkg::PointLight light1 (
-        "light1",
-        {1.f, 0.f, 0.f, 1.f},
-        {1.f, 1.f, 1.f, .02f},
-        {1.0f, -1.5f, -1.5f}, 
-        0.05f
-    );
-
-    nvkg::PointLight light2 (
-        "light2",
-        {0.f, 1.f, 0.f, 1.f}, 
-        {1.f, 1.f, 1.f, .02f},
-        {-1.f, -1.5f, -1.5f}, 
-        0.05f 
-    );
-
-    nvkg::PointLight light3 (
-        "light3",
-        {0.f, 0.f, 1.f, 1.f}, 
-        {1.f, 1.f, 1.f, .02f},
-        {-0.f, -1.5f, 1.5f}, 
-        0.05f 
-    );
-
-    scene->add_pointlight(&light1);
-    scene->add_pointlight(&light2);
-    scene->add_pointlight(&light3);
+    auto point_light_ent1 = registry.create<nvkg::point_light>({{1.f, 0.f, 0.f, 1.f}, {1.0f, -1.5f, -1.5f}});
+    auto point_light_ent2 = registry.create<nvkg::point_light>({{0.f, 1.f, 0.f, 1.f}, {-1.f, -1.5f, -1.5f}});
+    auto point_light_ent3 = registry.create<nvkg::point_light>({{0.f, 0.f, 1.f, 1.f}, {-0.f, -1.5f, 1.5f}});
 
     auto currentTime = std::chrono::high_resolution_clock::now();
 
