@@ -3,6 +3,7 @@
 #include <volk/volk.h>
 #include <GLFW/glfw3.h>
 #include <cstdint>
+#include <string>
 
 namespace nvkg {
 
@@ -47,6 +48,8 @@ namespace nvkg {
         // Public Functions
 
         void update();
+
+        void update_window_title(std::string title);
 
         bool window_should_close();
 

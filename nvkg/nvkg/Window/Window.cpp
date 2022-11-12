@@ -8,6 +8,10 @@ namespace nvkg {
         glfwPollEvents();
     }
 
+    void Window::update_window_title(std::string title) {
+        glfwSetWindowTitle(window, title.c_str());
+    }
+
     bool Window::window_should_close() {
         return glfwWindowShouldClose(window);
     }

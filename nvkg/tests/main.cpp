@@ -134,6 +134,8 @@ int main() {
 
         window.update();
 
+        //window.update_window_title(std::to_string(frameTime));
+
         if (Input::key_just_pressed(KEY_ESCAPE)) {
             input_enabled = !input_enabled;
             window.toggle_cursor(input_enabled);
