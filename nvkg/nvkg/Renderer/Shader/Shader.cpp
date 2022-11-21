@@ -2,10 +2,176 @@
 
 namespace nvkg {
 
+    bool glsl_runtime_compiler::preprocess_glsl(const shader_info& info, std::string& glsl_shader_code) {
+        glslang::InitializeProcess();
+
+        auto translate_stage = [](VkShaderStageFlagBits stage) -> EShLanguage {
+            switch (stage) {
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT: return EShLanguage::EShLangVertex;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT: return EShLanguage::EShLangTessControl;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT: return EShLanguage::EShLangTessEvaluation;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_GEOMETRY_BIT: return EShLanguage::EShLangGeometry;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT: return EShLanguage::EShLangFragment;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT: return EShLanguage::EShLangCompute;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_RAYGEN_BIT_KHR: return EShLanguage::EShLangRayGen;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_ANY_HIT_BIT_KHR: return EShLanguage::EShLangAnyHit;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR: return EShLanguage::EShLangClosestHit;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_MISS_BIT_KHR: return EShLanguage::EShLangMiss;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_INTERSECTION_BIT_KHR: return EShLanguage::EShLangIntersect;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_CALLABLE_BIT_KHR: return EShLanguage::EShLangCallable;
+            default:
+                NVKG_ASSERT(false, "Tried creating shader with unknown shader stage");
+                return EShLanguage::EShLangCount;
+            }
+        };
+
+        auto shader_stage = translate_stage(info.shader_stage_);
+        auto shader = glslang::TShader { shader_stage };
+        auto shader_code_c = info.shader_code_.c_str();
+
+        shader.setStrings(&shader_code_c, 1);
+        shader.setEnvInput(glslang::EShSource::EShSourceGlsl, shader_stage,
+                glslang::EShClient::EShClientVulkan,
+                glslang::EShTargetClientVersion::EShTargetVulkan_1_1);
+
+        auto build_preamble = [](const std::vector<std::string>& defines) -> std::string {
+            auto preamble = std::ostringstream{};
+            
+            for(const auto& define : defines) {
+                preamble << "#define " << define << "\n";
+            }
+
+            return preamble.str();
+        };
+
+        const auto preamble = build_preamble(info.compilation_defines_);
+        shader.setPreamble(preamble.c_str());
+
+        shader.setEnvClient(glslang::EShClient::EShClientVulkan, glslang::EShTargetClientVersion::EShTargetVulkan_1_1);
+        shader.setEnvTarget(glslang::EShTargetLanguage::EShTargetSpv, glslang::EShTargetLanguageVersion::EShTargetSpv_1_3);
+        shader.setEntryPoint(info.entry_.c_str());
+        shader.setSourceEntryPoint("main");
+
+        glslang::TShader::ForbidIncluder forbid_includer;
+
+        shader.preprocess(&defaultTBuiltInResource_, 450, EProfile::ENoProfile, false, false,
+                static_cast<EShMessages>(EShMessages::EShMsgVulkanRules | EShMessages::EShMsgSpvRules),
+                &glsl_shader_code, forbid_includer);
+
+        glslang::FinalizeProcess();
+
+        return true;
+    }
+
+    bool glsl_runtime_compiler::compile_to_spirv(const shader_info& info, std::vector<uint32_t>& shader_code) {
+        glslang::InitializeProcess();
+
+        auto translate_stage = [](VkShaderStageFlagBits stage) -> EShLanguage {
+            switch (stage) {
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT: return EShLanguage::EShLangVertex;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT: return EShLanguage::EShLangTessControl;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT: return EShLanguage::EShLangTessEvaluation;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_GEOMETRY_BIT: return EShLanguage::EShLangGeometry;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT: return EShLanguage::EShLangFragment;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT: return EShLanguage::EShLangCompute;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_RAYGEN_BIT_KHR: return EShLanguage::EShLangRayGen;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_ANY_HIT_BIT_KHR: return EShLanguage::EShLangAnyHit;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR: return EShLanguage::EShLangClosestHit;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_MISS_BIT_KHR: return EShLanguage::EShLangMiss;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_INTERSECTION_BIT_KHR: return EShLanguage::EShLangIntersect;
+                case VkShaderStageFlagBits::VK_SHADER_STAGE_CALLABLE_BIT_KHR: return EShLanguage::EShLangCallable;
+            default:
+                NVKG_ASSERT(false, "Tried creating shader with unknown shader stage");
+                return EShLanguage::EShLangCount;
+            }
+        };
+
+        auto shader_stage = translate_stage(info.shader_stage_);
+        auto shader = glslang::TShader { shader_stage };
+        auto shader_code_c = info.shader_code_.c_str();
+
+        shader.setStrings(&shader_code_c, 1);
+        shader.setEnvInput(glslang::EShSource::EShSourceGlsl, shader_stage,
+                glslang::EShClient::EShClientVulkan,
+                glslang::EShTargetClientVersion::EShTargetVulkan_1_1);
+
+        auto build_preamble = [](const std::vector<std::string>& defines) -> std::string {
+            auto preamble = std::ostringstream{};
+            
+            for(const auto& define : defines) {
+                preamble << "#define " << define << "\n";
+            }
+
+            return preamble.str();
+        };
+
+        const auto preamble = build_preamble(info.compilation_defines_);
+        shader.setPreamble(preamble.c_str());
+
+        shader.setEnvClient(glslang::EShClient::EShClientVulkan, glslang::EShTargetClientVersion::EShTargetVulkan_1_1);
+        shader.setEnvTarget(glslang::EShTargetLanguage::EShTargetSpv, glslang::EShTargetLanguageVersion::EShTargetSpv_1_3);
+        shader.setEntryPoint(info.entry_.c_str());
+        shader.setSourceEntryPoint("main");
+
+        const auto compilation_errors = !shader.parse(&defaultTBuiltInResource_, 450, false,
+	        static_cast<EShMessages>(EShMessages::EShMsgVulkanRules | EShMessages::EShMsgSpvRules));
+
+        if(compilation_errors) {
+            logger::debug() << "Error: " << shader.getInfoLog();
+            logger::debug() << "Error: " << shader.getInfoDebugLog();
+            glslang::FinalizeProcess();
+            return false;
+        }
+
+        auto spv_options = glslang::SpvOptions{};
+
+        if(info.enable_debug_compilation_) {
+            spv_options.generateDebugInfo = true;
+            spv_options.disableOptimizer = true;
+            spv_options.optimizeSize = false;
+        } else {
+            spv_options.generateDebugInfo = false;
+            spv_options.disableOptimizer = false;
+            spv_options.optimizeSize = true;
+        }
+
+        auto spirv_logger = spv::SpvBuildLogger{};
+        glslang::GlslangToSpv(*shader.getIntermediate(), shader_code, &spirv_logger, &spv_options);
+
+        const auto messages = spirv_logger.getAllMessages();
+        if(!messages.empty()) {
+            logger::debug() << messages;
+        }
+
+        glslang::FinalizeProcess();
+
+        return true;
+    }
+
     std::vector<uint32_t> convert(std::vector<char> buf) {
         std::vector<uint32_t> output(buf.size() / sizeof(uint32_t));
         std::memcpy(output.data(), buf.data(), buf.size());
         return output;
+    }
+
+    std::string read_file_to_string(const std::filesystem::path& path) {
+        if(!std::filesystem::exists(path) && !std::filesystem::is_regular_file(path)) {
+            logger::debug(logger::Level::Error) << path << " is an invalid path or invalid file";
+            return {};
+        }
+
+        auto err = std::error_code{};
+        auto filesize = std::filesystem::file_size(path, err);
+        if(filesize != static_cast<uintmax_t>(-1)) {
+            logger::debug() << "Filesize: " << filesize;
+        }
+
+        std::ifstream file;
+        file.open(path);
+
+        std::stringstream strStream;
+        strStream << file.rdbuf();
+        return strStream.str();
     }
 
 	void ShaderModule::create(std::string name, std::string stage, std::string entrance_function) {
@@ -14,31 +180,41 @@ namespace nvkg {
         auto device_ = VulkanDevice::get_device_instance();
         device = device_;
 
-        if (stage == "vert")
+        if (stage == "vert") {
             shader_stage = VK_SHADER_STAGE_VERTEX_BIT;
-        else if (stage == "frag")
+        } else if (stage == "frag") {
             shader_stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        else if (stage == "comp")
+        } else if (stage == "comp") {
             shader_stage = VK_SHADER_STAGE_COMPUTE_BIT;
-        else if (stage == "tess")
+        } else if (stage == "tess") {
             shader_stage = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT; // todo: theres also tess_evaluation_bit
-        else if (stage == "geom")
+        } else if (stage == "geom") {
             shader_stage = VK_SHADER_STAGE_GEOMETRY_BIT;
-        else if (stage == "glsl")
+        } else if (stage == "glsl") {
             shader_stage = VK_SHADER_STAGE_ALL_GRAPHICS; // todo: dont know what to put here
+        }
 
         //TODO: extract to config
         std::string dir = "shaders/";
 
 		filepath = dir + name + "." + stage + ".spv";
+        filepath_new = "../" + dir + name + "." + stage;
+
+        std::string shader_file = read_file_to_string(filepath_new);
+        std::vector<uint32_t> byte_code{};
+        if(glsl_runtime_compiler::compile_to_spirv({{}, shader_stage, shader_file, "entry"}, byte_code)) {
+            logger::debug() << "Compiled shader " << filepath_new;
+        } else {
+            logger::debug() << "Error compiling shader " << filepath_new;
+        }
 
         binary_data = loadSpirVBinary(filepath);
 
         if (stage == "frag")
-            reflect_descriptor_types(convert(binary_data));
+            reflect_descriptor_types(byte_code);
 
         if (stage == "vert")
-            reflect_descriptor_types(convert(binary_data));
+            reflect_descriptor_types(byte_code);
 
         logger::debug() << "SHADER INFO: " << name << "." << stage;
         logger::debug() << "UBO's: " << shader_resources.size() << " with overall size " << combined_uniform_size;

@@ -10,20 +10,17 @@ layout(location = 1) out vec3 fragPosWorld;
 layout(location = 2) out vec3 fragNormalWorld;
 layout(location = 3) out vec2 fragUV;
 
-struct ObjectData 
-{
+struct ObjectData {
     mat4 transform;
     mat4 normalMatrix;
 };
 
-struct CameraData
-{
+struct CameraData {
     mat4 projectionMatrix;
     mat4 viewMatrix;
 };
 
-struct LightData
-{
+struct LightData {
     vec4 lightColor;
     vec3 position;
 };

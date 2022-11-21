@@ -30,8 +30,8 @@ sources := $(call rwildcard,nvkg/,*.cpp)
 objects := $(patsubst nvkg/%, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
 depends := $(patsubst %.o, %.d, $(objects))
 
-includes = -I $(abspath nvkg) -I $(externDir)/vulkan/include -I $(externDir)/glfw/include -I $(externDir)/glm -I $(externDir)/tinyobjloader -I $(externDir)/stb -I $(externDir)/vulkan/SPIRV-Cross/
-linkFlags = -L $(libDir) -lglfw3 -L $(libDir) -lspirv-cross -L/opt/homebrew/opt/gcc/lib/gcc/12/
+includes = -I $(abspath nvkg) -I $(externDir)/glslang -I $(externDir)/vulkan/include -I $(externDir)/glfw/include -I $(externDir)/glm -I $(externDir)/tinyobjloader -I $(externDir)/stb -I $(externDir)/vulkan/SPIRV-Cross/
+linkFlags = -L $(libDir) -lglfw3 -L $(libDir) -lspirv-cross -L $(libDir) -lglslang -lGenericCodeGen -lglslang-default-resource-limits -lHLSL -lMachineIndependent -lOGLCompiler -lOSDependent -lSPIRV -lSPVRemapper -L/opt/homebrew/opt/gcc/lib/gcc/12/
 compileFlags := -std=c++2b $(includes)
 glfwLib := $(libDir)/libglfw3.a
 

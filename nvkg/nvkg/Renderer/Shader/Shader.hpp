@@ -5,15 +5,22 @@
 #include <nvkg/Renderer/Buffer/Buffer.hpp>
 #include <nvkg/Renderer/Utils/Hash.hpp>
 #include <nvkg/Renderer/Utils/Descriptor.hpp>
-#include <map>
 
+#include <map>
 #include <ostream>
 #include <fstream>
+#include <string>
+#include <sstream>
 #include <iostream>
 #include <algorithm>
+#include <filesystem>
+#include <chrono>
 
 #include <spirv_glsl.hpp>
 
+#include "SPIRV/GlslangToSpv.h"
+#include "glslang/Public/ShaderLang.h"
+#include "glslang/Include/ResourceLimits.h"
 
 namespace nvkg {
 
@@ -27,6 +34,130 @@ namespace nvkg {
         uint64_t offset = 0;
         VkDescriptorType type;
         VkShaderStageFlags stage;
+    };
+
+    class glsl_runtime_compiler {
+        private:
+
+            inline static constexpr TBuiltInResource defaultTBuiltInResource_ = {
+                .maxLights =  32,
+                .maxClipPlanes =  6,
+                .maxTextureUnits =  32,
+                .maxTextureCoords =  32,
+                .maxVertexAttribs =  64,
+                .maxVertexUniformComponents =  4096,
+                .maxVaryingFloats =  64,
+                .maxVertexTextureImageUnits =  32,
+                .maxCombinedTextureImageUnits =  80,
+                .maxTextureImageUnits =  32,
+                .maxFragmentUniformComponents =  4096,
+                .maxDrawBuffers =  32,
+                .maxVertexUniformVectors =  128,
+                .maxVaryingVectors =  8,
+                .maxFragmentUniformVectors =  16,
+                .maxVertexOutputVectors =  16,
+                .maxFragmentInputVectors =  15,
+                .minProgramTexelOffset =  -8,
+                .maxProgramTexelOffset =  7,
+                .maxClipDistances =  8,
+                .maxComputeWorkGroupCountX =  65535,
+                .maxComputeWorkGroupCountY =  65535,
+                .maxComputeWorkGroupCountZ =  65535,
+                .maxComputeWorkGroupSizeX =  1024,
+                .maxComputeWorkGroupSizeY =  1024,
+                .maxComputeWorkGroupSizeZ =  64,
+                .maxComputeUniformComponents =  1024,
+                .maxComputeTextureImageUnits =  16,
+                .maxComputeImageUniforms =  8,
+                .maxComputeAtomicCounters =  8,
+                .maxComputeAtomicCounterBuffers =  1,
+                .maxVaryingComponents =  60,
+                .maxVertexOutputComponents =  64,
+                .maxGeometryInputComponents =  64,
+                .maxGeometryOutputComponents =  128,
+                .maxFragmentInputComponents =  128,
+                .maxImageUnits =  8,
+                .maxCombinedImageUnitsAndFragmentOutputs =  8,
+                .maxCombinedShaderOutputResources =  8,
+                .maxImageSamples =  0,
+                .maxVertexImageUniforms =  0,
+                .maxTessControlImageUniforms =  0,
+                .maxTessEvaluationImageUniforms =  0,
+                .maxGeometryImageUniforms =  0,
+                .maxFragmentImageUniforms =  8,
+                .maxCombinedImageUniforms =  8,
+                .maxGeometryTextureImageUnits =  16,
+                .maxGeometryOutputVertices =  256,
+                .maxGeometryTotalOutputComponents =  1024,
+                .maxGeometryUniformComponents =  1024,
+                .maxGeometryVaryingComponents =  64,
+                .maxTessControlInputComponents =  128,
+                .maxTessControlOutputComponents =  128,
+                .maxTessControlTextureImageUnits =  16,
+                .maxTessControlUniformComponents =  1024,
+                .maxTessControlTotalOutputComponents =  4096,
+                .maxTessEvaluationInputComponents =  128,
+                .maxTessEvaluationOutputComponents =  128,
+                .maxTessEvaluationTextureImageUnits =  16,
+                .maxTessEvaluationUniformComponents =  1024,
+                .maxTessPatchComponents =  120,
+                .maxPatchVertices =  32,
+                .maxTessGenLevel =  64,
+                .maxViewports =  16,
+                .maxVertexAtomicCounters =  0,
+                .maxTessControlAtomicCounters =  0,
+                .maxTessEvaluationAtomicCounters =  0,
+                .maxGeometryAtomicCounters =  0,
+                .maxFragmentAtomicCounters =  8,
+                .maxCombinedAtomicCounters =  8,
+                .maxAtomicCounterBindings =  1,
+                .maxVertexAtomicCounterBuffers =  0,
+                .maxTessControlAtomicCounterBuffers =  0,
+                .maxTessEvaluationAtomicCounterBuffers =  0,
+                .maxGeometryAtomicCounterBuffers =  0,
+                .maxFragmentAtomicCounterBuffers =  1,
+                .maxCombinedAtomicCounterBuffers =  1,
+                .maxAtomicCounterBufferSize =  16384,
+                .maxTransformFeedbackBuffers =  4,
+                .maxTransformFeedbackInterleavedComponents =  64,
+                .maxCullDistances =  8,
+                .maxCombinedClipAndCullDistances =  8,
+                .maxSamples =  4,
+                .maxMeshOutputVerticesNV =  256,
+                .maxMeshOutputPrimitivesNV =  512,
+                .maxMeshWorkGroupSizeX_NV =  32,
+                .maxMeshWorkGroupSizeY_NV =  1,
+                .maxMeshWorkGroupSizeZ_NV =  1,
+                .maxTaskWorkGroupSizeX_NV =  32,
+                .maxTaskWorkGroupSizeY_NV =  1,
+                .maxTaskWorkGroupSizeZ_NV =  1,
+                .maxMeshViewCountNV =  4,
+                .maxDualSourceDrawBuffersEXT =  1,
+
+                .limits =  {
+                    .nonInductiveForLoops =  1,
+                    .whileLoops =  1,
+                    .doWhileLoops =  1,
+                    .generalUniformIndexing =  1,
+                    .generalAttributeMatrixVectorIndexing =  1,
+                    .generalVaryingIndexing =  1,
+                    .generalSamplerIndexing =  1,
+                    .generalVariableIndexing =  1,
+                    .generalConstantMatrixVectorIndexing =  1,
+            } };
+        
+        public:
+
+            struct shader_info {
+                std::vector<std::string> compilation_defines_;
+                VkShaderStageFlagBits shader_stage_;
+                std::string shader_code_;
+                std::string entry_;
+                bool enable_debug_compilation_ = false;
+            };
+
+            static bool preprocess_glsl(const shader_info& info, std::string& glsl_shader_code);
+            static bool compile_to_spirv(const shader_info& info, std::vector<uint32_t>& shader_code);
     };
 
     class ShaderModule {
@@ -59,9 +190,13 @@ namespace nvkg {
         private:
             VulkanDevice *device;
 
-            std::string filename;
-            std::string filepath;
+            std::string filename, filepath, filepath_new;
             std::vector<char> binary_data;
+
+            struct file_handle {
+                std::filesystem::path path_;
+                std::filesystem::file_time_type last_write_time_;
+            };
 
             uint32_t combined_uniform_size = 0;
 
