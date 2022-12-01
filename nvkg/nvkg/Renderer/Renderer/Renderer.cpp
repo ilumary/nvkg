@@ -7,7 +7,7 @@ namespace nvkg {
         transform_id = INTERN_STR("objectBuffer");
 
         light_material = std::unique_ptr<Material>(new Material({
-            .shaders = {{"pointLight", "vert"}, {"pointLight", "frag"}},
+            .shaders = {"pointLight.vert", "pointLight.frag"},
         }));
 
         point_light_vertices.insert(point_light_vertices.end(), {{1.f, 1.f}, {1.f, -1.f}, {-1.f, -1.f}, {-1.f, 1.f}});

@@ -15,10 +15,11 @@ namespace nvkg {
         config_ = config;
         for(auto& shader : config_.shaders) {
             //TODO make more dynamic
-            if(shader.stage == "vert") {
-                vert_shader = new nvkg::ShaderModule({shader.name, shader.stage});
-            } else if(shader.stage == "frag") {
-                frag_shader = new nvkg::ShaderModule({shader.name, shader.stage});
+            ShaderModule* tmp = new ShaderModule(shader, true);
+            if(tmp->shader_stage == VK_SHADER_STAGE_VERTEX_BIT) {
+                vert_shader = tmp;
+            } else if(tmp->shader_stage == VK_SHADER_STAGE_FRAGMENT_BIT) {
+                frag_shader = tmp;
             }
             shader_count += 1;
         }

@@ -22,7 +22,7 @@ namespace nvkg {
 
             //TODO somehow get pointer to global ubo for continuos update without explicitly calling update from renderer
             struct MaterialConfig {
-                std::vector<ShaderModule::ShaderInit> shaders;
+                std::vector<std::string> shaders;
                 std::map<std::string, SampledTexture*> textures;
             } config_;
 

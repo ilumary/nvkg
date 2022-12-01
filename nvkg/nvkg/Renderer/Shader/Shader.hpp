@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <chrono>
+#include <iomanip>
 
 #include <spirv_glsl.hpp>
 
@@ -163,15 +164,13 @@ namespace nvkg {
     class ShaderModule {
         public:
 
-            struct ShaderInit {
-                std::string name, stage, entrance_function = "main";
-            };
-
-            ShaderModule(ShaderInit init) { create(init.name, init.stage, init.entrance_function); };
+            ShaderModule(std::string file, bool runtime_compilation = true);
             ~ShaderModule() { cleanup(); };
 
             ShaderModule(const ShaderModule&) = default;
             ShaderModule& operator=(const ShaderModule&) = default;
+
+            void recompile();
 
             struct VertexBinding {
                 std::vector<VertexDescription::Attribute> attributes{};
@@ -180,7 +179,6 @@ namespace nvkg {
 
             VkShaderModule shader_module{};
             VkShaderStageFlagBits shader_stage{};
-            std::string entrance_function;
 
             // specifies the binding order of the model descriptor.
             std::map<std::string, VkPushConstantRange> push_constants_new{}; //
@@ -190,13 +188,14 @@ namespace nvkg {
         private:
             VulkanDevice *device;
 
-            std::string filename, filepath, filepath_new;
-            std::vector<char> binary_data;
+            std::vector<char> spirv_bin_data{};
+            std::vector<uint32_t> spirv_bin_data_u32{};
 
             struct file_handle {
-                std::filesystem::path path_;
+                std::filesystem::path path_; //depending on runtime_compilation the path is set
                 std::filesystem::file_time_type last_write_time_;
-            };
+                bool compile_sources = true;
+            } file_handle_;
 
             uint32_t combined_uniform_size = 0;
 
@@ -213,7 +212,7 @@ namespace nvkg {
                 "radiance_map"
             };
 
-            void create(std::string name, std::string stage, std::string entrance_function = "main");
+            void create();
 
             void cleanup();
 
@@ -225,7 +224,7 @@ namespace nvkg {
             /*
             * Uses SPIRV-Cross to perform runtime reflection of the spriv shader to analyze descriptor binding info.
             */
-            void reflect_descriptor_types(std::vector<uint32_t> spirv_binary);
+            void reflect_descriptor_types(std::vector<uint32_t>& spirv_binary);
 
             /*
             * Collects all push constant data from shader.

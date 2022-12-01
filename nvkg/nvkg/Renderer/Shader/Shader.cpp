@@ -154,6 +154,12 @@ namespace nvkg {
         return output;
     }
 
+    std::vector<char> convert(std::vector<uint32_t> buf) {
+        std::vector<char> output(buf.size() * sizeof(uint32_t));
+        std::memcpy(output.data(), buf.data(), buf.size());
+        return output;
+    }
+
     std::string read_file_to_string(const std::filesystem::path& path) {
         if(!std::filesystem::exists(path) && !std::filesystem::is_regular_file(path)) {
             logger::debug(logger::Level::Error) << path << " is an invalid path or invalid file";
@@ -162,9 +168,6 @@ namespace nvkg {
 
         auto err = std::error_code{};
         auto filesize = std::filesystem::file_size(path, err);
-        if(filesize != static_cast<uintmax_t>(-1)) {
-            logger::debug() << "Filesize: " << filesize;
-        }
 
         std::ifstream file;
         file.open(path);
@@ -174,11 +177,45 @@ namespace nvkg {
         return strStream.str();
     }
 
-	void ShaderModule::create(std::string name, std::string stage, std::string entrance_function) {
-		filename = name;
-        this->entrance_function = entrance_function;
-        auto device_ = VulkanDevice::get_device_instance();
-        device = device_;
+    template <typename TP>
+    std::time_t to_time_t(TP tp) {
+        using namespace std::chrono;
+        auto sctp = time_point_cast<system_clock::duration>(tp - TP::clock::now() + system_clock::now());
+        return system_clock::to_time_t(sctp);
+    }
+
+    std::string file_time_to_string(std::filesystem::file_time_type& time) {
+        std::time_t tt = to_time_t(time);
+        std::tm *gmt = std::gmtime(&tt);
+        std::stringstream buffer;
+        buffer << std::put_time(gmt, "%A, %d %B %Y %H:%M");
+        return buffer.str();
+    }
+
+    ShaderModule::ShaderModule(std::string file, bool runtime_compilation) {
+        if(runtime_compilation) {
+            file_handle_.path_ = "../shaders/" + file;
+        } else {
+            file_handle_.path_ = "shaders/" + file + ".spv";
+            file_handle_.compile_sources = false;
+        }
+
+        using namespace std::chrono_literals;
+
+        file_handle_.last_write_time_ = std::filesystem::last_write_time(file_handle_.path_);
+        std::filesystem::last_write_time(file_handle_.path_, file_handle_.last_write_time_ + 1h);
+
+        std::string stage = file_handle_.path_.extension();
+        stage.erase(std::remove(stage.begin(), stage.end(), '.'), stage.end());
+
+        if(stage == "spv") {
+            std::string tmp = file_handle_.path_;
+            size_t spv_extension = tmp.find_last_of('.');
+            tmp.erase(spv_extension, 4);
+            std::filesystem::path new_path = tmp;
+            stage = new_path.extension();
+            stage.erase(std::remove(stage.begin(), stage.end(), '.'), stage.end());
+        }
 
         if (stage == "vert") {
             shader_stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -192,39 +229,55 @@ namespace nvkg {
             shader_stage = VK_SHADER_STAGE_GEOMETRY_BIT;
         } else if (stage == "glsl") {
             shader_stage = VK_SHADER_STAGE_ALL_GRAPHICS; // todo: dont know what to put here
-        }
-
-        //TODO: extract to config
-        std::string dir = "shaders/";
-
-		filepath = dir + name + "." + stage + ".spv";
-        filepath_new = "../" + dir + name + "." + stage;
-
-        std::string shader_file = read_file_to_string(filepath_new);
-        std::vector<uint32_t> byte_code{};
-        if(glsl_runtime_compiler::compile_to_spirv({{}, shader_stage, shader_file, "entry"}, byte_code)) {
-            logger::debug() << "Compiled shader " << filepath_new;
         } else {
-            logger::debug() << "Error compiling shader " << filepath_new;
+            logger::debug(logger::Level::Error) << "No shader stage was found!";
         }
 
-        binary_data = loadSpirVBinary(filepath);
+        recompile();
+    }
 
-        if (stage == "frag")
-            reflect_descriptor_types(byte_code);
+    void ShaderModule::recompile() {
+        std::filesystem::file_time_type crnt_last_write_time = std::filesystem::last_write_time(file_handle_.path_);
+        if(crnt_last_write_time > file_handle_.last_write_time_) {
+            logger::debug() << "Upgrading outdated shader " << file_handle_.path_;
+            if(file_handle_.compile_sources) {
+                std::string shader_file = read_file_to_string(file_handle_.path_);
+                logger::debug() << "Compiling shader...";
+                if(glsl_runtime_compiler::compile_to_spirv({{}, shader_stage, shader_file, "main"}, spirv_bin_data_u32)) {
+                    logger::debug() << "Shader compiled successfully!";
+                    spirv_bin_data = convert(spirv_bin_data_u32);
+                } else {
+                    logger::debug() << "Error compiling shader!";
+                    return; //TODO handle error correctly
+                }
+            } else {
+                spirv_bin_data = loadSpirVBinary(file_handle_.path_);
+                spirv_bin_data_u32 = convert(spirv_bin_data);
+            }
+            file_handle_.last_write_time_ = crnt_last_write_time;
+        }
 
-        if (stage == "vert")
-            reflect_descriptor_types(byte_code);
+        create();
+    }
 
-        logger::debug() << "SHADER INFO: " << name << "." << stage;
+	void ShaderModule::create() {
+        device = VulkanDevice::get_device_instance();
+
+        if (shader_stage == VK_SHADER_STAGE_FRAGMENT_BIT)
+            reflect_descriptor_types(spirv_bin_data_u32);
+
+        if (shader_stage == VK_SHADER_STAGE_VERTEX_BIT)
+            reflect_descriptor_types(spirv_bin_data_u32);
+
+        logger::debug() << "SHADER INFO: " << file_handle_.path_;
         logger::debug() << "UBO's: " << shader_resources.size() << " with overall size " << combined_uniform_size;
         logger::debug() << "Vertex Bindings: " << vertex_bindings.size();
         logger::debug() << "Push Constants: " << push_constants_new.size();
 
 		VkShaderModuleCreateInfo shader_module_create_info = {};
 		shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		shader_module_create_info.codeSize = binary_data.size();
-		shader_module_create_info.pCode = reinterpret_cast<const uint32_t*>(binary_data.data());
+		shader_module_create_info.codeSize = spirv_bin_data.size();
+		shader_module_create_info.pCode = spirv_bin_data_u32.data();
 
 		NVKG_ASSERT(vkCreateShaderModule(device->device(), &shader_module_create_info, nullptr, &shader_module) == VK_SUCCESS, "Failed to create shader module");
 	}
@@ -251,7 +304,7 @@ namespace nvkg {
 		return buffer;
 	}
 
-    void ShaderModule::reflect_descriptor_types(std::vector<uint32_t> spirv_binary) {
+    void ShaderModule::reflect_descriptor_types(std::vector<uint32_t>& spirv_binary) {
         spirv_cross::CompilerGLSL glsl(spirv_binary);
         spirv_cross::ShaderResources resources = glsl.get_shader_resources();
 

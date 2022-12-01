@@ -85,7 +85,7 @@ int main() {
     scene->set_camera(&camera);
 
     nvkg::Material diffuse_mat_new({
-        .shaders = {{"simpleShader", "vert"}, {"diffuseFragShader", "frag"}},
+        .shaders = {"simpleShader.vert", "diffuseFragShader.frag"},
         .textures = {{"texSampler", tex_mng->load_2d_img("../assets/textures/tex1.png")}},
     });
 
