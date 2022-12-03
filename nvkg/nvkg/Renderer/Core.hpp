@@ -1,6 +1,7 @@
 #ifndef NVKG_CORE_HPP
 #define NVKG_CORE_HPP
 
+#include <nvkg/Utils/mem_profiler.hpp>
 #include <nvkg/Renderer/Utils/Hash.hpp>
 #include <nvkg/Utils/logger.hpp>
 #include <nvkg/ecs/ecs.hpp>

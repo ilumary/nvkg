@@ -124,6 +124,8 @@ int main() {
 
     bool input_enabled = true;
 
+    logger::debug() << alloc_calls_ << ", " << dealloc_calls_ << ", " << used_memory_;
+
     while(!window.window_should_close()) {
         
         auto newTime = std::chrono::high_resolution_clock::now();
