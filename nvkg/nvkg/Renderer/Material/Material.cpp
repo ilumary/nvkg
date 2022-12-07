@@ -5,23 +5,11 @@
 
 namespace nvkg {
 
-    Material::Material() {
-        vert_shader = nullptr;
-        frag_shader = nullptr;
-        shader_count = 0;
-    }
-
-    Material::Material(MaterialConfig config) : Material() {
+    Material::Material(MaterialConfig config) {
         config_ = config;
         for(auto& shader : config_.shaders) {
-            //TODO make more dynamic
-            ShaderModule* tmp = new ShaderModule(shader, true);
-            if(tmp->shader_stage == VK_SHADER_STAGE_VERTEX_BIT) {
-                vert_shader = tmp;
-            } else if(tmp->shader_stage == VK_SHADER_STAGE_FRAGMENT_BIT) {
-                frag_shader = tmp;
-            }
-            shader_count += 1;
+            std::unique_ptr<ShaderModule> tmp = std::make_unique<ShaderModule>(shader, true);
+            shaders[tmp->shader_stage] = std::move(tmp);
         }
 
         for(auto& texture : config_.textures) {
@@ -32,22 +20,17 @@ namespace nvkg {
     }
 
     Material::~Material() {
-        if (isFreed) return;
-
-        destroy_material();
-    }
-
-    //TODO remove and replace by somehting les spaghetti like
-    void Material::create_layout( VkDescriptorSetLayout* layouts, uint32_t layoutCount, VkPushConstantRange* pushConstants, uint32_t pushConstantCount) {
         auto device = VulkanDevice::get_device_instance();
 
-        PipelineConfig::create_pipeline_layout(
-            device->device(), 
-            OUT &pipeline_layout, 
-            layouts, 
-            layoutCount, 
-            pushConstants, 
-            pushConstantCount);
+        for (auto& layout : descriptor_set_layouts) {
+            vkDestroyDescriptorSetLayout(device->device(), layout, nullptr);
+        }
+
+        pipeline.destroy();
+        
+        vkDestroyPipelineLayout(device->device(), pipeline_layout, nullptr);
+        
+        Buffer::destroy_buffer(buffer);
     }
 
     void Material::bind(VkCommandBuffer commandBuffer) {
@@ -57,16 +40,10 @@ namespace nvkg {
     }
 
     void Material::push_constant(VkCommandBuffer command_buffer, std::string name, size_t push_constant_size, const void* data) {
-        if(push_constants_new.count(name) > 0) {
-            const auto& pc = push_constants_new[name]; 
+        if(push_constants.count(name) > 0) {
+            const auto& pc = push_constants[name]; 
             vkCmdPushConstants(command_buffer, pipeline_layout, pc.stageFlags, 0, push_constant_size, data);
         }
-    }
-
-    void Material::recreate_pipeline() {
-        // Clear our graphics pipeline before swapchain re-creation
-        pipeline.clear();
-        prepare_pipeline();
     }
 
     void Material::set_texture(SampledTexture* tex, std::string tex_name) {
@@ -104,32 +81,33 @@ namespace nvkg {
                 NVKG_ASSERT(vkCreateDescriptorSetLayout(VulkanDevice::get_device_instance()->device(), &descriptor_layout, nullptr, &descriptor_set_layouts[index]) == VK_SUCCESS, "Failed to create descriptor set layout");
         }
 
-        for(const auto& [s, v] : vert_shader->push_constants_new) {
-            if(push_constants_new.count(s) > 0) {
-                push_constants_new[s].stageFlags = push_constants_new[s].stageFlags | v.stageFlags; 
-                continue;
+        for(const auto& [stage, shader] : shaders) {
+            for(const auto& [name, push_constant_range] : shader->push_constants_new) {
+                if(push_constants.count(name) > 0) {
+                    push_constants[name].stageFlags = push_constants[name].stageFlags | push_constant_range.stageFlags; 
+                    continue;
+                }
+                push_constants[name] = push_constant_range;
             }
-            push_constants_new[s] = v;
         }
 
-        for(const auto& [s, v] : frag_shader->push_constants_new) {
-            if(push_constants_new.count(s) > 0) {
-                push_constants_new[s].stageFlags = push_constants_new[s].stageFlags | v.stageFlags; 
-                continue;
-            }
-            push_constants_new[s] = v;
-        }
+        std::vector<VkPushConstantRange> tmp_push_constants(push_constants.size());
 
-        std::vector<VkPushConstantRange> tmp_push_constants(push_constants_new.size());
-
-        for(const auto& pc : push_constants_new) {
+        for(const auto& pc : push_constants) {
             tmp_push_constants.push_back(pc.second);
         }
 
         void* push_constant_data;
         if(tmp_push_constants.size() == 0) { push_constant_data = nullptr; } else { push_constant_data = &tmp_push_constants[0]; }
 
-        create_layout(&descriptor_set_layouts[0], descriptor_set_layouts.size(), (VkPushConstantRange*)push_constant_data, tmp_push_constants.size());
+        PipelineConfig::create_pipeline_layout(
+            VulkanDevice::get_device_instance()->device(),
+            OUT &pipeline_layout, 
+            &descriptor_set_layouts[0], 
+            descriptor_set_layouts.size(), 
+            (VkPushConstantRange*)push_constant_data, 
+            tmp_push_constants.size()
+        );
 
         NVKG_ASSERT(pipeline_layout != nullptr, "Cannot create pipeline without a valid layout!");
     }
@@ -137,8 +115,8 @@ namespace nvkg {
     void Material::prepare_pipeline() { 
         std::vector<PipelineConfig::ShaderConfig> shader_configs{};
 
-        if (vert_shader) shader_configs.push_back(PipelineConfig::ShaderConfig { nullptr, PipelineConfig::PipelineStage::VERTEX, vert_shader->shader_module });
-        if (frag_shader) shader_configs.push_back(PipelineConfig::ShaderConfig { nullptr, PipelineConfig::PipelineStage::FRAGMENT, frag_shader->shader_module });
+        shader_configs.push_back(PipelineConfig::ShaderConfig { VK_SHADER_STAGE_VERTEX_BIT, shaders[VK_SHADER_STAGE_VERTEX_BIT]->shader_module });
+        shader_configs.push_back(PipelineConfig::ShaderConfig { VK_SHADER_STAGE_FRAGMENT_BIT, shaders[VK_SHADER_STAGE_FRAGMENT_BIT]->shader_module });
 
         PipelineInit pipeline_conf = Pipeline::default_pipeline_init();
         pipeline_conf.rasterization_state.cullMode = VK_CULL_MODE_NONE;
@@ -146,7 +124,7 @@ namespace nvkg {
         pipeline_conf.pipeline_layout = pipeline_layout;
         pipeline_conf.vertex_data = VertexDescription::CreateDescriptions(vertex_binds.size(), vertex_binds.data());
 
-        pipeline.create_graphics_pipeline(shader_configs.data(), shader_count, pipeline_conf);
+        pipeline.create_graphics_pipeline(shader_configs.data(), shaders.size(), pipeline_conf);
     }
 
     void Material::setup_descriptor_sets() {
@@ -224,7 +202,7 @@ namespace nvkg {
         vkUpdateDescriptorSets(VulkanDevice::get_device_instance()->device(), static_cast<uint32_t>(write_sets.size()), write_sets.data(), 0, NULL);
     }
 
-    void Material::add_shader(ShaderModule* shader) {
+    void Material::add_shader(const std::unique_ptr<ShaderModule>& shader) {
         auto& vertices = shader->vertex_bindings;
 
         for(size_t i = 0; i < vertices.size(); i++) {
@@ -244,11 +222,11 @@ namespace nvkg {
         }
     }
 
-    void Material::set_shader_props(ShaderModule* shader, uint64_t& offset, uint16_t& res_counter) {
+    void Material::set_shader_props(const std::unique_ptr<ShaderModule>& shader, uint64_t& offset, uint16_t& res_counter) {
         auto shader_resources = shader->shader_resources;
 
         for(auto& res : shader_resources) {
-            if (has_prop(res.id)) {
+            if (has_res(res.id)) {
                 auto& property = get_res(res.id);
                 property.stage = property.stage | (VkShaderStageFlags) shader->shader_stage;
                 continue;
@@ -269,22 +247,6 @@ namespace nvkg {
             res_counter++;
         }
     }
-    
-    void Material::destroy_material() {
-        auto device = VulkanDevice::get_device_instance();
-
-        for (auto& layout : descriptor_set_layouts) {
-            vkDestroyDescriptorSetLayout(device->device(), layout, nullptr);
-        }
-
-        pipeline.destroy();
-        
-        vkDestroyPipelineLayout(device->device(), pipeline_layout, nullptr);
-        
-        Buffer::destroy_buffer(buffer);
-
-        isFreed = true;
-    }
 
     void Material::set_uniform_data(Utils::StringId id, VkDeviceSize dataSize, const void* data) {
         for(const auto& [k, v] : resources_per_set) {
@@ -299,7 +261,7 @@ namespace nvkg {
         logger::debug() << "Error while setting uniform data";
     }
 
-    bool Material::has_prop(Utils::StringId id) {
+    bool Material::has_res(Utils::StringId id) {
         for(const auto& [k, v] : resources_per_set) {
             for(auto& prop : v) {
                 if(prop.id == id) return true;
@@ -336,20 +298,14 @@ namespace nvkg {
     }
 
     void Material::create_material() {
-        // Allocate buffer which can store all the data we need
         logger::debug() << "CREATING NEW MATERIAL";
 
         uint64_t offset = 0;
         uint16_t counter = 0;
 
-        if (vert_shader) {
-            add_shader(vert_shader);
-            set_shader_props(vert_shader, OUT offset, counter);
-        }
-
-        if (frag_shader) {
-            add_shader(frag_shader);
-            set_shader_props(frag_shader, OUT offset, counter);
+        for(const auto& [stage, shader] : shaders) {
+            add_shader(shader);
+            set_shader_props(shader, OUT offset, counter);
         }
 
         if(buffer_size > 0) {

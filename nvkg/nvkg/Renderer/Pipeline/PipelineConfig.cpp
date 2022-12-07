@@ -79,7 +79,7 @@ namespace nvkg {
             "Failed to create pipeline layout!");
     }
 
-    VkPipelineShaderStageCreateInfo PipelineConfig::CreateShaderStage(
+    VkPipelineShaderStageCreateInfo PipelineConfig::create_shader_stage(
             VkShaderStageFlagBits stage, 
             VkShaderModule module, 
             const char* pName,
@@ -100,13 +100,13 @@ namespace nvkg {
         };
     }
 
-    void PipelineConfig::CreateDefaultPipelineStages(
+    void PipelineConfig::create_default_pipeline_stages(
             VkPipelineShaderStageCreateInfo* pShaderStageCreateInfos,
-            PipelineStage* stages, 
+            VkShaderStageFlagBits* stages,
             VkShaderModule* modules,
             uint32_t stageCount) {
         for (size_t i = 0; i < stageCount; i++) {
-            pShaderStageCreateInfos[i] = CreateShaderStage((VkShaderStageFlagBits)stages[i], modules[i]);
+            pShaderStageCreateInfos[i] = create_shader_stage(stages[i], modules[i]);
         }
     }
 }

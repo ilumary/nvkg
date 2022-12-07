@@ -239,7 +239,7 @@ namespace nvkg {
     void ShaderModule::recompile() {
         std::filesystem::file_time_type crnt_last_write_time = std::filesystem::last_write_time(file_handle_.path_);
         if(crnt_last_write_time > file_handle_.last_write_time_) {
-            logger::debug() << "Upgrading outdated shader " << file_handle_.path_;
+            logger::debug() << "Upgrading outdated shader " << file_handle_.path_ << " from " << file_time_to_string(file_handle_.last_write_time_);
             if(file_handle_.compile_sources) {
                 std::string shader_file = read_file_to_string(file_handle_.path_);
                 logger::debug() << "Compiling shader...";
@@ -255,9 +255,8 @@ namespace nvkg {
                 spirv_bin_data_u32 = convert(spirv_bin_data);
             }
             file_handle_.last_write_time_ = crnt_last_write_time;
+            create();
         }
-
-        create();
     }
 
 	void ShaderModule::create() {

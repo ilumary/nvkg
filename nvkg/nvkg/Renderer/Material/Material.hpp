@@ -26,7 +26,6 @@ namespace nvkg {
                 std::map<std::string, SampledTexture*> textures;
             } config_;
 
-            Material();
             Material(const MaterialConfig config);
 
             Material(const Material&) = delete;
@@ -37,38 +36,25 @@ namespace nvkg {
             void set_uniform_data(Utils::StringId id, VkDeviceSize dataSize, const void* data);
             void set_uniform_data(const char* name, VkDeviceSize dataSize, const void* data);
 
-            bool has_prop(Utils::StringId id);
-
             void push_constant(VkCommandBuffer command_buffer, std::string name, size_t push_constant_size, const void* data);
-            void set_texture(SampledTexture* tex, std::string tex_name);
-
+            
             void bind(VkCommandBuffer commandBuffer);
-
-            void recreate_pipeline();
-            void prepare_desc_set_layouts();
-            void prepare_pipeline();
-            void setup_descriptor_sets();
-            void destroy_material();
 
         private:
 
             ShaderResource& get_res(Utils::StringId id);
+            bool has_res(Utils::StringId id);
+            void set_texture(SampledTexture* tex, std::string tex_name);
 
             void create_material();
-            void add_shader(ShaderModule* shader);
-            void set_shader_props(ShaderModule* shader, uint64_t& offset, uint16_t& res_counter);
 
-            void create_layout(
-                VkDescriptorSetLayout* layouts = nullptr, 
-                uint32_t layoutCount = 0, 
-                VkPushConstantRange* pushConstants = nullptr, 
-                uint32_t pushConstantCount = 0
-            );
+            void add_shader(const std::unique_ptr<ShaderModule>& shader);
+            void set_shader_props(const std::unique_ptr<ShaderModule>& shader, uint64_t& offset, uint16_t& res_counter);
+            void prepare_desc_set_layouts();
+            void prepare_pipeline();
+            void setup_descriptor_sets();
 
-            uint32_t shader_count = 0;
-
-            ShaderModule* vert_shader {nullptr};
-            ShaderModule* frag_shader {nullptr};
+            std::map<VkShaderStageFlagBits, std::unique_ptr<ShaderModule>> shaders;
 
             Buffer::Buffer buffer;
             uint64_t buffer_size = 0;
@@ -85,7 +71,7 @@ namespace nvkg {
 
             std::map<uint32_t, SampledTexture*> textures{};
 
-            std::map<std::string, VkPushConstantRange> push_constants_new{}; //
+            std::map<std::string, VkPushConstantRange> push_constants{};
             std::vector<VertexDescription::Binding> vertex_binds{};
 
             std::vector<VkDescriptorSetLayout> descriptor_set_layouts{};
@@ -93,7 +79,5 @@ namespace nvkg {
             
             Pipeline pipeline;
             VkPipelineLayout pipeline_layout {VK_NULL_HANDLE};
-
-            bool isFreed = false;
     };
 }

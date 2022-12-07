@@ -28,17 +28,14 @@ namespace nvkg {
         shader_module_count = shader_count;
 
         VkPipelineShaderStageCreateInfo shader_stages[shader_count];
-
-        PipelineConfig::PipelineStage stages[shader_count];
+        VkShaderStageFlagBits stages[shader_count];
 
         for (size_t i = 0; i < shader_count; i++) {
-            if(shaders[i].filePath == nullptr) {
-                shader_modules[i] = shaders[i].shader_module;
-            } 
+            shader_modules[i] = shaders[i].shader_module;
             stages[i] = shaders[i].stage;
         }
 
-        PipelineConfig::CreateDefaultPipelineStages(OUT shader_stages, stages, shader_modules, shader_count);
+        PipelineConfig::create_default_pipeline_stages(OUT shader_stages, stages, shader_modules, shader_count);
 
         auto binding_descriptions = p_config.vertex_data.bindings;
         auto attribute_descriptions = p_config.vertex_data.attributes;

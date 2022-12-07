@@ -64,14 +64,9 @@ namespace nvkg {
     //TODO integrate in Pipeline class
     class PipelineConfig {
         public:
-        enum PipelineStage {
-            VERTEX = VK_SHADER_STAGE_VERTEX_BIT,
-            FRAGMENT = VK_SHADER_STAGE_FRAGMENT_BIT
-        };
 
         struct ShaderConfig {
-            const char* filePath { nullptr }; 
-            PipelineStage stage;
+            VkShaderStageFlagBits stage;
             VkShaderModule shader_module { VK_NULL_HANDLE };
         };
 
@@ -91,7 +86,7 @@ namespace nvkg {
             uint32_t pushConstantCount = 0
         );
 
-        static VkPipelineShaderStageCreateInfo CreateShaderStage(
+        static VkPipelineShaderStageCreateInfo create_shader_stage(
             VkShaderStageFlagBits stage, 
             VkShaderModule module, 
             const char* pName = "main",
@@ -100,9 +95,9 @@ namespace nvkg {
             const VkSpecializationInfo* pSpecialisationInfo = nullptr
         );
 
-        static void CreateDefaultPipelineStages(
+        static void create_default_pipeline_stages(
             VkPipelineShaderStageCreateInfo* pShaderStageCreateInfos, 
-            PipelineStage* stages, 
+            VkShaderStageFlagBits* stages,
             VkShaderModule* modules,
             uint32_t stageCount
         );

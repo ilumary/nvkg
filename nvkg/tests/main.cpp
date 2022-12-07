@@ -66,6 +66,7 @@ void mov_cam_xz(float deltaTime, Components::Shape& viewerObject) {
 }
 
 int main() {
+    logger::debug() << alloc_calls_ << ", " << dealloc_calls_ << ", " << used_memory_;
     nvkg::Window window("NVKG", WIDTH, HEIGHT);
     window.disable_cursor();
     Input::init_with_window_pointer(&window); //TODO hide
