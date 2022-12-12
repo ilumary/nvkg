@@ -119,7 +119,9 @@ namespace nvkg {
         shader_configs.push_back(PipelineConfig::ShaderConfig { VK_SHADER_STAGE_FRAGMENT_BIT, shaders[VK_SHADER_STAGE_FRAGMENT_BIT]->shader_module });
 
         PipelineInit pipeline_conf = Pipeline::default_pipeline_init();
-        pipeline_conf.rasterization_state.cullMode = VK_CULL_MODE_NONE;
+        
+        if(config_.pipeline_configurator) { config_.pipeline_configurator(pipeline_conf); } //user specified changes to pipeline
+
         pipeline_conf.render_pass = SwapChain::GetInstance()->GetRenderPass()->GetRenderPass();
         pipeline_conf.pipeline_layout = pipeline_layout;
         pipeline_conf.vertex_data = VertexDescription::CreateDescriptions(vertex_binds.size(), vertex_binds.data());

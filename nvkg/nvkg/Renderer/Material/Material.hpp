@@ -10,6 +10,9 @@
 #include <vector>
 #include <array>
 #include <map>
+#include <chrono>
+#include <thread>
+#include <functional>
 
 namespace nvkg {
 
@@ -24,6 +27,7 @@ namespace nvkg {
             struct MaterialConfig {
                 std::vector<std::string> shaders;
                 std::map<std::string, SampledTexture*> textures;
+                std::function<void(PipelineInit& pipeline)> pipeline_configurator = {};
             } config_;
 
             Material(const MaterialConfig config);

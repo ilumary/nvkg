@@ -90,7 +90,7 @@ namespace nvkg {
         PipelineInit pc{};
 
         pc.input_assembly_state = pipeline::pipeline_input_assembly_state_create_info(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, 0, VK_FALSE);
-        pc.rasterization_state = pipeline::pipeline_rasterization_state_create_info(VK_POLYGON_MODE_FILL, VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_CLOCKWISE, 0);
+        pc.rasterization_state = pipeline::pipeline_rasterization_state_create_info(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE, 0);
         pc.blend_attachment_state = pipeline::pipeline_color_blend_attachment_state(0xf, VK_FALSE);
 		pc.color_blend_state = pipeline::pipeline_color_blend_state_create_info(1, &pc.blend_attachment_state);
         pc.depth_stencil_state = pipeline::pipeline_depth_stencil_state_create_info(VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS_OR_EQUAL);
