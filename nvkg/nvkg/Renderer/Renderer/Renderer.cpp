@@ -76,5 +76,12 @@ namespace nvkg {
             m->bind(commandBuffer);
             m->draw(commandBuffer, 0);
         });
+        
+        registry.each([&commandBuffer](const sdf_text_outline& s, const render_mesh& r) {
+            r.material_->bind(commandBuffer);
+            r.material_->push_constant(commandBuffer, "push", sizeof(sdf_text_outline), &s);
+            r.model_->bind(commandBuffer);
+            r.model_->draw(commandBuffer, 0);
+        });
     }
 }

@@ -477,6 +477,8 @@ namespace nvkg {
             VkPushConstantRange push_constant_range = {};
 
             const spirv_cross::SPIRType &type = glsl.get_type(resource.base_type_id);
+            size_t push_size = glsl.get_declared_struct_size(type);
+            logger::debug() << "Push constant size: " << push_size;
             if(type.basetype == spirv_cross::SPIRType::Struct) {
                 size_t push_size = glsl.get_declared_struct_size(type);
 

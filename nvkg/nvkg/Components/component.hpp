@@ -7,6 +7,7 @@
 #include <nvkg/Utils/logger.hpp>
 #include <nvkg/Renderer/Core.hpp>
 #include <nvkg/Renderer/Model/Model.hpp>
+#include <nvkg/Components/sdf_text.hpp>
 
 namespace nvkg {
     /*
@@ -33,6 +34,11 @@ namespace nvkg {
     struct point_light {
         glm::vec4 color_;
         alignas(16) glm::vec3 position_;
+    };
+
+    struct sdf_text_outline {
+        float outline_width_;
+        float outline_enabled_;
     };
 
     struct shared_render_mesh { // instanced rendering, TODO

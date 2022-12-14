@@ -14,6 +14,7 @@ Current highlights are:
   - Plug-and-play architecture
   - Model loading
   - Fully functional Entity Component System
+  - Signed distance field font rendering
 
 Still to be done are:
   - Compute pipeline builder
