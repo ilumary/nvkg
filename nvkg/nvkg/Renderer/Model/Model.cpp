@@ -27,7 +27,7 @@ namespace std {
 
 namespace nvkg {
     Model::Model(const Mesh::MeshData& meshData) {
-        modelMesh.LoadVertices(meshData);
+        modelMesh.load_vertices(meshData);
     }
 
     Model::Model(const char* filePath) {
@@ -36,10 +36,6 @@ namespace nvkg {
 
     Model::Model() {}
     Model::~Model() {}
-
-    void Model::DestroyModel() {
-        modelMesh.DestroyMesh();
-    }
 
     void Model::LoadModelFromFile(const char* filePath) {
         tinyobj::attrib_t attrib;
@@ -95,7 +91,7 @@ namespace nvkg {
             }
         }
 
-        modelMesh.LoadVertices(
+        modelMesh.load_vertices(
             {
                 sizeof(Vertex),
                 objVertices.data(), 
@@ -107,19 +103,19 @@ namespace nvkg {
     }
 
     void Model::update_mesh(const Mesh::MeshData& meshData) {
-        modelMesh.UpdateVertices(meshData);
+        modelMesh.update_vertices(meshData);
     }
 
     void Model::set_mesh(const Mesh::MeshData& meshData) {
-        modelMesh.LoadVertices(meshData);
+        modelMesh.load_vertices(meshData);
     }
 
     void Model::bind(VkCommandBuffer commandBuffer) {
-        modelMesh.Bind(commandBuffer);
+        modelMesh.bind(commandBuffer);
     }
 
     void Model::draw(VkCommandBuffer commandBuffer, uint32_t instance) {
-        if (modelMesh.HasIndexBuffer()) vkCmdDrawIndexed(commandBuffer, modelMesh.GetIndexCount(), 1, 0, 0, instance);
-        else vkCmdDraw(commandBuffer, modelMesh.GetVertexCount(), 1, 0, instance);
+        if (modelMesh.has_index_buffer()) vkCmdDrawIndexed(commandBuffer, modelMesh.get_index_count(), 1, 0, 0, instance);
+        else vkCmdDraw(commandBuffer, modelMesh.get_vertex_count(), 1, 0, instance);
     }
 }

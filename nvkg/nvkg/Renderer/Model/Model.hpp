@@ -23,12 +23,11 @@ namespace nvkg {
                 glm::mat4 normalMatrix;
             };
 
-            Model(const Mesh::MeshData& meshData);
-            Model(const char* filePath);
             Model();
             ~Model();
 
-            void DestroyModel();
+            Model(const Mesh::MeshData& meshData);
+            Model(const char* filePath);
 
             Model(const Model&) = delete;
             Model& operator=(const Model&) = delete;
@@ -39,7 +38,7 @@ namespace nvkg {
             void update_mesh(const Mesh::MeshData& meshData);
             void set_mesh(const Mesh::MeshData& meshData);
 
-            bool IsIndexed() { return modelMesh.HasIndexBuffer(); }
+            bool IsIndexed() { return modelMesh.has_index_buffer(); }
 
         private:
 

@@ -32,9 +32,6 @@ namespace nvkg {
     class Mesh {
         public:
 
-            static constexpr size_t MAX_VERTICES = 10000;
-            static constexpr size_t MAX_INDICES = 100000;
-
             struct MeshData {
                 uint64_t vertexSize {0};
                 const void* vertices {nullptr};
@@ -50,40 +47,30 @@ namespace nvkg {
             Mesh(const Mesh&) = delete;
             void operator=(const Mesh& other) = delete;
 
-            void LoadVertices(const Mesh::MeshData& meshData);
-            void UpdateVertices(const Mesh::MeshData& meshData);
+            void load_vertices(const Mesh::MeshData& meshData);
+            void update_vertices(const Mesh::MeshData& meshData);
 
-            void UpdateVertexBuffer(const void* vertices);
-            void UpdateIndexBuffer(uint32_t* indices);
+            void bind(VkCommandBuffer commandBuffer);
 
-            void Bind(VkCommandBuffer commandBuffer);
-            void DestroyMesh();
+            bool has_index_buffer() { return has_index_buffer_; }
 
-            bool HasIndexBuffer() { return hasIndexBuffer; }
-
-            uint32_t GetVertexCount() { return vertexCount; }
-            uint32_t GetIndexCount() { return indexCount; }
+            uint32_t get_vertex_count() { return vertex_count_; }
+            uint32_t get_index_count() { return index_count_; }
 
         private:
 
-            void CreateVertexBuffers(const void* vertices);
-            void CreateIndexBuffer(const uint32_t* indices);
+            void update_vertex_buffer(const void* vertices, size_t size);
+            void update_index_buffer(uint32_t* indices, size_t size);
 
-            Buffer::Buffer globalStagingBuffer;
-            Buffer::Buffer globalIndexStagingBuffer;
+            void create_vertex_buffer(const void* vertices, size_t size);
+            void create_index_buffer(const uint32_t* indices, size_t size);
 
-            Buffer::Buffer vertexBuffer;
-            Buffer::Buffer indexBuffer;
+            Buffer::Buffer vertex_staging_buffer_, index_staging_buffer_;
 
-            bool hasIndexBuffer = false;
-            bool hasVertexBuffer = false;
+            Buffer::Buffer vertex_buffer_, index_buffer_;
 
-            uint32_t indexCount = 0;
-            uint32_t vertexCount = 0;
+            bool has_index_buffer_ = false, has_vertex_buffer_ = false;
 
-            uint64_t indexSize {sizeof(uint32_t)};
-            uint64_t vertexSize = 0;
-
-            bool isFreed = false;
+            uint32_t index_count_ = 0, vertex_count_ = 0;
     };
 }
