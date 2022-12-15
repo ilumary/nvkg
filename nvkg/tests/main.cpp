@@ -3,7 +3,6 @@
 #include <nvkg/Window/Window.hpp>
 #include <nvkg/Renderer/Context.hpp>
 #include <nvkg/Renderer/Model/Model.hpp>
-#include <nvkg/Components/Shape.hpp>
 #include <nvkg/Input/Input.hpp>
 #include <nvkg/Utils/Math.hpp>
 #include <nvkg/Renderer/Material/Material.hpp>
@@ -19,7 +18,7 @@
 static const constexpr int WIDTH = 1280;
 static const constexpr int HEIGHT = 720;
 
-void mov_cam_xz(float deltaTime, Components::Shape& viewerObject) {
+void mov_cam_xz(float deltaTime, nvkg::transform_3d& cam_transform) {
     static auto oldMousePos = Input::get_cursor_pos();
     auto mousePos = Input::get_cursor_pos();
 
@@ -33,15 +32,15 @@ void mov_cam_xz(float deltaTime, Components::Shape& viewerObject) {
     rotate.x += differenceY;
 
     if (glm::dot(rotate, rotate) > glm::epsilon<float>()) {
-        glm::vec3 newRotation = viewerObject.get_rot() + lookSpeed * glm::normalize(rotate);
-        viewerObject.set_rot(Utils::Math::Lerp(viewerObject.get_rot(), newRotation, deltaTime));
+        glm::vec3 newRotation = cam_transform.rotation_ + lookSpeed * glm::normalize(rotate);
+        cam_transform.rotation_ = Utils::Math::Lerp(cam_transform.rotation_, newRotation, deltaTime);
     }
 
-    // Limit the pitch values to avoid objects rotating upside-down.
-    viewerObject.set_rot_x(glm::clamp(viewerObject.get_rot().x, -1.5f, 1.5f));
-    viewerObject.set_rot_y(glm::mod(viewerObject.get_rot().y, glm::two_pi<float>()));
+    // Limit the pitch values to avoid objects rotating upside-down
+    cam_transform.rotation_.x = glm::clamp(cam_transform.rotation_.x, -1.5f, 1.5f);
+    cam_transform.rotation_.y = glm::mod(cam_transform.rotation_.y, glm::two_pi<float>());
 
-    float yaw = viewerObject.get_rot().y;
+    float yaw = cam_transform.rotation_.y;
     const glm::vec3 forwardDir{glm::sin(yaw), 0.f, glm::cos(yaw)};
     const glm::vec3 rightDir{forwardDir.z, 0.f, -forwardDir.x};
     const glm::vec3 upDir{0.f, -1.f, 0.f};
@@ -58,8 +57,8 @@ void mov_cam_xz(float deltaTime, Components::Shape& viewerObject) {
     float moveSpeed = 2.f;
 
     if (glm::dot(moveDir, moveDir) > glm::epsilon<float>()) {
-        glm::vec3 newMove = viewerObject.get_pos() + moveSpeed * glm::normalize(moveDir);
-        viewerObject.set_pos(Utils::Math::Lerp(viewerObject.get_pos(), newMove, deltaTime));
+        glm::vec3 newMove = cam_transform.position_ + moveSpeed * glm::normalize(moveDir);
+        cam_transform.position_ = Utils::Math::Lerp(cam_transform.position_, newMove, deltaTime);
     }
 
     oldMousePos = mousePos;
@@ -79,7 +78,7 @@ int main() {
 
     //TODO need to update camera
     nvkg::Camera camera;
-    Components::Shape cam_obj;
+    nvkg::transform_3d cam_transform;
 
     //TODO request scene from context
     nvkg::Scene* scene = context.create_scene("scene1");
@@ -110,15 +109,25 @@ int main() {
     });
 
     auto test_text_entity = registry.create<nvkg::sdf_text_outline, nvkg::render_mesh>({.55f, true }, {
-        .model_ = nvkg::sdf_text::generate_text("Bitte helfen sie mir!"),
+        .model_ = nvkg::sdf_text::generate_text("HILFE MANNNO MANN"), //TODO maybe add puffer
         .material_ = std::unique_ptr<nvkg::Material>(&sdf_mat_new)
     });
+
+    tp::timer timer;
+
+    nvkg::render_mesh& text_render_mesh = registry.get<nvkg::render_mesh>(test_text_entity);
+
+    timer.start(); nvkg::sdf_text::generate_text("test"); timer.stop();
+    logger::debug() << "generate_text func time " << timer.ns();
+    timer.start(); nvkg::sdf_text::update_model_mesh("Hallo langer Text", text_render_mesh.model_); timer.stop();
+    logger::debug() << "update_model_mesh func update time " << timer.ns();
 
     // Generating models from .obj files
     nvkg::Model cubeObjModel("assets/models/cube.obj");
     nvkg::Model vaseObjModel("assets/models/smooth_vase.obj");
 
-    cam_obj.set_pos({0.f, -1.f, -2.5f});
+    //cam_obj.set_pos({0.f, -1.f, -2.5f});
+    cam_transform.position_ = {0.f, -1.f, -2.5f};
 
     auto entity = registry.create<nvkg::transform_3d, nvkg::render_mesh>({
         {0.f, -.5f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}
@@ -173,8 +182,8 @@ int main() {
         camera.set_perspective_proj(glm::radians(50.f), aspect, 0.1f, 100.f);
 
         if (input_enabled) {
-            mov_cam_xz(frameTime, cam_obj);
-            camera.set_view_xyz(cam_obj.get_pos(), cam_obj.get_rot());
+            mov_cam_xz(frameTime, cam_transform);
+            camera.set_view_xyz(cam_transform.position_, cam_transform.rotation_);
         }
 
         context.render();

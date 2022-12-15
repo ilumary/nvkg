@@ -1,7 +1,6 @@
 #ifndef NVKG_SCENE_HPP
 #define NVKG_SCENE_HPP
 
-#include <nvkg/Components/Shape.hpp>
 #include <nvkg/Renderer/Camera/Camera.hpp>
 #include <nvkg/Components/component.hpp>
 
