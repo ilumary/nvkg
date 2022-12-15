@@ -104,7 +104,7 @@ namespace nvkg {
     std::map<char, sdf_text::vi_2d> sdf_text::chars_ = []{
         std::map<char, vi_2d> tmp_chars;
         
-        std::string alphanum = "abcdefghijklmnopqrstuvwqyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+        std::string alphanum = "abcdefghijklmnopqrstuvwqxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
         std::string special_chars = "(){}[]|$@!?;/\\%&<>:+^='\"`*~ ";
 
         for(int i = 0; i < alphanum.size(); ++i) {
@@ -155,6 +155,46 @@ namespace nvkg {
             static_cast<uint32_t>(vertices.size()),
             indices.data(),
             static_cast<uint32_t>(indices.size()),
+        });
+    }
+
+    void sdf_text::update_model_mesh(std::string text, std::unique_ptr<nvkg::Model>& model) {
+        std::vector<Vertex2D> vertices;
+        std::vector<uint32_t> indices;
+
+        uint32_t indice_offset = 0;
+        float previous_stride_x = 0;
+
+        for (uint32_t i = 0; i < text.size(); i++) {
+            vi_2d* mesh = &chars_[text[i]];
+
+            std::vector<uint32_t> tmp_i = mesh->indices;
+
+            for(auto& i : tmp_i) {
+                i += indice_offset;
+            }
+
+            indice_offset += 4;
+
+            indices.insert(indices.end(), tmp_i.begin(), tmp_i.end());
+            
+            std::vector<Vertex2D> tmp_v = mesh->vertices;
+
+            for(auto& v : tmp_v) {
+                v.position.x += previous_stride_x;
+            }
+
+            previous_stride_x += (float)sdf_text::font_chars_[(int)text[i]].xadvance / 36.f;
+
+            vertices.insert(vertices.end(), tmp_v.begin(), tmp_v.end());
+        }
+
+        model->update_mesh({
+            sizeof(Vertex2D),
+            vertices.data(),
+            static_cast<uint32_t>(vertices.size()),
+            indices.data(),
+            static_cast<uint32_t>(indices.size())
         });
     }
 

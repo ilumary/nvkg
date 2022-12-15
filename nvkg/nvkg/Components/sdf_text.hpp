@@ -14,6 +14,9 @@ namespace nvkg {
         public:
 
             static std::unique_ptr<nvkg::Model> generate_text(std::string text);
+
+            static void update_model_mesh(std::string text, std::unique_ptr<nvkg::Model>& model);
+
             static void generate_text_old(std::string text, std::unique_ptr<nvkg::Model>& model);
 
         private:
