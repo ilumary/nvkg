@@ -131,9 +131,9 @@ namespace nvkg {
 	}
 
 	void VulkanDevice::create_logical_device() {
-		QueueFamilyIndices::QueueFamilyIndices indices = QueueFamilyIndices::FindQueueFamilies(physical_device_, surface_);
+		QueueFamilyIndices::QueueFamilyIndices indices = QueueFamilyIndices::find_queue_families(physical_device_, surface_);
 
-		std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily};
+		std::set<uint32_t> uniqueQueueFamilies = {indices.graphics_family_, indices.present_family_};
 		VkDeviceQueueCreateInfo queueCreateInfos[uniqueQueueFamilies.size()];
 
 		float queuePriority = 1.0f;
@@ -175,8 +175,9 @@ namespace nvkg {
 		NVKG_ASSERT(vkCreateDevice(physical_device_, &createInfo, nullptr, OUT &device_) == VK_SUCCESS, 
 			"failed to create logical device!");
 
-		vkGetDeviceQueue(device_, indices.graphicsFamily, 0, OUT &graphics_queue_);
-		vkGetDeviceQueue(device_, indices.presentFamily, 0, OUT &present_queue_);
+		vkGetDeviceQueue(device_, indices.graphics_family_, 0, OUT &graphics_queue_);
+		vkGetDeviceQueue(device_, indices.compute_family, 0, OUT &compute_queue_);
+		vkGetDeviceQueue(device_, indices.present_family_, 0, OUT &present_queue_);
 
 		volkLoadDevice(device_);
 	}
@@ -186,7 +187,7 @@ namespace nvkg {
 
 		VkCommandPoolCreateInfo poolInfo = {};
 		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily;
+		poolInfo.queueFamilyIndex = queueFamilyIndices.graphics_family_;
 		poolInfo.flags =
 			VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 

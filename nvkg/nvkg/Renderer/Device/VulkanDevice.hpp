@@ -43,15 +43,17 @@ namespace nvkg {
 		VkCommandPool get_command_pool() { return command_pool_; }
 		VkDevice device() { return device_; }
 		VkSurfaceKHR surface() { return surface_; }
+
 		VkQueue graphics_queue() { return graphics_queue_; }
 		VkQueue present_queue() { return present_queue_; }
+		VkQueue compute_queue() { return compute_queue_; }
 
 		size_t get_device_alignment() { return properties.limits.minUniformBufferOffsetAlignment; }
 		SwapChainSupportDetails::SwapChainSupportDetails get_swapchain_support() { return SwapChainSupportDetails::QuerySupport(physical_device_, surface_); }
 		
 		uint32_t find_mem_type(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
-		QueueFamilyIndices::QueueFamilyIndices find_phys_queue_families() { return QueueFamilyIndices::FindQueueFamilies(physical_device_, surface_); }
+		QueueFamilyIndices::QueueFamilyIndices find_phys_queue_families() { return QueueFamilyIndices::find_queue_families(physical_device_, surface_); }
 		VkFormat find_supported_format(const VkFormat* candidates, size_t formatCount, VkImageTiling tiling, VkFormatFeatureFlags features);
 
 		VkCommandBuffer begin_single_time_commands();
@@ -86,8 +88,8 @@ namespace nvkg {
 
 		VkDevice device_;
 		VkSurfaceKHR surface_;
-		VkQueue graphics_queue_;
-		VkQueue present_queue_;
+
+		VkQueue graphics_queue_, present_queue_, compute_queue_;
 
 		const std::array<const char*, 1> validation_layers = { "VK_LAYER_KHRONOS_validation" };
 		const std::array<const char*, 2> device_extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME };

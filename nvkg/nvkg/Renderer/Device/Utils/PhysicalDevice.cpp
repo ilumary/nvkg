@@ -36,7 +36,7 @@ namespace nvkg::PhysicalDevice {
     }
 
     bool IsSuitable(VkPhysicalDevice device, VkSurfaceKHR& surface, const char *const * deviceExtensions, size_t deviceExtensionCount) {
-        QueueFamilyIndices::QueueFamilyIndices indices = QueueFamilyIndices::FindQueueFamilies(device, surface);
+        QueueFamilyIndices::QueueFamilyIndices indices = QueueFamilyIndices::find_queue_families(device, surface);
 
         bool extensionsSupported = CheckExtensionSupport(device, deviceExtensions, deviceExtensionCount);
 
@@ -55,7 +55,7 @@ namespace nvkg::PhysicalDevice {
         // 2) It has the supported formats and present modes.
         // 3) It has a graphics and present queues.
         // 4) It supports sampler anistropy.
-        return QueueFamilyIndices::IsComplete(indices) && extensionsSupported && swapChainAdequate &&
+        return QueueFamilyIndices::is_complete(indices) && extensionsSupported && swapChainAdequate &&
                 supportedFeatures.samplerAnisotropy;
     }
 }

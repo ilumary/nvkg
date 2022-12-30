@@ -106,9 +106,9 @@ namespace nvkg {
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
         
         QueueFamilyIndices::QueueFamilyIndices indices = device.find_phys_queue_families();
-        uint32_t queueFamilyIndices[] = {indices.graphicsFamily, indices.presentFamily};
+        uint32_t queueFamilyIndices[] = {indices.graphics_family_, indices.present_family_};
 
-        if (indices.graphicsFamily != indices.presentFamily) {
+        if (indices.graphics_family_ != indices.present_family_) {
             createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
             createInfo.queueFamilyIndexCount = 2;
             createInfo.pQueueFamilyIndices = queueFamilyIndices;
