@@ -49,51 +49,49 @@ namespace nvkg {
         return chars_;
     }();
 
-    void sdf_text::generate_mesh_from_string(std::string text, vi_2d& mesh) {
+    void sdf_text::generate_mesh_from_char(char c, vi_2d& mesh) {
         std::vector<nvkg::Vertex2D> vertices;
         std::vector<uint32_t> indices;
         uint32_t indexOffset = 0, indexCount = 0;
 
-        float w = 512; //textures.fontSDF.width;
+        float w = 512; //textures.fontSDF.width; TODO
 
         float posx = 0.0f;
         float posy = 0.0f;
 
-        for (uint32_t i = 0; i < text.size(); i++) {
-            bmchar *charInfo = &sdf_text::font_chars_[(int)text[i]];
+        bmchar *charInfo = &sdf_text::font_chars_[(int)c];
 
-            if (charInfo->width == 0)
-                charInfo->width = 36;
+        if (charInfo->width == 0)
+            charInfo->width = 36;
 
-            float charw = ((float)(charInfo->width) / 36.0f);
-            float dimx = 1.0f * charw;
-            float charh = ((float)(charInfo->height) / 36.0f);
-            float dimy = 1.0f * charh;
+        float charw = ((float)(charInfo->width) / 36.0f);
+        float dimx = 1.0f * charw;
+        float charh = ((float)(charInfo->height) / 36.0f);
+        float dimy = 1.0f * charh;
 
-            float us = charInfo->x / w;
-            float ue = (charInfo->x + charInfo->width) / w;
-            float ts = charInfo->y / w;
-            float te = (charInfo->y + charInfo->height) / w;
+        float us = charInfo->x / w;
+        float ue = (charInfo->x + charInfo->width) / w;
+        float ts = charInfo->y / w;
+        float te = (charInfo->y + charInfo->height) / w;
 
-            float xo = charInfo->xoffset / 36.0f;
-            float yo = charInfo->yoffset / 36.0f;
+        float xo = charInfo->xoffset / 36.0f;
+        float yo = charInfo->yoffset / 36.0f;
 
-            posy = yo;
+        posy = yo;
 
-            vertices.push_back({ { posx + dimx + xo,  posy + dimy}, { ue, te }, {1.f, 0.f, 0.f, 1.f} });
-            vertices.push_back({ { posx + xo,         posy + dimy}, { us, te }, {1.f, 0.f, 0.f, 1.f} });
-            vertices.push_back({ { posx + xo,         posy,      }, { us, ts }, {1.f, 0.f, 0.f, 1.f} });
-            vertices.push_back({ { posx + dimx + xo,  posy,      }, { ue, ts }, {1.f, 0.f, 0.f, 1.f} });
+        vertices.push_back({ { posx + dimx + xo,  posy + dimy}, { ue, te }, {1.f, 0.f, 0.f, 1.f} });
+        vertices.push_back({ { posx + xo,         posy + dimy}, { us, te }, {1.f, 0.f, 0.f, 1.f} });
+        vertices.push_back({ { posx + xo,         posy,      }, { us, ts }, {1.f, 0.f, 0.f, 1.f} });
+        vertices.push_back({ { posx + dimx + xo,  posy,      }, { ue, ts }, {1.f, 0.f, 0.f, 1.f} });
 
-            std::array<uint32_t, 6> letterIndices = { 0,1,2, 2,3,0 };
-            for (auto& index : letterIndices) {
-                indices.push_back(indexOffset + index);
-            }
-            indexOffset += 4;
-
-            float advance = ((float)(charInfo->xadvance) / 36.0f);
-            posx += advance;
+        std::array<uint32_t, 6> letterIndices = { 0,1,2, 2,3,0 };
+        for (auto& index : letterIndices) {
+            indices.push_back(indexOffset + index);
         }
+        indexOffset += 4;
+
+        float advance = ((float)(charInfo->xadvance) / 46.0f);
+        posx += advance;
 
         indexCount = indices.size();
 
@@ -105,14 +103,14 @@ namespace nvkg {
         std::map<char, vi_2d> tmp_chars;
         
         std::string alphanum = "abcdefghijklmnopqrstuvwqxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-        std::string special_chars = "(){}[]|$@!?;/\\%&<>:+^='\"`*~ ";
+        std::string special_chars = "(){}[]|$@!?;/\\%&<>:+^='\"`*~ ,.";
 
         for(int i = 0; i < alphanum.size(); ++i) {
-            generate_mesh_from_string(std::string(1, alphanum[i]), tmp_chars[alphanum[i]]);
+            generate_mesh_from_char(alphanum[i], tmp_chars[alphanum[i]]);
         }
 
         for(int i = 0; i < special_chars.size(); ++i) {
-            generate_mesh_from_string(std::string(1, special_chars[i]), tmp_chars[special_chars[i]]);
+            generate_mesh_from_char(special_chars[i], tmp_chars[special_chars[i]]);
         }
         
         return tmp_chars;
@@ -144,7 +142,7 @@ namespace nvkg {
                 v.position.x += previous_stride_x;
             }
 
-            previous_stride_x += (float)sdf_text::font_chars_[(int)text[i]].xadvance / 36.f;
+            previous_stride_x += (float)sdf_text::font_chars_[(int)text[i]].xadvance / 46.f;
 
             vertices.insert(vertices.end(), tmp_v.begin(), tmp_v.end());
         }
@@ -158,7 +156,7 @@ namespace nvkg {
         });
     }
 
-    void sdf_text::update_model_mesh(std::string text, std::unique_ptr<nvkg::Model>& model) {
+    void sdf_text::update_model_mesh(std::string text, std::unique_ptr<nvkg::Model>& model, uint32_t start_index) {
         std::vector<Vertex2D> vertices;
         std::vector<uint32_t> indices;
 
@@ -184,7 +182,7 @@ namespace nvkg {
                 v.position.x += previous_stride_x;
             }
 
-            previous_stride_x += (float)sdf_text::font_chars_[(int)text[i]].xadvance / 36.f;
+            previous_stride_x += (float)sdf_text::font_chars_[(int)text[i]].xadvance / 46.f;
 
             vertices.insert(vertices.end(), tmp_v.begin(), tmp_v.end());
         }
@@ -240,7 +238,7 @@ namespace nvkg {
             }
             indexOffset += 4;
 
-            float advance = ((float)(charInfo->xadvance) / 36.0f);
+            float advance = ((float)(charInfo->xadvance) / 46.0f);
             posx += advance;
         }
 

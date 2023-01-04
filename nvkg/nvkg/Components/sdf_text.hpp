@@ -15,7 +15,7 @@ namespace nvkg {
 
             static std::unique_ptr<nvkg::Model> generate_text(std::string text);
 
-            static void update_model_mesh(std::string text, std::unique_ptr<nvkg::Model>& model);
+            static void update_model_mesh(std::string text, std::unique_ptr<nvkg::Model>& model, uint32_t start_index = 0);
 
             static void generate_text_old(std::string text, std::unique_ptr<nvkg::Model>& model);
 
@@ -41,7 +41,7 @@ namespace nvkg {
                 std::vector<uint32_t> indices; 
             };
 
-            static void generate_mesh_from_string(std::string text, vi_2d& mesh);
+            static void generate_mesh_from_char(char c, vi_2d& mesh);
 
             static std::array<bmchar, 255> font_chars_;
 
