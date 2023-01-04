@@ -38,12 +38,12 @@ namespace nvkg {
             void update_mesh(const Mesh::MeshData& meshData);
             void set_mesh(const Mesh::MeshData& meshData);
 
-            bool IsIndexed() { return modelMesh.has_index_buffer(); }
+            bool IsIndexed() { return mesh_.has_index_buffer(); }
 
         private:
 
             void LoadModelFromFile(const char* filePath);
 
-            Mesh modelMesh;
+            Mesh mesh_;
     };
 }
