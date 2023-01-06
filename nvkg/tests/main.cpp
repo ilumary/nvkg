@@ -73,9 +73,6 @@ int main() {
     nvkg::Context context(window);
     ecs::registry& registry = context.get_registry();
 
-    nvkg::TextureManager* tex_mng = new nvkg::TextureManager(); //TODO hide
-    tex_mng->init(&context.get_device()); //also
-
     //TODO need to update camera
     nvkg::Camera camera;
     nvkg::transform_3d cam_transform{};
@@ -86,12 +83,12 @@ int main() {
 
     nvkg::Material diffuse_mat_new({
         .shaders = {"simpleShader.vert", "diffuseFragShader.frag"},
-        .textures = {{"texSampler", tex_mng->load_2d_img("../assets/textures/tex1.png")}},
+        .textures = {{"texSampler", nvkg::TextureManager::load_2d_img("../assets/textures/tex1.png")}},
     });
 
     nvkg::Material sdf_mat_new({
         .shaders = {"sdf.vert", "sdf.frag"},
-        .textures = {{"samplerColor", tex_mng->load_2d_img("../assets/textures/font_sdf_rgba.png")}},
+        .textures = {{"samplerColor", nvkg::TextureManager::load_2d_img("../assets/textures/font_sdf_rgba.png")}},
         .pipeline_configurator = [](nvkg::PipelineInit& pipeline) -> void {
             pipeline.rasterization_state.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
