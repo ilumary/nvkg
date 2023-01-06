@@ -28,17 +28,21 @@ namespace nvkg {
     struct transform_2d {
         glm::vec2 position_;
         glm::vec2 scale_;
-        glm::vec2 rotation_;
+        float rotation_;
     };
 
     struct point_light {
-        glm::vec4 color_;
+        alignas(16) glm::vec4 color_;
         alignas(16) glm::vec3 position_;
     };
 
     struct sdf_text_outline {
-        float outline_width_;
-        float outline_enabled_;
+        alignas(4) glm::float32 outline_width_;
+        alignas(4) glm::float32 outline_enabled_;
+        alignas(4) glm::float32 text_thickness_;
+        alignas(8) glm::vec2 position_;
+        alignas(8) glm::vec2 scale_;
+        alignas(4) glm::float32 rotation_;
     };
 
     struct shared_render_mesh { // instanced rendering, TODO

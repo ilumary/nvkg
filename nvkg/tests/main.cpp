@@ -78,7 +78,7 @@ int main() {
 
     //TODO need to update camera
     nvkg::Camera camera;
-    nvkg::transform_3d cam_transform;
+    nvkg::transform_3d cam_transform{};
 
     //TODO request scene from context
     nvkg::Scene* scene = context.create_scene("scene1");
@@ -108,19 +108,13 @@ int main() {
         },
     });
 
-    auto test_text_entity = registry.create<nvkg::sdf_text_outline, nvkg::render_mesh>({.55f, true }, {
-        .model_ = nvkg::sdf_text::generate_text("HILFE MANNNO MANN"), //TODO maybe add puffer
+    auto frame_time = registry.create<nvkg::sdf_text_outline, nvkg::render_mesh>(
+        { .55f, false, .75f, {-0.99, -0.99}, {.02f, .04f}, 0.f }, {
+        .model_ = nvkg::sdf_text::generate_text("Frame Time: 00000 us"), //TODO maybe add puffer
         .material_ = std::unique_ptr<nvkg::Material>(&sdf_mat_new)
     });
 
-    tp::timer timer;
-
-    nvkg::render_mesh& text_render_mesh = registry.get<nvkg::render_mesh>(test_text_entity);
-
-    timer.start(); nvkg::sdf_text::generate_text("test"); timer.stop();
-    logger::debug() << "generate_text func time " << timer.ns();
-    timer.start(); nvkg::sdf_text::update_model_mesh("Hallo langer Text", text_render_mesh.model_); timer.stop();
-    logger::debug() << "update_model_mesh func update time " << timer.ns();
+    nvkg::render_mesh& frame_time_render_mesh = registry.get<nvkg::render_mesh>(frame_time);
 
     // Generating models from .obj files
     nvkg::Model cubeObjModel("assets/models/cube.obj");
@@ -160,17 +154,25 @@ int main() {
 
     logger::debug() << alloc_calls_ << ", " << dealloc_calls_ << ", " << used_memory_;
 
+    float time_1s = 0.f;
+
     while(!window.window_should_close()) {
         
         auto newTime = std::chrono::high_resolution_clock::now();
         float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
+        time_1s += frameTime;
         currentTime = newTime;
 
-        auto alpha = std::clamp<float>(abs(sin(glfwGetTime())), 0.001f, 1.f);
+        if(time_1s > 1) {
+            std::stringstream sstm;
+            sstm << "Frame Time: " << floorf(frameTime * 100000000) / 100 << " us";
+
+            nvkg::sdf_text::update_model_mesh(sstm.str(), frame_time_render_mesh.model_);
+
+            time_1s -= 1;
+        }
 
         window.update();
-
-        //window.update_window_title(std::to_string(frameTime));
 
         if (Input::key_just_pressed(KEY_ESCAPE)) {
             input_enabled = !input_enabled;

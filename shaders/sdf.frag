@@ -8,13 +8,17 @@ layout (binding = 1) uniform sampler2D samplerColor;
 layout(push_constant) uniform Push {
 	float outlineWidth;
 	float outlineEnabled;
+    float textThickness;
+    vec2 textPosition;
+    vec2 textScale;
+    float textRotation;
 } push;
 
 layout (location = 0) out vec4 outFragColor;
 
 void main() {
-    float distance = texture(samplerColor, inUV).a * 0.85; //externalise bold factor
-    float smoothWidth = fwidth(distance);	
+    float distance = texture(samplerColor, inUV).a * push.textThickness;
+    float smoothWidth = fwidth(distance);
     float alpha = smoothstep(0.5 - smoothWidth, 0.5 + smoothWidth, distance);
 	vec3 rgb = vec3(alpha);
 									 
