@@ -3,12 +3,11 @@
 namespace nvkg {
     SwapChain* SwapChain::instance = nullptr;
 
-    SwapChain::SwapChain(VulkanDevice& device, VkExtent2D windowExtent) 
-        : device{device}, windowExtent{windowExtent} {
+    SwapChain::SwapChain(VkExtent2D windowExtent) : windowExtent{windowExtent} {
         Init();
     }
 
-    SwapChain::SwapChain(VulkanDevice& device) : device{device} {}
+    SwapChain::SwapChain() {}
 
     SwapChain::~SwapChain() {
         ClearSwapChain();
@@ -26,20 +25,20 @@ namespace nvkg {
         swapchainImages.DestroyFrameImages();
 
         if (!isRecreated && swapChain != nullptr) {
-            vkDestroySwapchainKHR(device.device(), GetSwapChain(), nullptr);
+            vkDestroySwapchainKHR(device().device(), GetSwapChain(), nullptr);
             swapChain = nullptr;
         }
 
         depthImages.DestroyFrameImages();
 
         for (size_t i = 0; i < imageCount; i++) {
-            vkDestroyFramebuffer(device.device(), swapChainFrameBuffers[i], nullptr);
+            vkDestroyFramebuffer(device().device(), swapChainFrameBuffers[i], nullptr);
         }
         
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroySemaphore(device.device(), renderFinishedSemaphores[i], nullptr);
-            vkDestroySemaphore(device.device(), imageAvailableSemaphores[i], nullptr);
-            vkDestroyFence(device.device(), inFlightFences[i], nullptr);
+            vkDestroySemaphore(device().device(), renderFinishedSemaphores[i], nullptr);
+            vkDestroySemaphore(device().device(), imageAvailableSemaphores[i], nullptr);
+            vkDestroyFence(device().device(), inFlightFences[i], nullptr);
         }
     }
 
@@ -75,7 +74,7 @@ namespace nvkg {
     }
 
     void SwapChain::CreateSwapChain() {
-        SwapChainSupportDetails::SwapChainSupportDetails details = device.get_swapchain_support();
+        SwapChainSupportDetails::SwapChainSupportDetails details = device().get_swapchain_support();
 
         VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(details.formats.data(),
                                                                    static_cast<uint32_t>(details.formats.size()));
@@ -96,7 +95,7 @@ namespace nvkg {
 
         VkSwapchainCreateInfoKHR createInfo {};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        createInfo.surface = device.surface();
+        createInfo.surface = device().surface();
         
         createInfo.minImageCount = imageCount;
         createInfo.imageFormat = surfaceFormat.format;
@@ -105,7 +104,7 @@ namespace nvkg {
         createInfo.imageArrayLayers = 1;
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
         
-        QueueFamilyIndices::QueueFamilyIndices indices = device.find_phys_queue_families();
+        QueueFamilyIndices::QueueFamilyIndices indices = device().find_phys_queue_families();
         uint32_t queueFamilyIndices[] = {indices.graphics_family_, indices.present_family_};
 
         if (indices.graphics_family_ != indices.present_family_) {
@@ -126,16 +125,16 @@ namespace nvkg {
 
         createInfo.oldSwapchain = swapChain ? swapChain : VK_NULL_HANDLE;
 
-        NVKG_ASSERT(vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, OUT &swapChain) == VK_SUCCESS,
+        NVKG_ASSERT(vkCreateSwapchainKHR(device().device(), &createInfo, nullptr, OUT &swapChain) == VK_SUCCESS,
                 "Failed to create Swapchain!");
 
-        swapchainImages = FrameImages(&device, surfaceFormat.format);
+        swapchainImages = FrameImages(surfaceFormat.format);
 
-        vkGetSwapchainImagesKHR(device.device(), swapChain, OUT &imageCount, nullptr);
+        vkGetSwapchainImagesKHR(device().device(), swapChain, OUT &imageCount, nullptr);
 
         FrameImages::SetImageCount(imageCount);
 
-        vkGetSwapchainImagesKHR(device.device(), swapChain, &imageCount, OUT swapchainImages.GetImages());
+        vkGetSwapchainImagesKHR(device().device(), swapChain, &imageCount, OUT swapchainImages.GetImages());
 
         swapChainExtent = extent;
     }
@@ -147,9 +146,8 @@ namespace nvkg {
     void SwapChain::CreateRenderPass() {
         swapChainImageFormat = GetSwapChainImageFormat();
         swapChainDepthFormat = FindDepthFormat();
-        RenderPass::Initialise(&device,
-                               OUT renderPass,
-                              RenderPass::CreateConfig()
+        RenderPass::Initialise(OUT renderPass,
+                               RenderPass::CreateConfig()
                               .WithAttachment(Attachments::CreateColorAttachment(swapChainImageFormat))
                               .WithAttachment(Attachments::CreateDepthAttachment(swapChainDepthFormat))
                               .WithSubPass(Attachments::CreateSubPass()
@@ -172,7 +170,7 @@ namespace nvkg {
     void SwapChain::CreateDepthResources() {
         VkExtent2D extent = GetSwapChainExtent();
 
-        depthImages = FrameImages(&device, swapChainDepthFormat);
+        depthImages = FrameImages(swapChainDepthFormat);
 
         depthImages.InitDepthImageView2D(extent.width, extent.height, 1);
     }
@@ -198,7 +196,7 @@ namespace nvkg {
             frameBufferInfo.height = swapChainExtent.height;
             frameBufferInfo.layers = 1;
 
-            NVKG_ASSERT(vkCreateFramebuffer(device.device(),
+            NVKG_ASSERT(vkCreateFramebuffer(device().device(),
                                             &frameBufferInfo, nullptr, OUT &swapChainFrameBuffers[i]) == VK_SUCCESS,
                                             "Failed to create framebuffer");
         }
@@ -223,23 +221,23 @@ namespace nvkg {
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             NVKG_ASSERT(
-                vkCreateSemaphore(device.device(), &semaphoreInfo, nullptr, OUT &imageAvailableSemaphores[i]) == VK_SUCCESS &&
-                vkCreateSemaphore(device.device(), &semaphoreInfo, nullptr, OUT &renderFinishedSemaphores[i]) == VK_SUCCESS &&
-                vkCreateFence(device.device(), &fenceInfo, nullptr, OUT &inFlightFences[i]) == VK_SUCCESS, 
+                vkCreateSemaphore(device().device(), &semaphoreInfo, nullptr, OUT &imageAvailableSemaphores[i]) == VK_SUCCESS &&
+                vkCreateSemaphore(device().device(), &semaphoreInfo, nullptr, OUT &renderFinishedSemaphores[i]) == VK_SUCCESS &&
+                vkCreateFence(device().device(), &fenceInfo, nullptr, OUT &inFlightFences[i]) == VK_SUCCESS, 
                 "Failed to create synchronization objects fora  frame!");
         }
     }
 
     VkResult SwapChain::AcquireNextImage(uint32_t* imageIndex) {
         vkWaitForFences(
-            device.device(), 
+            device().device(), 
             1, 
             &inFlightFences[currentFrame], 
             VK_TRUE, 
             std::numeric_limits<uint64_t>::max());
 
         return vkAcquireNextImageKHR(
-            device.device(),
+            device().device(),
             swapChain, 
             std::numeric_limits<uint64_t>::max(),
             imageAvailableSemaphores[currentFrame],
@@ -252,7 +250,7 @@ namespace nvkg {
         uint32_t index = *imageIndex;
 
         if (imagesInFlight[index] != VK_NULL_HANDLE) {
-            vkWaitForFences(device.device(), 1, &imagesInFlight[index], VK_TRUE, UINT64_MAX);
+            vkWaitForFences(device().device(), 1, &imagesInFlight[index], VK_TRUE, UINT64_MAX);
         }
 
         imagesInFlight[index] = inFlightFences[currentFrame];
@@ -276,9 +274,9 @@ namespace nvkg {
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
         
-        vkResetFences(device.device(), 1, OUT &inFlightFences[currentFrame]);
+        vkResetFences(device().device(), 1, OUT &inFlightFences[currentFrame]);
 
-        NVKG_ASSERT(vkQueueSubmit(device.graphics_queue(), 1, &submitInfo, OUT inFlightFences[currentFrame]) == VK_SUCCESS,
+        NVKG_ASSERT(vkQueueSubmit(device().graphics_queue(), 1, &submitInfo, OUT inFlightFences[currentFrame]) == VK_SUCCESS,
             "Failed to submit draw command buffer");
 
         VkPresentInfoKHR presentInfo{};
@@ -294,7 +292,7 @@ namespace nvkg {
 
         presentInfo.pImageIndices = imageIndex;
 
-        auto result = vkQueuePresentKHR(device.present_queue(), &presentInfo);
+        auto result = vkQueuePresentKHR(device().present_queue(), &presentInfo);
 
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
@@ -342,7 +340,7 @@ namespace nvkg {
 
     VkFormat SwapChain::FindDepthFormat() {
         VkFormat formats[] = {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT};
-        return device.find_supported_format(
+        return device().find_supported_format(
             formats,
             3,
             VK_IMAGE_TILING_OPTIMAL,

@@ -6,9 +6,7 @@
 
 namespace nvkg {
 
-	VulkanDevice* VulkanDevice::vk_device_instance_ = nullptr;
-
-	VulkanDevice::VulkanDevice(Window* window) : window_{window} {
+	vulkan_device_impl::vulkan_device_impl(Window* window) : window_{window} {
 		NVKG_ASSERT(volkInitialize() == VK_SUCCESS, "Unable to initialise Volk!");
 
 		create_instance();
@@ -17,35 +15,13 @@ namespace nvkg {
 		pick_phys_device();
 		create_logical_device();
 		create_command_pool();
-
-		set_vk_device_instance(this);
 	}
 
-	VulkanDevice::VulkanDevice() {
-		set_vk_device_instance(this);
-	}
+	vulkan_device_impl::vulkan_device_impl() {}
 
-	void VulkanDevice::set_window_ptr(Window* window) {
-		NVKG_ASSERT(volkInitialize() == VK_SUCCESS, "Unable to initialise Volk!");
 
-		NVKG_ASSERT(window != nullptr, "Must provide a valid pointer to a window!");
 
-		this->window_ = window;
-
-		create_instance();
-		setup_debug_messenger();
-		create_surface();
-		pick_phys_device();
-		create_logical_device();
-		create_command_pool();
-
-		set_vk_device_instance(this);
-	}
-
-	VulkanDevice::~VulkanDevice() {
-		// When the device goes out of scope, all vulkan structs must be 
-		// de-allocated in reverse order of how they were created. 
-
+	vulkan_device_impl::~vulkan_device_impl() {
 		vkDestroyCommandPool(device_, command_pool_, nullptr);
 		vkDestroyDevice(device_, nullptr);
 
@@ -57,7 +33,7 @@ namespace nvkg {
 		vkDestroyInstance(instance_, nullptr);
 	}
 
-	void VulkanDevice::create_instance() {
+	void vulkan_device_impl::create_instance() {
 		if (enable_validation_layers) {
 			NVKG_ASSERT(Extensions::CheckValidationLayerSupport(validation_layers.data(), validation_layers.size()),
 				"Validation Layers are not supported!");
@@ -66,7 +42,7 @@ namespace nvkg {
 		// Specify general app information.
 		VkApplicationInfo appInfo {};
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		appInfo.pApplicationName = "SnekVK";
+		appInfo.pApplicationName = "nvkg";
 		appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 		appInfo.pEngineName = "No Engine";
 		appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -102,9 +78,9 @@ namespace nvkg {
 		volkLoadInstance(instance_);
 	}
 
-	void VulkanDevice::create_surface() { window_->init_window_surface(instance_, OUT &surface_); }
+	void vulkan_device_impl::create_surface() { window_->init_window_surface(instance_, OUT &surface_); }
 
-	void VulkanDevice::pick_phys_device() {
+	void vulkan_device_impl::pick_phys_device() {
 		uint32_t deviceCount = 0;
 		vkEnumeratePhysicalDevices(instance_, OUT &deviceCount, nullptr);
 
@@ -130,7 +106,7 @@ namespace nvkg {
         logger::debug(logger::Level::Info) << "GPU has a minumum buffer alignment of " << properties.limits.minUniformBufferOffsetAlignment;
 	}
 
-	void VulkanDevice::create_logical_device() {
+	void vulkan_device_impl::create_logical_device() {
 		QueueFamilyIndices::QueueFamilyIndices indices = QueueFamilyIndices::find_queue_families(physical_device_, surface_);
 
 		std::set<uint32_t> uniqueQueueFamilies = {indices.graphics_family_, indices.present_family_};
@@ -162,15 +138,12 @@ namespace nvkg {
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(device_extensions.size());
 		createInfo.ppEnabledExtensionNames = device_extensions.data();
 
-		// might not really be necessary anymore because device specific validation layers
-		// have been deprecated
 		if (enable_validation_layers) {
 			createInfo.enabledLayerCount = static_cast<uint32_t>(validation_layers.size());
 			createInfo.ppEnabledLayerNames = validation_layers.data();
 		} else {
 			createInfo.enabledLayerCount = 0;
 		}
-
 
 		NVKG_ASSERT(vkCreateDevice(physical_device_, &createInfo, nullptr, OUT &device_) == VK_SUCCESS, 
 			"failed to create logical device!");
@@ -182,7 +155,7 @@ namespace nvkg {
 		volkLoadDevice(device_);
 	}
 
-	void VulkanDevice::create_command_pool() {
+	void vulkan_device_impl::create_command_pool() {
 		QueueFamilyIndices::QueueFamilyIndices queueFamilyIndices = find_phys_queue_families();
 
 		VkCommandPoolCreateInfo poolInfo = {};
@@ -194,7 +167,7 @@ namespace nvkg {
 		NVKG_ASSERT(vkCreateCommandPool(device_, &poolInfo, nullptr, OUT &command_pool_) == VK_SUCCESS, "Failed to create command pool!");
 	}
 
-	void VulkanDevice::setup_debug_messenger() {
+	void vulkan_device_impl::setup_debug_messenger() {
 		if (!enable_validation_layers) return;
 
 		VkDebugUtilsMessengerCreateInfoEXT createInfo;
@@ -204,7 +177,7 @@ namespace nvkg {
 			"Failed to create DebugUtilsMessenger!");
 	}
 
-	VkFormat VulkanDevice::find_supported_format( const VkFormat* candidates, size_t formatCount, VkImageTiling tiling, VkFormatFeatureFlags features) {
+	VkFormat vulkan_device_impl::find_supported_format( const VkFormat* candidates, size_t formatCount, VkImageTiling tiling, VkFormatFeatureFlags features) {
 		for (size_t i = 0; i < formatCount; i++) {
 			VkFormat format = candidates[i];
 
@@ -220,7 +193,7 @@ namespace nvkg {
 		NVKG_ASSERT(false, "Failed to find a supported format!");
 	}
 
-	uint32_t VulkanDevice::find_mem_type(uint32_t type_bits, VkMemoryPropertyFlags properties) {
+	uint32_t vulkan_device_impl::find_mem_type(uint32_t type_bits, VkMemoryPropertyFlags properties) {
 		VkPhysicalDeviceMemoryProperties memProperties;
 		vkGetPhysicalDeviceMemoryProperties(physical_device_, &memProperties);
 		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
@@ -232,7 +205,7 @@ namespace nvkg {
 		NVKG_ASSERT(false, "Failed to find suitable memory type!");
 	}
 
-	VkCommandBuffer VulkanDevice::begin_single_time_commands() {
+	VkCommandBuffer vulkan_device_impl::begin_single_time_commands() {
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -250,7 +223,7 @@ namespace nvkg {
 		return commandBuffer;
 	}
 
-	void VulkanDevice::end_single_time_commands(VkCommandBuffer commandBuffer) {
+	void vulkan_device_impl::end_single_time_commands(VkCommandBuffer commandBuffer) {
 		vkEndCommandBuffer(commandBuffer);
 
 		VkSubmitInfo submitInfo{};
@@ -264,7 +237,7 @@ namespace nvkg {
 		vkFreeCommandBuffers(device_, command_pool_, 1, OUT &commandBuffer);
 	}
 
-	void VulkanDevice::cpy_buf(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+	void vulkan_device_impl::cpy_buf(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
 		VkCommandBuffer commandBuffer = begin_single_time_commands();
 
 		VkBufferCopy copyRegion{};
@@ -276,7 +249,7 @@ namespace nvkg {
 		end_single_time_commands(commandBuffer);
 	}
 
-	void VulkanDevice::cpy_buf_to_img(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount) {
+	void vulkan_device_impl::cpy_buf_to_img(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount) {
 		VkCommandBuffer commandBuffer = begin_single_time_commands();
 
 		VkBufferImageCopy region{};
@@ -302,7 +275,7 @@ namespace nvkg {
 		end_single_time_commands(commandBuffer);
 	}
 
-	void VulkanDevice::create_img_with_info(const VkImageCreateInfo &imageInfo, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory) {
+	void vulkan_device_impl::create_img_with_info(const VkImageCreateInfo &imageInfo, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory) {
 		NVKG_ASSERT(vkCreateImage(device_, &imageInfo, nullptr, OUT &image) == VK_SUCCESS, 
 			"Failed to create FrameImages!");
 
@@ -319,5 +292,10 @@ namespace nvkg {
 
 		NVKG_ASSERT(vkBindImageMemory(device_, OUT image, imageMemory, 0) == VK_SUCCESS,
 				"Failed to bind image memory!");
+	}
+
+	vulkan_device_impl& device(Window* window) {
+		static auto device_new_ = vulkan_device_impl(window);
+		return device_new_;
 	}
 }

@@ -116,7 +116,7 @@ namespace nvkg {
          * @param vulkanDevice The device instance being used to crete the render pass
          * @param config Config variables used to create the renderpass
          */
-        void Initialise(VulkanDevice* vulkanDevice, const Config& config);
+        void Initialise(const Config& config);
 
         /**
          * @brief A shorthand function for creating an empty Config.
@@ -130,7 +130,7 @@ namespace nvkg {
          * @param renderpass the RenderPass to be configured.
          * @param config the RenderPass' configuration options.
          */
-        static void Initialise(VulkanDevice* device, RenderPass& renderpass, const Config& config);
+        static void Initialise(RenderPass& renderpass, const Config& config);
 
         /**
          * @brief Begins a RenderPass. Any rendering operations that occur will utilise the attachments and operations
@@ -181,7 +181,6 @@ namespace nvkg {
 
     private:
         VkRenderPass renderPass {VK_NULL_HANDLE};
-        VulkanDevice* device {nullptr};
     };
 }
 

@@ -41,8 +41,8 @@ namespace nvkg {
          * @param windowExtent the window resolution. Images need to be scaled to an extent, this usually
          * must follow the extents of the window. 
          */
-        SwapChain(VulkanDevice& device, VkExtent2D windowExtent);
-        SwapChain(VulkanDevice& device);
+        SwapChain(VkExtent2D windowExtent);
+        SwapChain();
         ~SwapChain();
 
         // Delete copy constructors. 
@@ -223,8 +223,6 @@ namespace nvkg {
         void ClearSwapChain(bool isRecreated = false);
         void ClearMemory();
 
-        // Device and window data
-        VulkanDevice& device;
         VkExtent2D windowExtent;
 
         static SwapChain* instance;

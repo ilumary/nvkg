@@ -7,7 +7,7 @@ namespace nvkg {
     }
 
     void RenderPass::DestroyRenderPass() {
-        vkDestroyRenderPass(device->device(), renderPass, nullptr);
+        vkDestroyRenderPass(device().device(), renderPass, nullptr);
     }
 
     void
@@ -33,9 +33,7 @@ namespace nvkg {
 
     RenderPass::RenderPass() = default;
 
-    void RenderPass::Initialise(VulkanDevice *vulkanDevice, const RenderPass::Config& config) {
-        device = vulkanDevice;
-
+    void RenderPass::Initialise(const RenderPass::Config& config) {
         auto& attachments = config.GetAttachments();
         auto& subPasses = config.GetSubPasses();
         auto& dependencies = config.GetDependencies();
@@ -49,12 +47,12 @@ namespace nvkg {
         renderPassCreateInfo.dependencyCount = dependencies.size();
         renderPassCreateInfo.pDependencies = dependencies.data();
 
-        NVKG_ASSERT(vkCreateRenderPass(device->device(), &renderPassCreateInfo, nullptr, OUT &renderPass) == VK_SUCCESS,
+        NVKG_ASSERT(vkCreateRenderPass(device().device(), &renderPassCreateInfo, nullptr, OUT &renderPass) == VK_SUCCESS,
                     "Failed to create render pass!")
     }
 
-    void RenderPass::Initialise(VulkanDevice* device, RenderPass &renderpass, const RenderPass::Config &config) {
-        renderpass.Initialise(device, config);
+    void RenderPass::Initialise(RenderPass &renderpass, const RenderPass::Config &config) {
+        renderpass.Initialise(config);
     }
 
     // Config functions.

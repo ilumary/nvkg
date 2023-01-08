@@ -10,7 +10,7 @@ namespace nvkg {
         static constexpr uint32_t MAX_IMAGES = 5;
 
         FrameImages();
-        FrameImages(VulkanDevice* vulkanDevice, VkFormat format);
+        FrameImages(VkFormat format);
         ~FrameImages();
 
         void InitColorImageView2D();
@@ -32,10 +32,8 @@ namespace nvkg {
 
         static void SetImageCount(uint32_t count) { imageCount = count; }
         static uint32_t GetImageCount() { return imageCount; }
+        
     private:
-
-        VulkanDevice* device {nullptr};
-
         VkImage images[MAX_IMAGES] {VK_NULL_HANDLE};
         VkImageView imageViews[MAX_IMAGES] {VK_NULL_HANDLE};
         VkDeviceMemory imageMemorys[MAX_IMAGES] {VK_NULL_HANDLE};

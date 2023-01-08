@@ -64,7 +64,7 @@ namespace nvkg {
         VulkanImage();
         ~VulkanImage();
 
-        void create(VulkanDevice *device, VkExtent3D extent, VkFormat format, VkImageType type, VkImageCreateFlags flags,
+        void create(VkExtent3D extent, VkFormat format, VkImageType type, VkImageCreateFlags flags,
                         VkImageAspectFlags aspect_flags, uint32_t mip_levels, uint32_t array_layers,
                         VkImageLayout initial_layout, VkSampleCountFlagBits sample_count);
 
@@ -72,8 +72,6 @@ namespace nvkg {
 
 
     private:
-
-        VulkanDevice *device_;
 		VkImage staging_image_ = VK_NULL_HANDLE;
         VkBuffer staging_buffer_ = VK_NULL_HANDLE;
 		VkDeviceMemory staging_memory_ = VK_NULL_HANDLE;
@@ -165,12 +163,11 @@ namespace nvkg {
             VulkanImageView();
             ~VulkanImageView();
 
-            void create(VulkanDevice *device, VulkanImage *image, VkImageViewType image_view_type, uint32_t base_mip_level);
+            void create(VulkanImage *image, VkImageViewType image_view_type, uint32_t base_mip_level);
 
             void cleanup();
 
         private:
-            VulkanDevice *device_;
             VulkanImage *image_;
     };
 
@@ -186,14 +183,11 @@ namespace nvkg {
             VulkanSampler();
             ~VulkanSampler();
 
-            void create(VulkanDevice *device, VkFilter mag_filter, VkFilter min_filter, VkSamplerAddressMode u, VkSamplerAddressMode v,
+            void create(VkFilter mag_filter, VkFilter min_filter, VkSamplerAddressMode u, VkSamplerAddressMode v,
                         VkSamplerAddressMode w, bool enable_anisotropy, float max_anisotropy, VkSamplerMipmapMode mipmap_mode,
                         float mip_lod_bias, float min_lod, float max_lod, bool use_unnormalized_coordinates);
 
             void cleanup();
-
-        private:
-            VulkanDevice *device;
 	};
 
 }

@@ -63,18 +63,16 @@ namespace nvkg {
         pipelineCI.basePipelineHandle = VK_NULL_HANDLE;
         pipelineCI.basePipelineIndex = -1;
 
-        NVKG_ASSERT(vkCreateGraphicsPipelines(VulkanDevice::get_device_instance()->device(), VK_NULL_HANDLE, 1, &pipelineCI, nullptr, OUT &pipeline) 
+        NVKG_ASSERT(vkCreateGraphicsPipelines(device().device(), VK_NULL_HANDLE, 1, &pipelineCI, nullptr, OUT &pipeline) 
             == VK_SUCCESS, "Failed to create graphics pipeline!")
     }
 
     void Pipeline::clear() {
-        auto device = VulkanDevice::get_device_instance();
-
         for (size_t i = 0; i < shader_module_count; i++) {
-            vkDestroyShaderModule(device->device(), shader_modules[i], nullptr);
+            vkDestroyShaderModule(device().device(), shader_modules[i], nullptr);
         }
         
-        vkDestroyPipeline(device->device(), pipeline, nullptr);
+        vkDestroyPipeline(device().device(), pipeline, nullptr);
     }
 
     void Pipeline::destroy() {

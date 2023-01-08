@@ -87,12 +87,11 @@ namespace nvkg {
     VulkanImage::VulkanImage(){}
     VulkanImage::~VulkanImage(){}
 
-    void VulkanImage::create(VulkanDevice *device, VkExtent3D extent, VkFormat format, VkImageType type, VkImageCreateFlags flags,
+    void VulkanImage::create(VkExtent3D extent, VkFormat format, VkImageType type, VkImageCreateFlags flags,
                         VkImageAspectFlags aspect_flags, uint32_t mip_levels, uint32_t array_layers,
                         VkImageLayout initial_layout, VkSampleCountFlagBits sample_count) {
         
         NVKG_ASSERT(device != VK_NULL_HANDLE, "VulkanDevice not present");
-		device_ = device;
 		this->format = format;
         this->width = extent.width;
         this->height = extent.height;
@@ -132,12 +131,12 @@ namespace nvkg {
         uint32_t queue_index = static_cast<uint32_t>(device_->graphics_family_index);
         image_create_info.pQueueFamilyIndices = &queue_index;*/
 
-		vkCreateImage(device_->device(), &image_create_info, nullptr, &image);
+		vkCreateImage(device().device(), &image_create_info, nullptr, &image);
 
 		// Determine requirements for memory (where it's allocated, type of memory, etc.)
 		VkMemoryRequirements memory_requirements = {};
-		vkGetImageMemoryRequirements(device_->device(), image, &memory_requirements);
-		auto memory_type = device_->find_mem_type(memory_requirements.memoryTypeBits, memory_properties);
+		vkGetImageMemoryRequirements(device().device(), image, &memory_requirements);
+		auto memory_type = device().find_mem_type(memory_requirements.memoryTypeBits, memory_properties);
 
 		// Allocate and bind buffer memory.
 		VkMemoryAllocateInfo memory_allocate_info = {
@@ -146,12 +145,12 @@ namespace nvkg {
             .memoryTypeIndex = memory_type,
         };
 
-		vkAllocateMemory(device_->device(), &memory_allocate_info, nullptr, &memory);
-		vkBindImageMemory(device_->device(), image, memory, 0);
+		vkAllocateMemory(device().device(), &memory_allocate_info, nullptr, &memory);
+		vkBindImageMemory(device().device(), image, memory, 0);
     }
 
     void VulkanImage::update_and_transfer(void *data, VkDeviceSize size_in_bytes) {
-        auto buf = device_->begin_single_time_commands();
+        auto buf = device().begin_single_time_commands();
 
         VkImageSubresourceRange subresource_range = {
             .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
@@ -165,9 +164,9 @@ namespace nvkg {
         // move host data to transfer buffer
         allocate_transfer_mem(size_in_bytes);
         void *mapped_data;
-        vkMapMemory(device_->device(), staging_memory_, 0, size_in_bytes, 0, &mapped_data);
+        vkMapMemory(device().device(), staging_memory_, 0, size_in_bytes, 0, &mapped_data);
         memcpy(mapped_data, data, size_in_bytes);
-        vkUnmapMemory(device_->device(), staging_memory_);
+        vkUnmapMemory(device().device(), staging_memory_);
         mapped_data = nullptr;
 
         const auto &format_info = format_info_table_.at(format);
@@ -208,10 +207,10 @@ namespace nvkg {
                                static_cast<uint32_t>(buffer_copy_regions.size()), buffer_copy_regions.data());
 
         transform_img_layout(buf, image, subresource_range, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        device_->end_single_time_commands(buf);
+        device().end_single_time_commands(buf);
 
-        vkDestroyBuffer(device_->device(), staging_buffer_, nullptr);
-        vkFreeMemory(device_->device(), staging_memory_, nullptr);
+        vkDestroyBuffer(device().device(), staging_buffer_, nullptr);
+        vkFreeMemory(device().device(), staging_memory_, nullptr);
     }
 
     void VulkanImage::transform_img_layout(VkCommandBuffer command_buffer, VkImage image, VkImageSubresourceRange subresource_range,
@@ -231,19 +230,19 @@ namespace nvkg {
             .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         };
 
-		vkCreateBuffer(device_->device(), &buffer_create_info, nullptr, &staging_buffer_);
+		vkCreateBuffer(device().device(), &buffer_create_info, nullptr, &staging_buffer_);
 
 		VkMemoryRequirements memory_requirements = {};
-		vkGetBufferMemoryRequirements(device_->device(), staging_buffer_, &memory_requirements);
+		vkGetBufferMemoryRequirements(device().device(), staging_buffer_, &memory_requirements);
 
         VkMemoryAllocateInfo memory_alloc_info = {
             .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
             .allocationSize = memory_requirements.size,
-            .memoryTypeIndex = device_->find_mem_type(memory_requirements.memoryTypeBits,  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT),
+            .memoryTypeIndex = device().find_mem_type(memory_requirements.memoryTypeBits,  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT),
         };
         
-		vkAllocateMemory(device_->device(), &memory_alloc_info, nullptr, &staging_memory_);
-		vkBindBufferMemory(device_->device(), staging_buffer_, staging_memory_, 0);
+		vkAllocateMemory(device().device(), &memory_alloc_info, nullptr, &staging_memory_);
+		vkBindBufferMemory(device().device(), staging_buffer_, staging_memory_, 0);
     }
 
     VkImageMemoryBarrier VulkanImage::det_access_masks(VkImage image, VkImageSubresourceRange subresource_range, VkImageLayout old_layout, VkImageLayout new_layout) {
@@ -353,8 +352,7 @@ namespace nvkg {
     VulkanImageView::VulkanImageView() {}
     VulkanImageView::~VulkanImageView() {}
 
-    void VulkanImageView::create(VulkanDevice *device, VulkanImage *image, VkImageViewType image_view_type, uint32_t base_mip_level) {
-		device_ = device;
+    void VulkanImageView::create(VulkanImage *image, VkImageViewType image_view_type, uint32_t base_mip_level) {
 		image_ = image;
         type = image_view_type;
 
@@ -377,18 +375,18 @@ namespace nvkg {
 		image_view_create_info.subresourceRange.baseArrayLayer = 0;
 		image_view_create_info.subresourceRange.layerCount = image->array_layers;
 
-		vkCreateImageView(device_->device(), &image_view_create_info, nullptr, &image_view);
+		vkCreateImageView(device().device(), &image_view_create_info, nullptr, &image_view);
 	}
 
 
 	void VulkanImageView::cleanup() {
-        vkDestroyImageView(device_->device(), image_view, nullptr);
+        vkDestroyImageView(device().device(), image_view, nullptr);
 	}
 
     VulkanSampler::VulkanSampler() {}
     VulkanSampler::~VulkanSampler() {}
 
-    void VulkanSampler::create(VulkanDevice *device, VkFilter mag_filter, VkFilter min_filter, VkSamplerAddressMode u, VkSamplerAddressMode v,
+    void VulkanSampler::create(VkFilter mag_filter, VkFilter min_filter, VkSamplerAddressMode u, VkSamplerAddressMode v,
                         VkSamplerAddressMode w, bool enable_anisotropy, float max_anisotropy, VkSamplerMipmapMode mipmap_mode,
                         float mip_lod_bias, float min_lod, float max_lod, bool use_unnormalized_coordinates) {
         
@@ -403,7 +401,6 @@ namespace nvkg {
             NVKG_ASSERT(!enable_anisotropy, "VulkanSampler doesn't support anisotropy when using unnormalized coordinates");
         }
 
-        this->device = device;
         this->mag_fltr = mag_filter;
         this->min_fltr = min_filter;
         this->u_add_m = u;
@@ -437,11 +434,11 @@ namespace nvkg {
 		sampler_create_info.minLod = min_lod;
 		sampler_create_info.maxLod = max_lod; // todo: figure out how lod works with these things
 
-		vkCreateSampler(device->device(), &sampler_create_info, nullptr, &sampler);
+		vkCreateSampler(device().device(), &sampler_create_info, nullptr, &sampler);
     }
 
     void VulkanSampler::cleanup() {
-        vkDestroySampler(device->device(), sampler, nullptr);
+        vkDestroySampler(device().device(), sampler, nullptr);
     }
 
 }

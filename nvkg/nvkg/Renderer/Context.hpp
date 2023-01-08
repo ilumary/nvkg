@@ -18,7 +18,6 @@ namespace nvkg {
 
             void destroy_renderer();
 
-            VulkanDevice& get_device() { return device_; }
             SwapChain& get_swapchain() { return swapchain; }
 
             int get_crnt_frame_index() const {
@@ -45,7 +44,7 @@ namespace nvkg {
             bool start_frame();
             void end_frame();
 
-            void clear_device_queue() { vkDeviceWaitIdle(device_.device()); } 
+            void clear_device_queue() { vkDeviceWaitIdle(device().device()); } 
 
             void set_clear_value(float r, float g, float b, float a) { clearValue = {r, g, b, a}; }
 
@@ -67,7 +66,6 @@ namespace nvkg {
 
             nvkg::Window& window;
             
-            VulkanDevice device_;
             SwapChain swapchain;
 
             Renderer* renderer;

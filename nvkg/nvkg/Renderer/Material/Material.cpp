@@ -20,15 +20,13 @@ namespace nvkg {
     }
 
     Material::~Material() {
-        auto device = VulkanDevice::get_device_instance();
-
         for (auto& layout : descriptor_set_layouts) {
-            vkDestroyDescriptorSetLayout(device->device(), layout, nullptr);
+            vkDestroyDescriptorSetLayout(device().device(), layout, nullptr);
         }
 
         pipeline.destroy();
         
-        vkDestroyPipelineLayout(device->device(), pipeline_layout, nullptr);
+        vkDestroyPipelineLayout(device().device(), pipeline_layout, nullptr);
         
         Buffer::destroy_buffer(buffer);
     }
@@ -78,7 +76,7 @@ namespace nvkg {
                         set_layout_bindings.data(),
                         static_cast<uint32_t>(set_layout_bindings.size()));
 
-                NVKG_ASSERT(vkCreateDescriptorSetLayout(VulkanDevice::get_device_instance()->device(), &descriptor_layout, nullptr, &descriptor_set_layouts[index]) == VK_SUCCESS, "Failed to create descriptor set layout");
+                NVKG_ASSERT(vkCreateDescriptorSetLayout(device().device(), &descriptor_layout, nullptr, &descriptor_set_layouts[index]) == VK_SUCCESS, "Failed to create descriptor set layout");
         }
 
         for(const auto& [stage, shader] : shaders) {
@@ -101,7 +99,7 @@ namespace nvkg {
         if(tmp_push_constants.size() == 0) { push_constant_data = nullptr; } else { push_constant_data = &tmp_push_constants[0]; }
 
         PipelineConfig::create_pipeline_layout(
-            VulkanDevice::get_device_instance()->device(),
+            device().device(),
             OUT &pipeline_layout, 
             &descriptor_set_layouts[0], 
             descriptor_set_layouts.size(), 
@@ -138,7 +136,7 @@ namespace nvkg {
 				&descriptor_set_layouts[0],
 				descriptor_set_layouts.size());
 
-        vkAllocateDescriptorSets(VulkanDevice::get_device_instance()->device(), &alloc_info, &descriptor_sets[0]);
+        vkAllocateDescriptorSets(device().device(), &alloc_info, &descriptor_sets[0]);
 
         std::vector<VkWriteDescriptorSet> write_sets{};
         VkDescriptorBufferInfo descriptor_buffer_infos[10]; // TODO: find limit on descriptor_buffer_infos from shader
@@ -201,7 +199,7 @@ namespace nvkg {
             }
         }
 
-        vkUpdateDescriptorSets(VulkanDevice::get_device_instance()->device(), static_cast<uint32_t>(write_sets.size()), write_sets.data(), 0, NULL);
+        vkUpdateDescriptorSets(device().device(), static_cast<uint32_t>(write_sets.size()), write_sets.data(), 0, NULL);
     }
 
     void Material::add_shader(const std::unique_ptr<ShaderModule>& shader) {

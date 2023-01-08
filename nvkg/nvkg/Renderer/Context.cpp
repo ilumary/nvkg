@@ -4,8 +4,9 @@ namespace nvkg {
 
     std::vector<VkCommandBuffer> Context::command_buffers;
 
-    Context::Context(Window& window) : window{window}, swapchain{SwapChain(device_)} {
-        device_.set_window_ptr(&window);
+    Context::Context(Window& window) : window{window}, swapchain{SwapChain()} {
+        device(&window);
+        
         swapchain.SetWindowExtents(window.get_window_extent());
 
         DescriptorPool::add_pool_size(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10);
@@ -31,13 +32,12 @@ namespace nvkg {
 
         VkCommandBufferAllocateInfo allocInfo {
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-            .commandPool = device_.get_command_pool(),
+            .commandPool = device().get_command_pool(),
             .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
             .commandBufferCount = static_cast<uint32_t>(command_buffers.size()),
         };
-        
 
-        NVKG_ASSERT(vkAllocateCommandBuffers(device_.device(), &allocInfo, OUT command_buffers.data()) == VK_SUCCESS,
+        NVKG_ASSERT(vkAllocateCommandBuffers(device().device(), &allocInfo, OUT command_buffers.data()) == VK_SUCCESS,
             "Failed to allocate command buffer");
     }
 
@@ -70,8 +70,8 @@ namespace nvkg {
 
     void Context::free_cmdbf() {
         vkFreeCommandBuffers(
-            device_.device(), 
-            device_.get_command_pool(), 
+            device().device(), 
+            device().get_command_pool(), 
             SwapChain::GetImageCount(),
             command_buffers.data());
     }
@@ -80,7 +80,6 @@ namespace nvkg {
         if(!start_frame()) return;
                 
         render_frame();
-        //render_ui();
 
         end_frame();
     }

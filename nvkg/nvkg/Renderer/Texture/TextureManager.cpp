@@ -16,17 +16,17 @@ namespace nvkg {
         SampledTexture *texture = new SampledTexture();
 
         texture->image = new VulkanImage();
-        texture->image->create(VulkanDevice::get_device_instance(), extent, format, VK_IMAGE_TYPE_2D, flags, VK_IMAGE_ASPECT_COLOR_BIT, mip_levels,
+        texture->image->create(extent, format, VK_IMAGE_TYPE_2D, flags, VK_IMAGE_ASPECT_COLOR_BIT, mip_levels,
                             array_layers, VK_IMAGE_LAYOUT_PREINITIALIZED, VK_SAMPLE_COUNT_1_BIT);
         texture->image->update_and_transfer(data, size_in_bytes);
         logger::debug() << "Created Vulkan Image";
 
         texture->image_view = new VulkanImageView();
-        texture->image_view->create(VulkanDevice::get_device_instance(), texture->image, image_view_type, 0);
+        texture->image_view->create(texture->image, image_view_type, 0);
         logger::debug() << "Created Vulkan Image View";
 
         texture->sampler = new VulkanSampler();
-        texture->sampler->create(VulkanDevice::get_device_instance(), VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+        texture->sampler->create(VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
             VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, true, 16, VK_SAMPLER_MIPMAP_MODE_LINEAR,
             0.f, 0.f, float(mip_levels - 1), false);
         logger::debug() << "Created Vulkan Image Sampler";

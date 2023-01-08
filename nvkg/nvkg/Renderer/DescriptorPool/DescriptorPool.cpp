@@ -9,8 +9,6 @@ namespace nvkg {
     }
 
     void DescriptorPool::build_pool() {
-        auto device = VulkanDevice::get_device_instance();
-
         if (descriptor_pool == VK_NULL_HANDLE) {
             VkDescriptorPoolCreateInfo poolCreateInfo {};
             poolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -19,14 +17,14 @@ namespace nvkg {
             poolCreateInfo.poolSizeCount = static_cast<uint32_t>(sizes.size());
             poolCreateInfo.pPoolSizes = sizes.data();
 
-            NVKG_ASSERT(vkCreateDescriptorPool(device->device(), &poolCreateInfo, nullptr, &descriptor_pool) == VK_SUCCESS,
+            NVKG_ASSERT(vkCreateDescriptorPool(device().device(), &poolCreateInfo, nullptr, &descriptor_pool) == VK_SUCCESS,
                 "Unable to create descriptor pool!");
         }
     }
 
     void DescriptorPool::destroy_pool() {
         if (descriptor_pool != VK_NULL_HANDLE) {
-            vkDestroyDescriptorPool(VulkanDevice::get_device_instance()->device(), descriptor_pool, nullptr);
+            vkDestroyDescriptorPool(device().device(), descriptor_pool, nullptr);
         }
     }
 }

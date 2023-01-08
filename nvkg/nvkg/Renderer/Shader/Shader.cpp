@@ -260,8 +260,6 @@ namespace nvkg {
     }
 
 	void ShaderModule::create() {
-        device = VulkanDevice::get_device_instance();
-
         if (shader_stage == VK_SHADER_STAGE_FRAGMENT_BIT)
             reflect_descriptor_types(spirv_bin_data_u32);
 
@@ -278,12 +276,12 @@ namespace nvkg {
 		shader_module_create_info.codeSize = spirv_bin_data.size();
 		shader_module_create_info.pCode = spirv_bin_data_u32.data();
 
-		NVKG_ASSERT(vkCreateShaderModule(device->device(), &shader_module_create_info, nullptr, &shader_module) == VK_SUCCESS, "Failed to create shader module");
+		NVKG_ASSERT(vkCreateShaderModule(device().device(), &shader_module_create_info, nullptr, &shader_module) == VK_SUCCESS, "Failed to create shader module");
 	}
 
 	void ShaderModule::cleanup() {
 		if (shader_module != VK_NULL_HANDLE)
-            vkDestroyShaderModule(device->device(), shader_module, nullptr);
+            vkDestroyShaderModule(device().device(), shader_module, nullptr);
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////// Private
@@ -399,7 +397,7 @@ namespace nvkg {
 
     void ShaderModule::reflect_storage_buffers(spirv_cross::CompilerGLSL &glsl) {
         spirv_cross::ShaderResources resources = glsl.get_shader_resources();
-        size_t min_device_alignment = VulkanDevice::get_device_instance()->get_device_alignment();
+        size_t min_device_alignment = device().get_device_alignment();
 
         for(auto& resource : resources.storage_buffers) {
             unsigned set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
@@ -433,7 +431,7 @@ namespace nvkg {
 
     void ShaderModule::reflect_uniform_buffers(spirv_cross::CompilerGLSL &glsl) {
         spirv_cross::ShaderResources resources = glsl.get_shader_resources();
-        size_t min_device_alignment = VulkanDevice::get_device_instance()->get_device_alignment();
+        size_t min_device_alignment = device().get_device_alignment();
 
         for (auto &resource : resources.uniform_buffers) {
             unsigned set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
