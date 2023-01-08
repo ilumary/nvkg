@@ -91,7 +91,6 @@ namespace nvkg {
                         VkImageAspectFlags aspect_flags, uint32_t mip_levels, uint32_t array_layers,
                         VkImageLayout initial_layout, VkSampleCountFlagBits sample_count) {
         
-        NVKG_ASSERT(device != VK_NULL_HANDLE, "VulkanDevice not present");
 		this->format = format;
         this->width = extent.width;
         this->height = extent.height;
@@ -128,11 +127,11 @@ namespace nvkg {
 		
         image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         /*image_create_info.queueFamilyIndexCount = 1;
-        uint32_t queue_index = static_cast<uint32_t>(device_->graphics_family_index);
+        uint32_t queue_index = static_cast<uint32_t>(device().find_phys_queue_families().graphics_family_);
         image_create_info.pQueueFamilyIndices = &queue_index;*/
-
-		vkCreateImage(device().device(), &image_create_info, nullptr, &image);
-
+        
+		NVKG_ASSERT(vkCreateImage(device().device(), &image_create_info, nullptr, &image) == VK_SUCCESS, "Error creating Image");
+        
 		// Determine requirements for memory (where it's allocated, type of memory, etc.)
 		VkMemoryRequirements memory_requirements = {};
 		vkGetImageMemoryRequirements(device().device(), image, &memory_requirements);
