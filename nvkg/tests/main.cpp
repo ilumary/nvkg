@@ -86,38 +86,24 @@ int main() {
         .textures = {{"texSampler", nvkg::TextureManager::load_2d_img("../assets/textures/tex1.png")}},
     });
 
-    nvkg::Material sdf_mat_new({
-        .shaders = {"sdf.vert", "sdf.frag"},
-        .textures = {{"samplerColor", nvkg::TextureManager::load_2d_img("../assets/textures/font_sdf_rgba.png")}},
-        .pipeline_configurator = [](nvkg::PipelineInit& pipeline) -> void {
-            pipeline.rasterization_state.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-
-            pipeline.blend_attachment_state.blendEnable = VK_TRUE;
-            pipeline.blend_attachment_state.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-            pipeline.blend_attachment_state.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-            pipeline.blend_attachment_state.colorBlendOp = VK_BLEND_OP_ADD;
-            pipeline.blend_attachment_state.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-            pipeline.blend_attachment_state.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-            pipeline.blend_attachment_state.alphaBlendOp = VK_BLEND_OP_ADD;
-            pipeline.blend_attachment_state.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-
-            pipeline.depth_stencil_state.depthTestEnable = VK_FALSE;
-        },
-    });
-
     auto frame_time = registry.create<nvkg::sdf_text_outline, nvkg::render_mesh>(
         { .55f, false, .75f, {-0.99, -0.99}, {.02f, .04f}, 0.f }, {
-        .model_ = nvkg::sdf_text::generate_text("Frame Time: 00000 us"), //TODO maybe add puffer
-        .material_ = std::unique_ptr<nvkg::Material>(&sdf_mat_new)
+        .model_ = nvkg::sdf_text::generate_text("Frame Time: 00000 us"),
     });
 
     nvkg::render_mesh& frame_time_render_mesh = registry.get<nvkg::render_mesh>(frame_time);
+
+    auto mem_usage = registry.create<nvkg::sdf_text_outline, nvkg::render_mesh>(
+        { .55f, false, .75f, {-0.99, -0.95}, {.02f, .04f}, 0.f }, {
+        .model_ = nvkg::sdf_text::generate_text("Memory Usage: 00000 MB"),
+    });
+
+    nvkg::render_mesh& mem_usage_render_mesh = registry.get<nvkg::render_mesh>(mem_usage);
 
     // Generating models from .obj files
     nvkg::Model cubeObjModel("assets/models/cube.obj");
     nvkg::Model vaseObjModel("assets/models/smooth_vase.obj");
 
-    //cam_obj.set_pos({0.f, -1.f, -2.5f});
     cam_transform.position_ = {0.f, -1.f, -2.5f};
 
     auto entity = registry.create<nvkg::transform_3d, nvkg::render_mesh>({
@@ -161,10 +147,13 @@ int main() {
         currentTime = newTime;
 
         if(time_1s > 1) {
-            std::stringstream sstm;
+            std::stringstream sstm, sstm_m;
             sstm << "Frame Time: " << floorf(frameTime * 100000000) / 100 << " us";
 
+            sstm_m << "Memory Usage: " << used_memory_ / 1000000 << " MB";
+
             nvkg::sdf_text::update_model_mesh(sstm.str(), frame_time_render_mesh.model_);
+            nvkg::sdf_text::update_model_mesh(sstm_m.str(), mem_usage_render_mesh.model_);
 
             time_1s -= 1;
         }

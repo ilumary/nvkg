@@ -253,4 +253,27 @@ namespace nvkg {
         });
     }
 
+    Material& sdf_text::sdf_material() { //TODO make shared_ptr
+        static nvkg::Material mat({
+            .shaders = {"sdf.vert", "sdf.frag"},
+            .textures = {{"samplerColor", nvkg::TextureManager::load_2d_img("../assets/textures/font_sdf_rgba.png")}},
+            .pipeline_configurator = [](nvkg::PipelineInit& pipeline) -> void {
+                pipeline.rasterization_state.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+
+                pipeline.blend_attachment_state.blendEnable = VK_TRUE;
+                pipeline.blend_attachment_state.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+                pipeline.blend_attachment_state.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+                pipeline.blend_attachment_state.colorBlendOp = VK_BLEND_OP_ADD;
+                pipeline.blend_attachment_state.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+                pipeline.blend_attachment_state.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+                pipeline.blend_attachment_state.alphaBlendOp = VK_BLEND_OP_ADD;
+                pipeline.blend_attachment_state.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+
+                pipeline.depth_stencil_state.depthTestEnable = VK_FALSE;
+            },
+        });
+
+        return mat;
+    };
+
 }

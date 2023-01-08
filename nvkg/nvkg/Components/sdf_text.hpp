@@ -19,6 +19,8 @@ namespace nvkg {
 
             static void generate_text_old(std::string text, std::unique_ptr<nvkg::Model>& model);
 
+            static Material& sdf_material();
+
         private:
 
             struct bmchar {

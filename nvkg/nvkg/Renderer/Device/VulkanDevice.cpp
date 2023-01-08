@@ -19,8 +19,6 @@ namespace nvkg {
 
 	vulkan_device_impl::vulkan_device_impl() {}
 
-
-
 	vulkan_device_impl::~vulkan_device_impl() {
 		vkDestroyCommandPool(device_, command_pool_, nullptr);
 		vkDestroyDevice(device_, nullptr);
