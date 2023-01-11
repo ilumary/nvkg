@@ -7,7 +7,6 @@
 #include <nvkg/Utils/Math.hpp>
 #include <nvkg/Renderer/Material/Material.hpp>
 #include <nvkg/Renderer/Shader/Shader.hpp>
-#include <nvkg/Renderer/Scene/Scene.hpp>
 #include <nvkg/Renderer/Texture/TextureManager.hpp>
 #include <nvkg/Components/component.hpp>
 
@@ -76,10 +75,6 @@ int main() {
     //TODO need to update camera
     nvkg::Camera camera;
     nvkg::transform_3d cam_transform{};
-
-    //TODO request scene from context
-    nvkg::Scene* scene = context.create_scene("scene1");
-    scene->set_camera(&camera);
 
     nvkg::Material diffuse_mat_new({
         .shaders = {"simpleShader.vert", "diffuseFragShader.frag"},
@@ -174,7 +169,7 @@ int main() {
             camera.set_view_xyz(cam_transform.position_, cam_transform.rotation_);
         }
 
-        context.render();
+        context.render(camera);
     }
 
     context.clear_device_queue();

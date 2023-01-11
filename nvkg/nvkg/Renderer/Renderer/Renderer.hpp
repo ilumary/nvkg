@@ -2,8 +2,9 @@
 #define NVKG_RENDERER_HPP
 
 #include <nvkg/Renderer/Core.hpp>
-#include <nvkg/Renderer/Scene/Scene.hpp>
 #include <nvkg/Renderer/Model/Model.hpp>
+#include <nvkg/Renderer/Camera/Camera.hpp>
+#include <nvkg/Components/component.hpp>
 #include <nvkg/Renderer/Utils/Math.hpp>
 
 namespace nvkg {
@@ -21,7 +22,7 @@ namespace nvkg {
             Renderer();
             ~Renderer();
 
-            void render(VkCommandBuffer& command_buffer, Scene* active_scene, const ecs::registry& registry);
+            void render(VkCommandBuffer& command_buffer, Camera* cam, const ecs::registry& registry);
 
             void recreate_materials();
 
@@ -30,8 +31,6 @@ namespace nvkg {
         private:
 
             Utils::StringId global_data_id, transform_id;
-
-            void update_global_ubo(Scene* scene, GlobalData* global_3d_data);
 
             //TODO this needs to change
             Model light_model;

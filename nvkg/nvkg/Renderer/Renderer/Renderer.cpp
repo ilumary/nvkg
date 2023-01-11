@@ -30,10 +30,10 @@ namespace nvkg {
 
     }
 
-    void Renderer::render(VkCommandBuffer& commandBuffer, Scene* scene, const ecs::registry& registry) {
+    void Renderer::render(VkCommandBuffer& commandBuffer, Camera* cam, const ecs::registry& registry) {
         GlobalData global_3d_data{};
         global_3d_data.light_index = 0;
-        global_3d_data.cameraData = scene->get_camera_data();
+        global_3d_data.cameraData = { cam->get_proj(), cam->get_view()};
 
         registry.each([&global_3d_data](const point_light& p){
             global_3d_data.light_data[global_3d_data.light_index] = p;

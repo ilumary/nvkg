@@ -41,10 +41,10 @@ namespace nvkg {
             "Failed to allocate command buffer");
     }
 
-    void Context::render_frame() {
+    void Context::render_frame(Camera& cam) {
         auto commandBuffer = get_crnt_cmdbf();
 
-        renderer->render(commandBuffer, active_scene, registry_);
+        renderer->render(commandBuffer, &cam, registry_);
     }
 
     void Context::recreate_swapchain() {
@@ -76,10 +76,10 @@ namespace nvkg {
             command_buffers.data());
     }
 
-    void Context::render() {
+    void Context::render(Camera& cam) {
         if(!start_frame()) return;
                 
-        render_frame();
+        render_frame(cam);
 
         end_frame();
     }
@@ -172,15 +172,5 @@ namespace nvkg {
         NVKG_ASSERT(commandBuffer == get_crnt_cmdbf(), "Can't begin a render pass on a command buffer from another frame!");
         
         RenderPass::End(commandBuffer);
-    }
-
-    Scene* Context::create_scene(std::string name, bool set_active) {
-        scenes[name] = new Scene(name);
-        if(set_active) { active_scene = scenes[name]; }
-        return scenes[name];
-    }
-    
-    Scene* Context::get_scene(std::string name) {
-        return scenes[name];
     }
 }

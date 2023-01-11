@@ -27,12 +27,9 @@ namespace nvkg {
 
             float get_aspect_ratio() const { return swapchain.ExtentAspectRatio(); }
 
-            Scene* create_scene(std::string name, bool set_active = true);
-            Scene* get_scene(std::string name);
-
             ecs::registry& get_registry() { return registry_; }
 
-            void render();
+            void render(Camera& cam);
             
             bool frame_started() { return is_frame_started; }
 
@@ -62,7 +59,7 @@ namespace nvkg {
             void begin_swapchain_renderpass(VkCommandBuffer commandBuffer);
             void end_swapchain_renderpass(VkCommandBuffer commandBuffer);
 
-            void render_frame();
+            void render_frame(Camera& cam);
 
             nvkg::Window& window;
             
@@ -73,9 +70,6 @@ namespace nvkg {
             uint32_t current_image_index;
             bool is_frame_started{false};
             int current_frame_index{0};
-
-            Scene* active_scene = nullptr;
-            std::map<std::string, Scene*> scenes;
 
             ecs::registry registry_;
     };
