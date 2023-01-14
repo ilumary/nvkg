@@ -122,8 +122,23 @@ namespace nvkg {
 
         pipeline_conf.render_pass = SwapChain::GetInstance()->GetRenderPass()->GetRenderPass();
         pipeline_conf.pipeline_layout = pipeline_layout;
-        pipeline_conf.vertex_data = VertexDescription::CreateDescriptions(vertex_binds.size(), vertex_binds.data());
 
+        NVKG_ASSERT(shaders.count(VK_SHADER_STAGE_VERTEX_BIT), "Vertex shader must be present");
+        auto& vertex_shader_attributes = shaders[VK_SHADER_STAGE_VERTEX_BIT]->vertex_attributes;
+
+        pipeline_conf.attributes = std::vector<VkVertexInputAttributeDescription>(vertex_shader_attributes.attributes.size());
+        std::generate(pipeline_conf.attributes.begin(), pipeline_conf.attributes.end(), [&vertex_shader_attributes, index = 0]() mutable -> VkVertexInputAttributeDescription {
+            auto desc = vertexdescription::vertex_input_attribute_description(VERTEX_BUFFER_BIND_ID, index, vertex_shader_attributes.attributes[index].second, vertex_shader_attributes.attributes[index].first);
+            index += 1;
+            return desc;
+        });
+
+        pipeline_conf.bindings = std::vector<VkVertexInputBindingDescription>(1);
+        std::generate(pipeline_conf.bindings.begin(), pipeline_conf.bindings.end(), [&vertex_shader_attributes]() -> VkVertexInputBindingDescription {
+            auto bind = vertexdescription::vertex_input_binding_description(VERTEX_BUFFER_BIND_ID, vertex_shader_attributes.vertexStride, VK_VERTEX_INPUT_RATE_VERTEX);
+            return bind;
+        });
+        
         pipeline.create_graphics_pipeline(shader_configs.data(), shaders.size(), pipeline_conf);
     }
 
@@ -200,26 +215,6 @@ namespace nvkg {
         }
 
         vkUpdateDescriptorSets(device().device(), static_cast<uint32_t>(write_sets.size()), write_sets.data(), 0, NULL);
-    }
-
-    void Material::add_shader(const std::unique_ptr<ShaderModule>& shader) {
-        auto& vertices = shader->vertex_bindings;
-
-        for(size_t i = 0; i < vertices.size(); i++) {
-            auto& binding = vertices.at(i);
-            auto& attributes = binding.attributes;
-
-            if (attributes.size() == 0) continue;
-
-            vertex_binds.push_back(
-                VertexDescription::CreateBinding(
-                    i, 
-                    binding.vertexStride, 
-                    VertexDescription::VERTEX,
-                    attributes.data(),
-                    attributes.size()
-            ));
-        }
     }
 
     void Material::set_shader_props(const std::unique_ptr<ShaderModule>& shader, uint64_t& offset, uint16_t& res_counter) {
@@ -304,7 +299,6 @@ namespace nvkg {
         uint16_t counter = 0;
 
         for(const auto& [stage, shader] : shaders) {
-            add_shader(shader);
             set_shader_props(shader, OUT offset, counter);
         }
 

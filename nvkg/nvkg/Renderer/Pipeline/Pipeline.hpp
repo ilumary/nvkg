@@ -154,7 +154,8 @@ namespace nvkg {
         VkRenderPass render_pass{nullptr};
         uint32_t sub_pass{0}; 
 
-        VertexDescription::Data vertex_data;
+		std::vector<VkVertexInputBindingDescription> bindings;
+        std::vector<VkVertexInputAttributeDescription> attributes;
     };
 
     class Pipeline {

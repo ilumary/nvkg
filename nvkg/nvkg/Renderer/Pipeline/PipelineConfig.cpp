@@ -1,58 +1,6 @@
 #include <nvkg/Renderer/Pipeline/PipelineConfig.hpp>
 
 namespace nvkg {
-    VkVertexInputBindingDescription VertexDescription::CreateBinding(
-            uint32_t binding,
-            uint32_t stride, 
-            VkVertexInputRate inputRate) {
-        return { binding, stride, inputRate };
-    }
-
-    VkVertexInputAttributeDescription VertexDescription::CreateAttribute(
-            uint32_t location, 
-            uint32_t binding, 
-            VkFormat format, 
-            uint32_t offset) {
-        return { location, binding, format, offset };
-    }
-
-    VertexDescription::Data VertexDescription::CreateDescriptions(size_t bindingCount, Binding* bindings) {
-        Data vertexData;
-
-        size_t totalAttributes = 0;
-        for (size_t i = 0; i < bindingCount; i++) {
-            totalAttributes += bindings[i].attributeCount;
-        }
-
-        vertexData.bindings = std::vector<VkVertexInputBindingDescription>(bindingCount);
-        vertexData.attributes = std::vector<VkVertexInputAttributeDescription>(totalAttributes);
-
-        size_t processedAttributes = 0;
-        for (size_t i = 0; i < bindingCount; i++) {
-            auto& binding = bindings[i];
-            vertexData.bindings[i] = CreateBinding(i, binding.stride, (VkVertexInputRate)binding.inputRate);
-
-            for (uint32_t j = 0; j < binding.attributeCount; j++) {
-                auto attribute = binding.attributes[j];
-                size_t attributeIndex = j + processedAttributes;
-                vertexData.attributes[attributeIndex] = 
-                    CreateAttribute(j, i, (VkFormat)attribute.type, attribute.offset);
-            }
-
-            processedAttributes += binding.attributeCount;
-        }
-
-        return vertexData;
-    }
-
-    VertexDescription::Binding VertexDescription::CreateBinding(
-        uint32_t binding, 
-        uint32_t stride, 
-        InputRate inputRate, 
-        Attribute* attributes, 
-        uint32_t attibuteCount) {
-        return { binding, stride, inputRate, attibuteCount, attributes};
-    }
 
     VkPipelineLayoutCreateInfo PipelineConfig::create_pipeline_layout_create_info(
             VkDescriptorSetLayout* layouts, 

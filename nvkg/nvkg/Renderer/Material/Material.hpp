@@ -13,6 +13,7 @@
 #include <chrono>
 #include <thread>
 #include <functional>
+#include <algorithm>
 
 namespace nvkg {
 
@@ -22,12 +23,22 @@ namespace nvkg {
 
     class Material {
         public:
-
+        
+            inline static constexpr uint32_t VERTEX_BUFFER_BIND_ID { 0 };
+            inline static constexpr uint32_t INSTANCE_BUFFER_BIND_ID { 1 };
+            
+            struct instance_binding_data {
+                bool instancing_enabled = false;
+                uint32_t per_vertex_size = 0;
+                uint32_t per_instance_size = 0;
+            };
+            
             //TODO somehow get pointer to global ubo for continuos update without explicitly calling update from renderer
             struct MaterialConfig {
                 std::vector<std::string> shaders;
                 std::map<std::string, SampledTexture*> textures;
                 std::function<void(PipelineInit& pipeline)> pipeline_configurator = {};
+                instance_binding_data instance_data{};
             } config_;
 
             Material(const MaterialConfig config);
@@ -52,7 +63,6 @@ namespace nvkg {
 
             void create_material();
 
-            void add_shader(const std::unique_ptr<ShaderModule>& shader);
             void set_shader_props(const std::unique_ptr<ShaderModule>& shader, uint64_t& offset, uint16_t& res_counter);
             void prepare_desc_set_layouts();
             void prepare_pipeline();
@@ -76,7 +86,6 @@ namespace nvkg {
             std::map<uint32_t, SampledTexture*> textures{};
 
             std::map<std::string, VkPushConstantRange> push_constants{};
-            std::vector<VertexDescription::Binding> vertex_binds{};
 
             std::vector<VkDescriptorSetLayout> descriptor_set_layouts{};
             std::vector<VkDescriptorSet> descriptor_sets{};

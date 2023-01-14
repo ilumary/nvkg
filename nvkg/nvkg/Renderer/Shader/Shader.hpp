@@ -163,6 +163,11 @@ namespace nvkg {
 
     class ShaderModule {
         public:
+            struct file_handle {
+                std::filesystem::path path_; //depending on runtime_compilation the path is set
+                std::filesystem::file_time_type last_write_time_;
+                bool compile_sources = true;
+            } file_handle_;
 
             ShaderModule(std::string file, bool runtime_compilation = true);
             ~ShaderModule() { cleanup(); };
@@ -172,8 +177,8 @@ namespace nvkg {
 
             void recompile();
 
-            struct VertexBinding {
-                std::vector<VertexDescription::Attribute> attributes{};
+            struct VertexAttributes {
+                std::vector<std::pair<uint32_t, VkFormat>> attributes{}; //<offset, format>
                 uint32_t vertexStride = 0;
             };
 
@@ -181,21 +186,13 @@ namespace nvkg {
             VkShaderStageFlagBits shader_stage{};
 
             // specifies the binding order of the model descriptor.
-            std::map<std::string, VkPushConstantRange> push_constants_new{}; //
-            std::vector<VertexBinding> vertex_bindings{};
+            std::map<std::string, VkPushConstantRange> push_constants_new{};
+            VertexAttributes vertex_attributes{};
             std::vector<ShaderResource> shader_resources{};
 
         private:
-            VulkanDevice *device;
-
             std::vector<char> spirv_bin_data{};
             std::vector<uint32_t> spirv_bin_data_u32{};
-
-            struct file_handle {
-                std::filesystem::path path_; //depending on runtime_compilation the path is set
-                std::filesystem::file_time_type last_write_time_;
-                bool compile_sources = true;
-            } file_handle_;
 
             uint32_t combined_uniform_size = 0;
 

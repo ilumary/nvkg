@@ -268,7 +268,7 @@ namespace nvkg {
 
         logger::debug() << "SHADER INFO: " << file_handle_.path_;
         logger::debug() << "UBO's: " << shader_resources.size() << " with overall size " << combined_uniform_size;
-        logger::debug() << "Vertex Bindings: " << vertex_bindings.size();
+        logger::debug() << "Vertex Attributes: " << vertex_attributes.attributes.size();
         logger::debug() << "Push Constants: " << push_constants_new.size();
 
 		VkShaderModuleCreateInfo shader_module_create_info = {};
@@ -332,7 +332,7 @@ namespace nvkg {
         spirv_cross::ShaderResources resources = glsl.get_shader_resources();
 
         uint32_t inputs_size = 0, locations = 0;
-        VertexBinding n_binding{};
+        VertexAttributes n_attributes{};
 
         std::map<uint16_t, spirv_cross::Resource> sorted_stage_inputs;
 
@@ -348,27 +348,24 @@ namespace nvkg {
             std::string name = glsl.get_name(resource.second.id);
 
             const spirv_cross::SPIRType &type = glsl.get_type(resource.second.type_id);
-
-            auto attrib_type = VertexDescription::AttributeType::VEC2;
-            if(type.vecsize == 3) {
-                attrib_type = VertexDescription::AttributeType::VEC3;
-            } else if(type.vecsize == 4) {
-                attrib_type = VertexDescription::AttributeType::VEC4;
-            }
-
-            auto attrib = VertexDescription::Attribute {
-                .offset = inputs_size,
-                .type = attrib_type,
+            
+            auto match_attrib_type = [&type](uint32_t vecsize) -> VkFormat {
+                if(vecsize == 1 && type.basetype == spirv_cross::SPIRType::BaseType::Float) return VK_FORMAT_R32_SFLOAT;
+                if(vecsize == 2 && type.basetype == spirv_cross::SPIRType::BaseType::Float) return VK_FORMAT_R32G32_SFLOAT;
+                if(vecsize == 3 && type.basetype == spirv_cross::SPIRType::BaseType::Float) return VK_FORMAT_R32G32B32_SFLOAT;
+                if(vecsize == 4 && type.basetype == spirv_cross::SPIRType::BaseType::Float) return VK_FORMAT_R32G32B32A32_SFLOAT;
             };
 
-            n_binding.attributes.push_back(attrib);
+            std::pair<uint32_t, VkFormat> attrib = { inputs_size, match_attrib_type(type.vecsize) };
 
-            inputs_size += type.vecsize * 4; // because float = 4B
+            n_attributes.attributes.push_back(attrib);
+
+            inputs_size += (type.width/8) * type.vecsize;
         }
         
         if(inputs_size > 0) {
-            n_binding.vertexStride = inputs_size;
-            vertex_bindings.push_back(n_binding);
+            n_attributes.vertexStride = inputs_size;
+            vertex_attributes = n_attributes;
         }
     }
 

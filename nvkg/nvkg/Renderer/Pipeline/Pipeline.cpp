@@ -37,15 +37,12 @@ namespace nvkg {
 
         PipelineConfig::create_default_pipeline_stages(OUT shader_stages, stages, shader_modules, shader_count);
 
-        auto binding_descriptions = p_config.vertex_data.bindings;
-        auto attribute_descriptions = p_config.vertex_data.attributes;
-
         VkPipelineVertexInputStateCreateInfo vertex_input_create_info{};
         vertex_input_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertex_input_create_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(attribute_descriptions.size());
-        vertex_input_create_info.vertexBindingDescriptionCount = static_cast<uint32_t>(binding_descriptions.size());
-        vertex_input_create_info.pVertexAttributeDescriptions = attribute_descriptions.data();
-        vertex_input_create_info.pVertexBindingDescriptions = binding_descriptions.data();
+        vertex_input_create_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(p_config.attributes.size());
+        vertex_input_create_info.vertexBindingDescriptionCount = static_cast<uint32_t>(p_config.bindings.size());
+        vertex_input_create_info.pVertexAttributeDescriptions = p_config.attributes.data();
+        vertex_input_create_info.pVertexBindingDescriptions = p_config.bindings.data();
 
         VkGraphicsPipelineCreateInfo pipelineCI = pipeline::pipeline_create_info(p_config.pipeline_layout, p_config.render_pass, 0);
 

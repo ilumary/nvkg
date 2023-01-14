@@ -5,61 +5,36 @@
 #include <vector>
 
 namespace nvkg {
-    // TEMPORARY
-    class VertexDescription {
-        public:
+    
+    namespace vertexdescription {
 
-        enum AttributeType {
-            VEC2 = VK_FORMAT_R32G32_SFLOAT,
-            VEC3 = VK_FORMAT_R32G32B32_SFLOAT,
-            VEC4 = VK_FORMAT_R32G32B32A32_SFLOAT
-        };
+        inline VkVertexInputBindingDescription vertex_input_binding_description(
+			uint32_t binding,
+			uint32_t stride,
+			VkVertexInputRate input_rate)
+		{
+			VkVertexInputBindingDescription v_input_bind_description {};
+			v_input_bind_description.binding = binding;
+			v_input_bind_description.stride = stride;
+			v_input_bind_description.inputRate = input_rate;
+			return v_input_bind_description;
+		}
 
-        enum InputRate {
-            VERTEX = VK_VERTEX_INPUT_RATE_VERTEX,
-            INSTANCE = VK_VERTEX_INPUT_RATE_INSTANCE
-        };
+		inline VkVertexInputAttributeDescription vertex_input_attribute_description(
+			uint32_t binding,
+			uint32_t location,
+			VkFormat format,
+			uint32_t offset)
+		{
+			VkVertexInputAttributeDescription v_input_attrib_description {};
+			v_input_attrib_description.location = location;
+			v_input_attrib_description.binding = binding;
+			v_input_attrib_description.format = format;
+			v_input_attrib_description.offset = offset;
+			return v_input_attrib_description;
+		}
 
-        struct Attribute {
-            uint32_t offset = 0;
-            AttributeType type;
-        };
-
-        struct Binding {
-            uint32_t binding;
-            uint32_t stride;
-            InputRate inputRate;
-            uint32_t attributeCount;
-            Attribute* attributes; 
-        };
-        
-        struct Data {
-            std::vector<VkVertexInputBindingDescription> bindings{};
-            std::vector<VkVertexInputAttributeDescription> attributes{};
-        };
-
-        static Data CreateDescriptions(size_t bindingCount, Binding* bindings);
-
-        static Binding CreateBinding(
-            uint32_t binding, 
-            uint32_t stride, 
-            InputRate inputRate, 
-            Attribute* attributes,
-            uint32_t attibuteCount);
-
-        static VkVertexInputBindingDescription CreateBinding(
-            uint32_t binding,
-            uint32_t stride, 
-            VkVertexInputRate inputRate
-        );
-
-        static VkVertexInputAttributeDescription CreateAttribute(
-            uint32_t location, 
-            uint32_t binding, 
-            VkFormat format, 
-            uint32_t offset
-        );
-    };   
+    } // namespace vertexdescription
 
     //TODO integrate in Pipeline class
     class PipelineConfig {
