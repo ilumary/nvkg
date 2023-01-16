@@ -7,20 +7,20 @@ ROOT_DIR=$(pwd -P)
 BIN_DIR="$ROOT_DIR/bin"
 
 # Find the current OS
-#if [ "$(uname)" == "Darwin" ]; then
+if [ "$(uname)" == "Darwin" ]; then
     OS="macos"
     NUMBER_OF_PROCESSORS="$(sysctl -n hw.ncpu)"
     LIB_SUFFIX=".dylib"
     LOADER_INSTALL_DIR=build/layers
-#else
-#    OS="linux"
-#    NUMBER_OF_PROCESSORS="$(nproc)"
-#    LIB_SUFFIX=".so"
-#    LOADER_INSTALL_DIR=build/share/vulkan/explicit_layer.d
-#fi
+else
+    OS="linux"
+    NUMBER_OF_PROCESSORS="$(nproc)"
+    LIB_SUFFIX=".so"
+    LOADER_INSTALL_DIR=build/share/vulkan/explicit_layer.d
+fi
 
 # Set setup details
-VULKAN_VERSION="1.3.211"
+VULKAN_VERSION="1.3.238"
 GENERATOR="Unix Makefiles"
 EXTERN_DIR="${ROOT_DIR}/extern"
 

@@ -2,13 +2,8 @@ ifneq ("$(wildcard .env)","")
     include .env
 endif
 
-# Set debugging build flags
-DEBUG ?= 1
-ifeq ($(DEBUG), 1)
-	override CXXFLAGS += -g -DDEBUG
-else
-    override CXXFLAGS += -DNDEBUG
-endif
+# Debug Mode Off
+override CXXFLAGS += -DNDEBUG
 
 # Set validation layer build flags
 ifeq ($(ENABLE_VALIDATION_LAYERS), 1)
@@ -31,8 +26,8 @@ objects := $(patsubst nvkg/%, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
 depends := $(patsubst %.o, %.d, $(objects))
 
 includes = -I $(abspath nvkg) -I $(externDir)/glslang -I $(externDir)/vulkan/include -I $(externDir)/glfw/include -I $(externDir)/glm -I $(externDir)/tinyobjloader -I $(externDir)/stb -I $(externDir)/vulkan/SPIRV-Cross/
-linkFlags = -L $(libDir) -lglfw3 -L $(libDir) -lspirv-cross -L $(libDir) -lglslang -lGenericCodeGen -lglslang-default-resource-limits -lHLSL -lMachineIndependent -lOGLCompiler -lOSDependent -lSPIRV -lSPVRemapper -L/opt/homebrew/opt/gcc/lib/gcc/12/
-compileFlags := -std=c++2b $(includes)
+linkFlags = -L $(libDir) -lglfw3 -lspirv-cross -lglslang -lSPIRV -lGenericCodeGen -lglslang-default-resource-limits -lHLSL -lMachineIndependent -lOGLCompiler -lOSDependent -lSPVRemapper -L/opt/homebrew/opt/gcc/lib/gcc/12/
+compileFlags := -std=c++2b $(includes) -O2
 glfwLib := $(libDir)/libglfw3.a
 
 vertSources = $(call rwildcard,shaders/,*.vert)
@@ -42,7 +37,6 @@ fragObjFiles = $(patsubst %.frag,$(buildDir)/%.frag.spv,$(fragSources))
 
 UNAMEOS := $(shell uname)
 ifeq ($(UNAMEOS), Linux)
-
     platform := linux
     CXX ?= g++
     libSuffix = so
@@ -50,7 +44,6 @@ ifeq ($(UNAMEOS), Linux)
     linkFlags += -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi -no-pie
 endif
 ifeq ($(UNAMEOS),Darwin)
-    
     platform := macos
     #CXX = /opt/homebrew/opt/llvm/bin/clang++
 	CXX = aarch64-apple-darwin22-c++-12

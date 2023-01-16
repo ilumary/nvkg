@@ -11,17 +11,17 @@ The dependencies are reduced to a minimum as the majority of external code is in
 Current highlights are:
   - Automated descriptor creation using SPIRV-Cross reflection
   - Material based rendering
-  - Plug-and-play architecture
-  - Model loading
   - Fully functional Entity Component System
-  - Signed distance field font rendering
+  - Font rendering using signed distance fields
 
-Still to be done are:
-  - Compute pipeline builder
-  - Examples
-  - LUA scripting support
-  - UI Framework
-  - lots more...
+Next up on my to-do list will be:
+  1. Improvements to renderer (instanced and indirect rendering, culling, lod, multithreading)
+  2. UI Framwork (i.e. buttons, ...)
+  3. Proper asset manager (unified way to load all kinds of files)
+  4. Audio support
+  5. Physics support
+  6. Serialisation
+  7. And everything that comes up inbetween...
 
 ## Contents
 
@@ -31,7 +31,7 @@ Still to be done are:
     - [Dependencies](#dependencies)
     - [Setup](#setup)
     - [Building and execution](#building-and-execution)
-    - [Modifications](#modifications)
+    - [Modifications \& Contributions](#modifications--contributions)
   - [Contributors](#contributors)
   - [References](#references)
 
@@ -41,23 +41,23 @@ Still to be done are:
 
 The following are dependencies for building and running NVKG:
 
-- [Cmake](https://cmake.org/) (all platforms)
+- [Cmake](https://cmake.org/) (linux & macos)
 - [GNU Make](https://www.gnu.org/software/make/) (linux & macos)
-- [Python](https://www.python.org/) (all platforms)
+- [Python](https://www.python.org/) (linux & macos)
 
 All other libraries are within git submodules.
 
 ### Setup
 
-Execute the provided script ```scripts/setup.sh```. This should take care of mostly everything.
+Execute the provided script ```scripts/setup.sh```. If you wish to build with vulkan validation layers, execute with ```--include-validation-layers```. No more action should be needed. 
 
-Also make shure to export your environment variables VULKAN_SDK, VK_ICD_FILENAMES, VK_LAYER_PATH, VK_VERSION.
+Linux Users may need to download the following libs: ```libx11-xcb-dev libxkbcommon-dev libwayland-dev libxrandr-dev libasound2-dev mesa-common-dev libx11-dev libxrandr-dev libxi-dev xorg-dev libgl1-mesa-dev libglu1-mesa-dev```.
 
 ### Building and execution
 
 Build with ```make app``` and execute with ```./bin/app```.
 
-### Modifications
+### Modifications & Contributions
 
 If you want to modify anything, the ```compile_commands.json``` for the clangd language server can be created using [bear](https://github.com/rizsotto/Bear).
 
