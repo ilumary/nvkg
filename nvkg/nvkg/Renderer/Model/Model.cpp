@@ -110,8 +110,8 @@ namespace nvkg {
         mesh_.load_vertices(meshData);
     }
 
-    void Model::bind(VkCommandBuffer commandBuffer) {
-        mesh_.bind(commandBuffer);
+    void Model::bind(VkCommandBuffer commandBuffer, uint32_t bind_id) {
+        mesh_.bind(commandBuffer, bind_id);
     }
 
     void Model::draw(VkCommandBuffer commandBuffer, uint32_t instance) {

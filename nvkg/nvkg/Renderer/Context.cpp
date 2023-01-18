@@ -6,6 +6,8 @@ namespace nvkg {
 
     Context::Context(Window& window) : window{window}, swapchain{SwapChain()} {
         device(&window);
+
+        Input::init_with_window_pointer(&window);
         
         swapchain.SetWindowExtents(window.get_window_extent());
 
@@ -17,14 +19,13 @@ namespace nvkg {
 
         DescriptorPool::build_pool();
 
-        renderer = new Renderer();
+        renderer_ = std::make_unique<Renderer>();
 
         create_cmdbf();
     }
 
     Context::~Context() {
         DescriptorPool::destroy_pool();
-        renderer->destroy();
     }
 
     void Context::create_cmdbf() {
@@ -41,10 +42,10 @@ namespace nvkg {
             "Failed to allocate command buffer");
     }
 
-    void Context::render_frame(Camera& cam) {
+    void Context::render_frame() {
         auto commandBuffer = get_crnt_cmdbf();
 
-        renderer->render(commandBuffer, &cam, registry_);
+        renderer_->render(commandBuffer, camera_, registry_);
     }
 
     void Context::recreate_swapchain() {
@@ -64,7 +65,7 @@ namespace nvkg {
         // Re-create the pipeline once the swapchain renderpass 
         // becomes available again.
         if (!swapchain.CompareSwapFormats(oldImageFormat, oldDepthFormat)) {
-            renderer->recreate_materials();
+            renderer_->recreate_materials();
         }
     }
 
@@ -76,12 +77,18 @@ namespace nvkg {
             command_buffers.data());
     }
 
-    void Context::render(Camera& cam) {
+    void Context::render() {
+        new_time_ = std::chrono::high_resolution_clock::now();
+        frame_time_ = std::chrono::duration<float, std::chrono::seconds::period>(new_time_ - current_time_).count();
+        current_time_ = new_time_;
+
         if(!start_frame()) return;
                 
-        render_frame(cam);
+        render_frame();
 
         end_frame();
+
+        camera_->update(frame_time_);
     }
 
     bool Context::start_frame() {

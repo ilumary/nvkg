@@ -32,9 +32,9 @@ namespace nvkg {
     }
 
     void Material::bind(VkCommandBuffer commandBuffer) {
-        pipeline.bind(commandBuffer);
-
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 0, descriptor_sets.size(), descriptor_sets.data(), 0, nullptr);
+    
+        pipeline.bind(commandBuffer);
     }
 
     void Material::push_constant(VkCommandBuffer command_buffer, std::string name, size_t push_constant_size, const void* data) {
@@ -127,17 +127,28 @@ namespace nvkg {
         auto& vertex_shader_attributes = shaders[VK_SHADER_STAGE_VERTEX_BIT]->vertex_attributes;
 
         pipeline_conf.attributes = std::vector<VkVertexInputAttributeDescription>(vertex_shader_attributes.attributes.size());
-        std::generate(pipeline_conf.attributes.begin(), pipeline_conf.attributes.end(), [&vertex_shader_attributes, index = 0]() mutable -> VkVertexInputAttributeDescription {
-            auto desc = vertexdescription::vertex_input_attribute_description(VERTEX_BUFFER_BIND_ID, index, vertex_shader_attributes.attributes[index].second, vertex_shader_attributes.attributes[index].first);
+        auto& i_data = config_.instance_data;
+        std::generate(pipeline_conf.attributes.begin(), pipeline_conf.attributes.end(), [&vertex_shader_attributes, &i_data, index = 0, offset = 0, bind_id = 0]() mutable -> VkVertexInputAttributeDescription {
+            auto desc = vertexdescription::vertex_input_attribute_description(bind_id, index, vertex_shader_attributes.attributes[index].second, vertex_shader_attributes.attributes[index].first - offset);
+            logger::debug() << "Vertex input attribute description: bind: " << bind_id << " loc: " << index << " off: " << vertex_shader_attributes.attributes[index].first - offset;
             index += 1;
+            if(i_data.instancing_enabled && i_data.per_vertex_size == vertex_shader_attributes.attributes[index].first) { 
+                logger::debug() << "Entering instanced vertex attributes!";
+                offset = i_data.per_vertex_size;
+                bind_id = 1;
+            }
             return desc;
         });
 
-        pipeline_conf.bindings = std::vector<VkVertexInputBindingDescription>(1);
-        std::generate(pipeline_conf.bindings.begin(), pipeline_conf.bindings.end(), [&vertex_shader_attributes]() -> VkVertexInputBindingDescription {
-            auto bind = vertexdescription::vertex_input_binding_description(VERTEX_BUFFER_BIND_ID, vertex_shader_attributes.vertexStride, VK_VERTEX_INPUT_RATE_VERTEX);
-            return bind;
-        });
+        logger::debug() << "Vertex stride: " << vertex_shader_attributes.vertexStride;
+
+        pipeline_conf.bindings = std::vector<VkVertexInputBindingDescription>(config_.instance_data.instancing_enabled ? 2 : 1);
+        if(!config_.instance_data.instancing_enabled) {
+            pipeline_conf.bindings[0] = vertexdescription::vertex_input_binding_description(VERTEX_BUFFER_BIND_ID, vertex_shader_attributes.vertexStride, VK_VERTEX_INPUT_RATE_VERTEX);
+        } else {
+            pipeline_conf.bindings[0] = vertexdescription::vertex_input_binding_description(VERTEX_BUFFER_BIND_ID, config_.instance_data.per_vertex_size, VK_VERTEX_INPUT_RATE_VERTEX);
+            pipeline_conf.bindings[1] = vertexdescription::vertex_input_binding_description(INSTANCE_BUFFER_BIND_ID, config_.instance_data.per_instance_size, VK_VERTEX_INPUT_RATE_INSTANCE);
+        }
         
         pipeline.create_graphics_pipeline(shader_configs.data(), shaders.size(), pipeline_conf);
     }

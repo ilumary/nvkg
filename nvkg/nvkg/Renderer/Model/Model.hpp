@@ -32,18 +32,22 @@ namespace nvkg {
             Model(const Model&) = delete;
             Model& operator=(const Model&) = delete;
 
-            void bind(VkCommandBuffer commandBuffer);
+            void bind(VkCommandBuffer commandBuffer,  uint32_t bind_id = 0);
             void draw(VkCommandBuffer commandBuffer, uint32_t instance = 0);
 
             void update_mesh(const Mesh::MeshData& meshData);
             void set_mesh(const Mesh::MeshData& meshData);
 
             bool IsIndexed() { return mesh_.has_index_buffer(); }
+            uint32_t get_index_count() { return mesh_.get_index_count(); }
+            uint32_t get_vertex_count() { return mesh_.get_vertex_count(); }
+
+            Mesh mesh_;
 
         private:
 
             void LoadModelFromFile(const char* filePath);
 
-            Mesh mesh_;
+            
     };
 }

@@ -17,69 +17,20 @@
 static const constexpr int WIDTH = 1280;
 static const constexpr int HEIGHT = 720;
 
-void mov_cam_xz(float deltaTime, nvkg::transform_3d& cam_transform) {
-    static auto oldMousePos = Input::get_cursor_pos();
-    auto mousePos = Input::get_cursor_pos();
-
-    glm::vec3 rotate{0};
-    float lookSpeed = 4.0f;
-
-    float differenceX = mousePos.x - oldMousePos.x;
-    float differenceY = oldMousePos.y - mousePos.y;
-
-    rotate.y += differenceX;
-    rotate.x += differenceY;
-
-    if (glm::dot(rotate, rotate) > glm::epsilon<float>()) {
-        glm::vec3 newRotation = cam_transform.rotation_ + lookSpeed * glm::normalize(rotate);
-        cam_transform.rotation_ = Utils::Math::Lerp(cam_transform.rotation_, newRotation, deltaTime);
-    }
-
-    // Limit the pitch values to avoid objects rotating upside-down
-    cam_transform.rotation_.x = glm::clamp(cam_transform.rotation_.x, -1.5f, 1.5f);
-    cam_transform.rotation_.y = glm::mod(cam_transform.rotation_.y, glm::two_pi<float>());
-
-    float yaw = cam_transform.rotation_.y;
-    const glm::vec3 forwardDir{glm::sin(yaw), 0.f, glm::cos(yaw)};
-    const glm::vec3 rightDir{forwardDir.z, 0.f, -forwardDir.x};
-    const glm::vec3 upDir{0.f, -1.f, 0.f};
-
-    glm::vec3 moveDir{0.f};
-    if (Input::key_down(KEY_W)) moveDir += forwardDir;
-    if (Input::key_down(KEY_S)) moveDir -= forwardDir;
-    if (Input::key_down(KEY_A)) moveDir -= rightDir;
-    if (Input::key_down(KEY_D)) moveDir += rightDir;
-
-    if (Input::key_down(KEY_Q)) moveDir += upDir;
-    if (Input::key_down(KEY_E)) moveDir -= upDir;
-
-    float moveSpeed = 2.f;
-
-    if (glm::dot(moveDir, moveDir) > glm::epsilon<float>()) {
-        glm::vec3 newMove = cam_transform.position_ + moveSpeed * glm::normalize(moveDir);
-        cam_transform.position_ = Utils::Math::Lerp(cam_transform.position_, newMove, deltaTime);
-    }
-
-    oldMousePos = mousePos;
-}
-
 int main() {
     logger::debug() << alloc_calls_ << ", " << dealloc_calls_ << ", " << used_memory_;
     nvkg::Window window("NVKG", WIDTH, HEIGHT);
-    window.disable_cursor();
-    Input::init_with_window_pointer(&window); //TODO hide
 
     nvkg::Context context(window);
     ecs::registry& registry = context.get_registry();
 
-    //TODO need to update camera
-    nvkg::Camera camera;
-    nvkg::transform_3d cam_transform{};
-
-    nvkg::Material diffuse_mat_new({
-        .shaders = {"simpleShader.vert", "diffuseFragShader.frag"},
-        .textures = {{"texSampler", nvkg::TextureManager::load_2d_img("../assets/textures/tex1.png")}},
-    });
+    std::shared_ptr<nvkg::CameraNew> camera = std::make_shared<nvkg::CameraNew>();
+    camera->type = nvkg::CameraNew::CameraType::firstperson;
+    camera->setPosition(glm::vec3(0.f, 0.f, -20.f));
+    camera->setRotation(glm::vec3(0.f, 0.f, 0.f));
+    camera->setPerspective(60.0f, (float)WIDTH / (float)HEIGHT, 1.0f, 256.0f);
+    camera->setMovementSpeed(5.0f);
+    context.set_camera(camera);
 
     auto frame_time = registry.create<nvkg::sdf_text_outline, nvkg::render_mesh>(
         { .55f, false, .75f, {-0.99, -0.99}, {.02f, .04f}, 0.f }, {
@@ -96,39 +47,40 @@ int main() {
     nvkg::render_mesh& mem_usage_render_mesh = registry.get<nvkg::render_mesh>(mem_usage);
 
     // Generating models from .obj files
-    nvkg::Model cubeObjModel("assets/models/cube.obj");
-    nvkg::Model vaseObjModel("assets/models/smooth_vase.obj");
+    //nvkg::Model cubeObjModel("assets/models/cube.obj");
 
-    cam_transform.position_ = {0.f, -1.f, -2.5f};
-
-    auto entity = registry.create<nvkg::transform_3d, nvkg::render_mesh>({
-        {0.f, -.5f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}
-    }, {
-        .model_ = std::unique_ptr<nvkg::Model>(&cubeObjModel),
-        .material_ = std::unique_ptr<nvkg::Material>(&diffuse_mat_new)
-    });
-
-    auto entity2 = registry.create<nvkg::transform_3d, nvkg::render_mesh>({
-        {0.f, 0.f, 0.f}, {3.f, 3.f, 0.05f}, {1.570796f, 0.f, 0.f}
-    }, {
-        .model_ = std::unique_ptr<nvkg::Model>(&cubeObjModel),
-        .material_ = std::unique_ptr<nvkg::Material>(&diffuse_mat_new)
-    });
-
-    auto entity3 = registry.create<nvkg::transform_3d, nvkg::render_mesh>({
-        {0.f, -1.f, 0.f}, {2.f, 2.f, 2.f}, {0.f, 0.f, 0.f}
-    }, {
-        .model_ = std::unique_ptr<nvkg::Model>(&vaseObjModel),
-        .material_ = std::unique_ptr<nvkg::Material>(&diffuse_mat_new)
-    });
-
-    auto point_light_ent1 = registry.create<nvkg::point_light>({{1.f, 0.f, 0.f, 1.f}, {1.0f, -1.5f, -1.5f}});
+    /*auto point_light_ent1 = registry.create<nvkg::point_light>({{1.f, 0.f, 0.f, 1.f}, {1.0f, -1.5f, -1.5f}});
     auto point_light_ent2 = registry.create<nvkg::point_light>({{0.f, 1.f, 0.f, 1.f}, {-1.f, -1.5f, -1.5f}});
-    auto point_light_ent3 = registry.create<nvkg::point_light>({{0.f, 0.f, 1.f, 1.f}, {-0.f, -1.5f, 1.5f}});
+    auto point_light_ent3 = registry.create<nvkg::point_light>({{0.f, 0.f, 1.f, 1.f}, {-0.f, -1.5f, 1.5f}});*/
+    
+    /////Instancing
 
-    auto currentTime = std::chrono::high_resolution_clock::now();
+    nvkg::Material::MaterialConfig config_test({
+        .shaders = {"instancing.vert", "instancing.frag"},
+        .instance_data = { true, sizeof(nvkg::Vertex), sizeof(nvkg::transform_3d) },
+    });
 
-    bool input_enabled = true;
+    auto instanced_entity = registry.create<nvkg::shared_render_mesh, nvkg::instance_data>({
+        .model_ = std::make_shared<nvkg::Model>("assets/models/cube.obj"),
+        .material_ = std::make_shared<nvkg::Material>(config_test)
+    }, {});
+
+    nvkg::instance_data& instance_data = registry.get<nvkg::instance_data>(instanced_entity);
+    instance_data.instance_data_ = {{{0.f, 0.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}},
+                                    {{2.f, 0.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}},
+                                    {{-2.f, 0.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}},
+                                    {{-2.f, -2.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}},
+                                    {{2.f, -2.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}},
+                                    {{0.f, -2.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}},
+                                    {{-2.f, 2.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}},
+                                    {{2.f, 2.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}},
+                                    {{0.f, 2.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}}};
+    instance_data.instance_count_ = instance_data.instance_data_.size();
+
+    instance_data.instance_data_buffer_.init_staging_buffer(sizeof(nvkg::transform_3d) * instance_data.instance_count_);
+    instance_data.instance_data_buffer_.create_buffer(instance_data.instance_data_.data(), sizeof(nvkg::transform_3d) * instance_data.instance_count_);
+
+    /////
 
     logger::debug() << alloc_calls_ << ", " << dealloc_calls_ << ", " << used_memory_;
 
@@ -136,10 +88,8 @@ int main() {
 
     while(!window.window_should_close()) {
         
-        auto newTime = std::chrono::high_resolution_clock::now();
-        float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
+        float frameTime = context.get_frame_time();
         time_1s += frameTime;
-        currentTime = newTime;
 
         if(time_1s > 1) {
             std::stringstream sstm, sstm_m;
@@ -155,21 +105,7 @@ int main() {
 
         window.update();
 
-        if (Input::key_just_pressed(KEY_ESCAPE)) {
-            input_enabled = !input_enabled;
-            window.toggle_cursor(input_enabled);
-        }
-
-        float aspect = context.get_aspect_ratio();
-
-        camera.set_perspective_proj(glm::radians(50.f), aspect, 0.1f, 100.f);
-
-        if (input_enabled) {
-            mov_cam_xz(frameTime, cam_transform);
-            camera.set_view_xyz(cam_transform.position_, cam_transform.rotation_);
-        }
-
-        context.render(camera);
+        context.render();
     }
 
     context.clear_device_queue();

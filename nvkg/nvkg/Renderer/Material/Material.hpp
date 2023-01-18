@@ -21,11 +21,11 @@ namespace nvkg {
     #define MAX_DESCRIPTOR_SETS 8
     #define MAX_DESCRIPTOR_BINDINGS_PER_SET 4
 
+    #define VERTEX_BUFFER_BIND_ID 0
+    #define INSTANCE_BUFFER_BIND_ID 1
+
     class Material {
         public:
-        
-            inline static constexpr uint32_t VERTEX_BUFFER_BIND_ID { 0 };
-            inline static constexpr uint32_t INSTANCE_BUFFER_BIND_ID { 1 };
             
             struct instance_binding_data {
                 bool instancing_enabled = false;

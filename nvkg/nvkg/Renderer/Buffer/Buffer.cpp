@@ -26,7 +26,7 @@ namespace nvkg::Buffer {
 		allocInfo.allocationSize = memRequirements.size;
 		allocInfo.memoryTypeIndex = device().find_mem_type(memRequirements.memoryTypeBits, properties);
 
-		NVKG_ASSERT (vkAllocateMemory(device().device(), &allocInfo, nullptr, OUT &bufferMemory) == VK_SUCCESS,
+		NVKG_ASSERT(vkAllocateMemory(device().device(), &allocInfo, nullptr, OUT &bufferMemory) == VK_SUCCESS,
 			"failed to allocate vertex buffer memory!");
 
   		vkBindBufferMemory(device().device(), buffer, bufferMemory, 0);

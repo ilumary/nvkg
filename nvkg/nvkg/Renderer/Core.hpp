@@ -1,8 +1,8 @@
 #ifndef NVKG_CORE_HPP
 #define NVKG_CORE_HPP
 
-#include <nvkg/Utils/mem_profiler.hpp>
 #include <nvkg/Renderer/Utils/Hash.hpp>
+#include <nvkg/Utils/mem_profiler.hpp>
 #include <nvkg/Utils/logger.hpp>
 #include <nvkg/ecs/ecs.hpp>
 
@@ -32,12 +32,5 @@
 #define OUT
 
 #define INTERN_STR(str) Utils::WSID(str)
-
-namespace nvkg {
-    struct CameraData {
-        glm::mat4 projectionMatrix;
-        glm::mat4 viewMatrix;
-    };
-}
 
 #endif

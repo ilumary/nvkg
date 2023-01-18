@@ -100,17 +100,19 @@ namespace nvkg {
             void load_vertices(const Mesh::MeshData& meshData);
             void update_vertices(const Mesh::MeshData& meshData);
 
-            void bind(VkCommandBuffer commandBuffer);
+            void bind(VkCommandBuffer commandBuffer, uint32_t bind_id = 0);
 
             bool has_index_buffer() { return has_index_buffer_; }
 
             uint32_t get_vertex_count() { return vertex_count_; }
             uint32_t get_index_count() { return index_count_; }
 
-        private:
-
             staged_buffer vertex_buffer_;
             staged_buffer index_buffer_;
+
+        private:
+
+            
 
             bool has_index_buffer_ = false, has_vertex_buffer_ = false;
 

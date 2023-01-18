@@ -13,20 +13,12 @@ namespace nvkg {
 
         public:
 
-            struct GlobalData {
-                CameraData cameraData;
-                point_light light_data[10];
-                int light_index;
-            };
-
             Renderer();
             ~Renderer();
 
-            void render(VkCommandBuffer& command_buffer, Camera* cam, const ecs::registry& registry);
+            void render(VkCommandBuffer& command_buffer, std::shared_ptr<CameraNew> camera, const ecs::registry& registry);
 
             void recreate_materials();
-
-            void destroy();
 
         private:
 

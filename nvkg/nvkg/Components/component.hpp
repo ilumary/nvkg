@@ -45,13 +45,15 @@ namespace nvkg {
         alignas(4) glm::float32 rotation_;
     };
 
-    struct shared_render_mesh { // instanced rendering, TODO
-        const std::shared_ptr<Mesh::MeshData> mesh_;
-        const std::shared_ptr<Material> material_;
+    struct shared_render_mesh {
+        std::shared_ptr<Model> model_;
+        std::shared_ptr<Material> material_;
     };
 
     struct instance_data {
-        std::shared_ptr<transform_3d> instance_data_;
+        std::vector<transform_3d> instance_data_;
+        uint32_t instance_count_;
+        staged_buffer instance_data_buffer_{VK_BUFFER_USAGE_VERTEX_BUFFER_BIT};
     };
 }
 

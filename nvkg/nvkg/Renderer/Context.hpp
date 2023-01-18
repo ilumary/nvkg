@@ -8,6 +8,8 @@
 #include <nvkg/Renderer/Renderer/Renderer.hpp>
 #include <nvkg/Renderer/DescriptorPool/DescriptorPool.hpp>
 
+#include <chrono>
+
 namespace nvkg {
 
     class Context {
@@ -15,8 +17,6 @@ namespace nvkg {
 
             Context(Window& window);
             ~Context();
-
-            void destroy_renderer();
 
             SwapChain& get_swapchain() { return swapchain; }
 
@@ -29,7 +29,7 @@ namespace nvkg {
 
             ecs::registry& get_registry() { return registry_; }
 
-            void render(Camera& cam);
+            void render();
             
             bool frame_started() { return is_frame_started; }
 
@@ -45,7 +45,11 @@ namespace nvkg {
 
             void set_clear_value(float r, float g, float b, float a) { clearValue = {r, g, b, a}; }
 
-        private:            
+            float get_frame_time() { return frame_time_; };
+
+            void set_camera(std::shared_ptr<CameraNew> cam) { camera_ = cam; }
+
+        private:
             static std::vector<VkCommandBuffer> command_buffers;
             
             VkClearColorValue clearValue {0, 0, 0, 1.f};
@@ -59,19 +63,23 @@ namespace nvkg {
             void begin_swapchain_renderpass(VkCommandBuffer commandBuffer);
             void end_swapchain_renderpass(VkCommandBuffer commandBuffer);
 
-            void render_frame(Camera& cam);
+            void render_frame();
 
             nvkg::Window& window;
             
             SwapChain swapchain;
 
-            Renderer* renderer;
+            std::unique_ptr<Renderer> renderer_;
 
             uint32_t current_image_index;
             bool is_frame_started{false};
             int current_frame_index{0};
 
+            std::chrono::time_point<std::chrono::high_resolution_clock> new_time_, current_time_ = std::chrono::high_resolution_clock::now();
+            float frame_time_ = 0.0f;
+
             ecs::registry registry_;
+            std::shared_ptr<CameraNew> camera_;
     };
 }
 

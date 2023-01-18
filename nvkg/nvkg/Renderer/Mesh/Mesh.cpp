@@ -36,11 +36,11 @@ namespace nvkg {
         if(has_index_buffer_) index_buffer_.create_buffer(meshData.indices, (sizeof(uint32_t) * meshData.indexCount));
     }
 
-    void Mesh::bind(VkCommandBuffer commandBuffer) {
+    void Mesh::bind(VkCommandBuffer commandBuffer, uint32_t bind_id) {
         if (vertex_count_ > 0) {
             VkBuffer buffers[] = {vertex_buffer_.buffer_.buffer};
             VkDeviceSize offsets[] = {0};
-            vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
+            vkCmdBindVertexBuffers(commandBuffer, bind_id, 1, buffers, offsets);
         }
 
         if (has_index_buffer_) vkCmdBindIndexBuffer(commandBuffer, index_buffer_.buffer_.buffer, 0, VK_INDEX_TYPE_UINT32);

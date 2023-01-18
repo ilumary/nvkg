@@ -22,50 +22,32 @@ namespace nvkg {
         });
     }
 
-    void Renderer::recreate_materials() {
+    Renderer::~Renderer() {}
 
-    }
+    void Renderer::recreate_materials() {}
 
-    void Renderer::destroy() {
+    void Renderer::render(VkCommandBuffer& commandBuffer, std::shared_ptr<CameraNew> camera, const ecs::registry& registry) {
+        registry.each([&commandBuffer, &camera](const shared_render_mesh& srm, const instance_data& id){
+            struct ubo {
+                glm::mat4 projection;
+                glm::mat4 modelview;
+                glm::vec4 light_pos = {0.0f, -5.0f, 0.0f, 1.0f};
+            } ubo;
 
-    }
+            ubo.projection = camera->matrices.perspective;
+            ubo.modelview = camera->matrices.view;
 
-    void Renderer::render(VkCommandBuffer& commandBuffer, Camera* cam, const ecs::registry& registry) {
-        GlobalData global_3d_data{};
-        global_3d_data.light_index = 0;
-        global_3d_data.cameraData = { cam->get_proj(), cam->get_view()};
-
-        registry.each([&global_3d_data](const point_light& p){
-            global_3d_data.light_data[global_3d_data.light_index] = p;
-            global_3d_data.light_index += 1;
+            srm.material_->set_uniform_data("globalData", sizeof(ubo), &ubo);
+            srm.material_->bind(commandBuffer);
+            //srm.model_->bind(commandBuffer);
+            VkDeviceSize offsets[1] = { 0 };
+            vkCmdBindVertexBuffers(commandBuffer, 0, 1, &srm.model_->mesh_.vertex_buffer_.buffer_.buffer, offsets);
+            vkCmdBindVertexBuffers(commandBuffer, 1, 1, &id.instance_data_buffer_.buffer_.buffer, offsets);
+            vkCmdBindIndexBuffer(commandBuffer, srm.model_->mesh_.index_buffer_.buffer_.buffer, 0, VK_INDEX_TYPE_UINT32);
+            vkCmdDrawIndexed(commandBuffer, srm.model_->get_index_count(), id.instance_count_, 0, 0, 0);
         });
 
-        uint64_t globalDataSize = sizeof(global_3d_data);
-
-        std::vector<Model::Transform> transforms{};
-        Material* tmp; // TODO replace with map of all materials
-        
-        registry.each([&transforms, &tmp](const transform_3d& t, const render_mesh& m){
-            auto transform = Utils::Math::calc_transform_3d(t.position_, t.rotation_, t.scale_);
-            auto normal = Utils::Math::calc_normal_matrix(t.rotation_, t.scale_);
-            transforms.push_back({transform, normal});
-            tmp = m.material_.get();
-        });
-
-        int instance = 0;
-
-        tmp->set_uniform_data("objectBuffer", sizeof(transforms[0]) * transforms.size(), transforms.data());
-        tmp->set_uniform_data("globalData", sizeof(global_3d_data), &global_3d_data);
-        tmp->bind(commandBuffer);
-
-        registry.each([&commandBuffer, &instance](const transform_3d& t, const render_mesh& m){
-            m.material_->bind(commandBuffer);
-            m.model_->bind(commandBuffer);
-            m.model_->draw(commandBuffer, instance);
-            instance += 1;
-        });
-
-        tmp = light_material.get();
+        /*tmp = light_material.get();
         Model* m = &light_model;
 
         tmp->set_uniform_data("globalData", sizeof(global_3d_data), &global_3d_data);
@@ -75,13 +57,13 @@ namespace nvkg {
             tmp->push_constant(commandBuffer, "push", sizeof(point_light), &p);
             m->bind(commandBuffer);
             m->draw(commandBuffer, 0);
-        });
+        });*/
 
-        tmp = &sdf_text::sdf_material();
-        tmp->bind(commandBuffer);
+        Material &tmp = sdf_text::sdf_material();
+        sdf_text::sdf_material().bind(commandBuffer);
 
         registry.each([&commandBuffer, &tmp](const sdf_text_outline& s, const render_mesh& r) {
-            tmp->push_constant(commandBuffer, "push", sizeof(sdf_text_outline), &s);
+            tmp.push_constant(commandBuffer, "push", sizeof(sdf_text_outline), &s);
             r.model_->bind(commandBuffer);
             r.model_->draw(commandBuffer, 0);
         });
