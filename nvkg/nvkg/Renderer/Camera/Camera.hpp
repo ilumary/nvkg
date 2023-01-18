@@ -79,7 +79,8 @@ namespace nvkg {
             } keys;
 
             bool moving() {
-                return Input::key_down(KEY_W) || Input::key_down(KEY_A) || Input::key_down(KEY_S) || Input::key_down(KEY_D);
+                return Input::key_down(KEY_W) || Input::key_down(KEY_A) || Input::key_down(KEY_S) ||
+                       Input::key_down(KEY_D) || Input::key_down(KEY_Q) || Input::key_down(KEY_E);
             }
 
             float getNearClip() { 
@@ -160,6 +161,10 @@ namespace nvkg {
                             position -= glm::normalize(glm::cross(camFront, glm::vec3(0.0f, 1.0f, 0.0f))) * moveSpeed;
                         if (Input::key_down(KEY_D))
                             position += glm::normalize(glm::cross(camFront, glm::vec3(0.0f, 1.0f, 0.0f))) * moveSpeed;
+                        if (Input::key_down(KEY_E))
+                            position -= glm::normalize(glm::cross(camFront, glm::vec3(1.0f, 0.0f, 0.0f))) * moveSpeed;
+                        if (Input::key_down(KEY_Q))
+                            position += glm::normalize(glm::cross(camFront, glm::vec3(1.0f, 0.0f, 0.0f))) * moveSpeed;
 
                         updateViewMatrix();
                     }
