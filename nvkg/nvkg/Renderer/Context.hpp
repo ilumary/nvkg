@@ -7,6 +7,7 @@
 #include <nvkg/Renderer/Material/Material.hpp>
 #include <nvkg/Renderer/Renderer/Renderer.hpp>
 #include <nvkg/Renderer/DescriptorPool/DescriptorPool.hpp>
+#include <nvkg/Input/Input.hpp>
 
 #include <chrono>
 
@@ -77,6 +78,7 @@ namespace nvkg {
 
             std::chrono::time_point<std::chrono::high_resolution_clock> new_time_, current_time_ = std::chrono::high_resolution_clock::now();
             float frame_time_ = 0.0f;
+            std::pair<double, double> old_cursor_pos;
 
             ecs::registry registry_;
             std::shared_ptr<CameraNew> camera_;

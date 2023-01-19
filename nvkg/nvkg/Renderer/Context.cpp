@@ -88,7 +88,17 @@ namespace nvkg {
 
         end_frame();
 
+        if(Input::mouse_button_down(GLFW_MOUSE_BUTTON_LEFT)) {
+            auto pos = Input::get_cursor_pos();
+            float deltaY = (old_cursor_pos.first - pos.first) * camera_->rotationSpeed * 0.5f;
+            float deltaX = (old_cursor_pos.second - pos.second) * camera_->rotationSpeed * 0.5f;
+            camera_->rotate(glm::vec3(deltaX, 0.0f, 0.0f));
+            camera_->rotate(glm::vec3(0.0f, -deltaY, 0.0f));
+        }
+        
         camera_->update(frame_time_);
+
+        old_cursor_pos = Input::get_cursor_pos();
     }
 
     bool Context::start_frame() {

@@ -22,23 +22,17 @@ class Input {
 
     public:
 
-        struct MouseCoordinates {
-            double x;
-            double y;
-        };
-
         static void init_with_window_pointer(nvkg::Window* window);
         static bool key_down(int key);
+        static bool mouse_button_down(int button);
         static bool key_just_pressed(int key);
 
-        static const MouseCoordinates& get_cursor_pos();
-        static MouseCoordinates get_norm_mouse_pos();
+        static const std::pair<double, double>& get_cursor_pos();
+        static std::pair<double, double> get_norm_mouse_pos();
 
     private:
         static nvkg::Window* window;
-        static bool detected_motion;
-        static MouseCoordinates crnt_mouse_coords;
-        static std::map<int, int> keys;
+        static std::pair<double, double> crnt_mouse_coords;
 
         static void GetCursorPositionCallback(GLFWwindow* window, double xpos, double ypos);
 
