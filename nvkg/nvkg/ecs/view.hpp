@@ -6,7 +6,20 @@
 
 namespace ecs {
 
-/// @brief A view lets you get a viewable range over components of Args out of a registry
+namespace detail {
+
+/// @brief Helper function to return true if all of the passed arguments are true
+///
+/// @tparam Args Parameter pack types
+/// @param args Parameter pack
+template<typename... Args>
+inline auto all(Args... args) -> bool {
+    return (... && args);
+}
+
+} // namespace detail
+
+/// @brief A view lets you get a range over components of Args out of a registry
 ///
 /// A view isn't invalidated when there are changes made to the registry which lets a create one an re-use over time.
 ///
@@ -32,7 +45,7 @@ public:
     /// @brief Returns an iterator that yields a std::tuple<Args...>
     ///
     /// @return decltype(auto) Iterator
-    decltype(auto) each()
+    auto each() -> decltype(auto)
         requires(!is_const) {
         return chunks(_registry.get_archetypes()) | std::views::join; // join all chunks together
     }
@@ -40,7 +53,7 @@ public:
     /// @brief Returns an iterator that yields a std::tuple<Args...>
     ///
     /// @return decltype(auto) Iterator
-    decltype(auto) each() const
+    auto each() const -> decltype(auto)
         requires(is_const) {
         return chunks(_registry.get_archetypes()) | std::views::join; // join all chunks together
     }
@@ -75,7 +88,7 @@ public:
     ///
     /// @param ent Entity to query
     /// @return value_type Components tuple
-    value_type get(entity ent)
+    auto get(entity ent) -> value_type
         requires(!is_const) {
         return _registry.template get<Args...>(ent);
     }
@@ -84,7 +97,7 @@ public:
     ///
     /// @param ent Entity to query
     /// @return value_type Components tuple
-    value_type get(entity ent) const
+    auto get(entity ent) const -> value_type
         requires(is_const) {
         return _registry.template get<Args...>(ent);
     }
@@ -94,9 +107,9 @@ private:
     ///
     /// @param archetypes Archetypes
     /// @return decltype(auto)
-    static decltype(auto) chunks(auto&& archetypes) {
-        auto filter_archetypes = [](auto& archetype) {
-            return (... && archetype->template contains<decay_component_t<Args>>());
+    static auto chunks(auto&& archetypes) -> decltype(auto) {
+        auto filter_archetypes = [](auto& archetype) -> bool {
+            return detail::all(archetype->template contains<decay_component_t<Args>>()...);
         };
         auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
         auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<Args...>(chunk); };
@@ -115,13 +128,13 @@ private:
 // Implement registry methods after we have view class defined
 
 template<component_reference... Args>
-ecs::view<Args...> registry::view()
+auto registry::view() -> ecs::view<Args...>
     requires(!const_component_references_v<Args...>) {
     return ecs::view<Args...>{ *this };
 }
 
 template<component_reference... Args>
-ecs::view<Args...> registry::view() const
+auto registry::view() const -> ecs::view<Args...>
     requires const_component_references_v<Args...> {
     return ecs::view<Args...>{ *this };
 }

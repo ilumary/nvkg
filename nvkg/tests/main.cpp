@@ -32,17 +32,23 @@ int main() {
     camera->setMovementSpeed(5.0f);
     context.set_camera(camera);
 
+    //nvkg::sdf_text_outline ft_outline = { .55f, false, .75f, {-0.99, -0.99}, {.02f, .04f}, 0.f };
+    //nvkg::render_mesh ft_render_mesh = { .model_ = nvkg::sdf_text::generate_text("Frame Time: 00000 us"), .material_ = nullptr };
+
     auto frame_time = registry.create<nvkg::sdf_text_outline, nvkg::render_mesh>(
-        { .55f, false, .75f, {-0.99, -0.99}, {.02f, .04f}, 0.f }, {
-        .model_ = nvkg::sdf_text::generate_text("Frame Time: 00000 us"),
-    });
+        { .55f, false, .75f, {-0.99, -0.99}, {.02f, .04f}, 0.f },
+        { .model_ = nvkg::sdf_text::generate_text("Frame Time: 00000 us"), .material_ = nullptr }
+    );
 
     nvkg::render_mesh& frame_time_render_mesh = registry.get<nvkg::render_mesh>(frame_time);
 
+    nvkg::sdf_text_outline mu_outline = { .55f, false, .75f, {-0.99, -0.95}, {.02f, .04f}, 0.f };
+    nvkg::render_mesh mu_render_mesh = { .model_ = nvkg::sdf_text::generate_text("Memory Usage: 00000 MB"), .material_ = nullptr };
+
     auto mem_usage = registry.create<nvkg::sdf_text_outline, nvkg::render_mesh>(
-        { .55f, false, .75f, {-0.99, -0.95}, {.02f, .04f}, 0.f }, {
-        .model_ = nvkg::sdf_text::generate_text("Memory Usage: 00000 MB"),
-    });
+        { .55f, false, .75f, {-0.99, -0.95}, {.02f, .04f}, 0.f },
+        { .model_ = nvkg::sdf_text::generate_text("Memory Usage: 00000 MB"), .material_ = nullptr }
+    );
 
     nvkg::render_mesh& mem_usage_render_mesh = registry.get<nvkg::render_mesh>(mem_usage);
 
@@ -55,26 +61,33 @@ int main() {
     
     /////Instancing
 
-    nvkg::Material::MaterialConfig config_test({
+    nvkg::Material::MaterialConfig instanced_config = {
         .shaders = {"instancing.vert", "instancing.frag"},
         .instance_data = { true, sizeof(nvkg::Vertex), sizeof(nvkg::transform_3d) },
-    });
+    };
 
-    auto instanced_entity = registry.create<nvkg::shared_render_mesh, nvkg::instance_data>({
-        .model_ = std::make_shared<nvkg::Model>("assets/models/cube.obj"),
-        .material_ = std::make_shared<nvkg::Material>(config_test)
-    }, {});
+    auto instanced_entity = registry.create<nvkg::shared_render_mesh, nvkg::instance_data>({ 
+            .model_ = std::make_shared<nvkg::Model>("assets/models/cube.obj"),
+            .material_ = std::make_shared<nvkg::Material>(instanced_config)
+        }, {}
+    );
+
+    auto instance_data_generator = []() -> std::vector<nvkg::transform_3d> {
+        std::vector<nvkg::transform_3d> instances;
+        for(int i = -5; i < 5; i++) {
+            for(int j = -5; j < 5; j++) {
+                for(int k = -5; k < 5; k++) {
+                    instances.push_back({{i * 2, j * 2, k * 2}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}});
+                }
+            }
+        }
+
+        return instances;
+    };
 
     nvkg::instance_data& instance_data = registry.get<nvkg::instance_data>(instanced_entity);
-    instance_data.instance_data_ = {{{0.f, 0.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}},
-                                    {{2.f, 0.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}},
-                                    {{-2.f, 0.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}},
-                                    {{-2.f, -2.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}},
-                                    {{2.f, -2.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}},
-                                    {{0.f, -2.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}},
-                                    {{-2.f, 2.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}},
-                                    {{2.f, 2.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}},
-                                    {{0.f, 2.f, 0.f}, {.5f, .5f, .5f}, {0.f, 0.f, 0.f}}};
+
+    instance_data.instance_data_ = instance_data_generator();
     instance_data.instance_count_ = instance_data.instance_data_.size();
 
     instance_data.instance_data_buffer_.init_staging_buffer(sizeof(nvkg::transform_3d) * instance_data.instance_count_);

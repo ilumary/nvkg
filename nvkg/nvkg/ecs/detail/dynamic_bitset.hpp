@@ -34,7 +34,7 @@ public:
     /// @param pos Position of the bit
     /// @return true If bit is set
     /// @return false If bit is unset
-    [[nodiscard]] inline bool test(std::size_t pos) const noexcept {
+    [[nodiscard]] inline auto test(std::size_t pos) const noexcept -> bool {
         const auto [block_index, bit_pos] = block_and_bit(pos);
         if (block_index < _blocks.size()) {
             return _blocks[block_index] & (block_type{ 1 } << bit_pos);
@@ -47,7 +47,7 @@ public:
     /// @param pos Position of the bit to set
     /// @param value Value to set
     /// @return dynamic_bitset&
-    inline dynamic_bitset& set(std::size_t pos, bool value = true) {
+    inline auto set(std::size_t pos, bool value = true) -> dynamic_bitset& {
         const auto [block_index, bit_pos] = block_and_bit(pos);
         if (block_index >= _blocks.size()) {
             _blocks.resize(block_index + 1);
@@ -68,7 +68,8 @@ public:
 
     /// @brief Clear all bits
     inline void clear() noexcept {
-        _blocks.clear();
+        _blocks.resize(1);
+        _blocks[0] = 0;
     }
 
     /// @brief Equality operator
@@ -76,14 +77,14 @@ public:
     /// @param rhs Right hand side bitset
     /// @return true If bitsets are equal
     /// @return false If bitsets aren't equal
-    bool operator==(const dynamic_bitset& rhs) const noexcept {
-        return std::equal(_blocks.begin(), _blocks.end(), rhs._blocks.begin(), rhs._blocks.end());
+    auto operator==(const dynamic_bitset& rhs) const noexcept -> bool {
+        return std::ranges::equal(_blocks, rhs._blocks);
     }
 
 private:
     friend struct std::hash<dynamic_bitset>;
 
-    static inline std::pair<std::size_t, std::size_t> block_and_bit(std::size_t pos) {
+    static inline auto block_and_bit(std::size_t pos) -> std::pair<std::size_t, std::size_t> {
         const auto bit_pos = pos % (sizeof(block_type) * CHAR_BIT);
         const auto block_index = pos / (sizeof(block_type) * CHAR_BIT);
         return std::make_pair(block_index, bit_pos);
@@ -92,14 +93,14 @@ private:
     storage_type _blocks;
 };
 
-}
+} // namespace ecs::detail
 
 namespace std {
 
 /// @brief Hash implementation for dynamic_bitset
 template<typename A>
 struct hash<ecs::detail::dynamic_bitset<A>> {
-    std::size_t operator()(const ecs::detail::dynamic_bitset<A>& bitset) const {
+    auto operator()(const ecs::detail::dynamic_bitset<A>& bitset) const -> std::size_t {
         std::size_t hash = 0;
         for (auto block : bitset._blocks) {
             hash ^= block;
@@ -108,4 +109,4 @@ struct hash<ecs::detail::dynamic_bitset<A>> {
     }
 };
 
-}
+} // namespace std

@@ -20,4 +20,4 @@ public:
     std::size_t entry_index{};
 };
 
-}
+} // namespace ecs

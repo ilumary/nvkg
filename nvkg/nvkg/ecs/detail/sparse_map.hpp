@@ -11,4 +11,4 @@ namespace ecs::detail {
 template<std::unsigned_integral K, typename T, typename Allocator = std::allocator<std::pair<K, T>>>
 using sparse_map = sparse_table<K, T, true, Allocator>;
 
-}
+} // namespace ecs::detail

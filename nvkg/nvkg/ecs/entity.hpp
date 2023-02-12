@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 #include <numeric>
+#include <vector>
 
 namespace ecs {
 
@@ -34,13 +34,12 @@ public:
     /// @param id ID number
     /// @param generation Generation number
     /// @return Handle
-    explicit constexpr entity(id_t id, generation_t generation = 0) noexcept : _id(id), _generation(generation) {
-    }
+    explicit constexpr entity(id_t id, generation_t generation = 0) noexcept : _id(id), _generation(generation) {}
 
     /// @brief Test if handle is valid
     ///
     /// @return True if handle is valid
-    [[nodiscard]] constexpr bool valid() const noexcept {
+    [[nodiscard]] constexpr auto valid() const noexcept -> bool {
         return *this != entity::invalid;
     }
 
@@ -78,7 +77,7 @@ public:
     /// @brief Create new handle
     ///
     /// @return Handle
-    [[nodiscard]] entity create() {
+    [[nodiscard]] auto create() -> entity {
         if (!_free_ids.empty()) {
             auto id = _free_ids.back();
             _free_ids.pop_back();
@@ -93,7 +92,7 @@ public:
     ///
     /// @param handle Handle to check
     /// @return True if handle is alive
-    [[nodiscard]] bool alive(entity handle) const noexcept {
+    [[nodiscard]] auto alive(entity handle) const noexcept -> bool {
         if (handle.id() < _generations.size()) {
             return _generations[handle.id()] == handle.generation();
         }
@@ -117,4 +116,4 @@ private:
     std::vector<typename entity::id_t> _free_ids;
 };
 
-}
+} // namespace ecs
