@@ -47,7 +47,7 @@ public:
     /// @return decltype(auto) Iterator
     auto each() -> decltype(auto)
         requires(!is_const) {
-        return chunks(_registry.get_archetypes()) | std::views::join; // join all chunks together
+        return chunk_views(_registry.get_archetypes()) | std::views::join; // join all chunks together
     }
 
     /// @brief Returns an iterator that yields a std::tuple<Args...>
@@ -55,7 +55,7 @@ public:
     /// @return decltype(auto) Iterator
     auto each() const -> decltype(auto)
         requires(is_const) {
-        return chunks(_registry.get_archetypes()) | std::views::join; // join all chunks together
+        return chunk_views(_registry.get_archetypes()) | std::views::join; // join all chunks together
     }
 
     /// @brief Run func on every entity that matches the Args requirement
@@ -63,7 +63,7 @@ public:
     /// @param func A callable to run on entity components
     void each(auto&& func)
         requires(!is_const) {
-        for (auto chunk : chunks(_registry.get_archetypes())) {
+        for (auto chunk : chunk_views(_registry.get_archetypes())) {
             for (auto entry : chunk) {
                 std::apply(func, entry);
             }
@@ -77,7 +77,7 @@ public:
     /// @param func A callable to run on entity components
     void each(auto&& func) const
         requires(is_const) {
-        for (auto chunk : chunks(_registry.get_archetypes())) {
+        for (auto chunk : chunk_views(_registry.get_archetypes())) {
             for (auto entry : chunk) {
                 std::apply(func, entry);
             }
@@ -102,7 +102,26 @@ public:
         return _registry.template get<Args...>(ent);
     }
 
+    const auto count() const noexcept -> std::size_t {
+        std::size_t s = 0;
+        for(const auto& c : chunks(_registry.get_archetypes())) {
+            s += c.size();
+        }
+        return s;
+    }
+
 private:
+
+    /// @brief Return a range of chunk views that match given component set in Args
+    ///
+    /// @param archetypes Archetypes
+    /// @return decltype(auto)
+    static auto chunk_views(auto&& archetypes) -> decltype(auto) {
+        auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<Args...>(chunk); };
+
+        return chunks(archetypes) | std::views::transform(as_typed_chunk); // each chunk casted to a typed chunk view range-like type
+    }
+
     /// @brief Return a range of chunks that match given component set in Args
     ///
     /// @param archetypes Archetypes
@@ -112,14 +131,12 @@ private:
             return detail::all(archetype->template contains<decay_component_t<Args>>()...);
         };
         auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
-        auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<Args...>(chunk); };
 
         return archetypes                               // for each archetype entry in archetype map
                | std::views::values                     // for each value, a pointer to archetype
                | std::views::filter(filter_archetypes)  // filter archetype by requested components
                | std::views::transform(into_chunks)     // fetch chunks vector
-               | std::views::join                       // join chunks together
-               | std::views::transform(as_typed_chunk); // each chunk casted to a typed chunk view range-like type
+               | std::views::join;                      // join chunks together
     }
 
     registry_type _registry;
