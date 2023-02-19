@@ -32,9 +32,6 @@ int main() {
     camera->setMovementSpeed(5.0f);
     context.set_camera(camera);
 
-    //nvkg::sdf_text_outline ft_outline = { .55f, false, .75f, {-0.99, -0.99}, {.02f, .04f}, 0.f };
-    //nvkg::render_mesh ft_render_mesh = { .model_ = nvkg::sdf_text::generate_text("Frame Time: 00000 us"), .material_ = nullptr };
-
     auto frame_time = registry.create<nvkg::sdf_text_outline, nvkg::render_mesh>(
         { .55f, false, .75f, {-0.99, -0.99}, {.02f, .04f}, 0.f },
         { .model_ = nvkg::sdf_text::generate_text("Frame Time: 00000 us"), .material_ = nullptr }

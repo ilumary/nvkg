@@ -24,9 +24,11 @@ namespace nvkg {
     #define VERTEX_BUFFER_BIND_ID 0
     #define INSTANCE_BUFFER_BIND_ID 1
 
+    
+
     class Material {
         public:
-            
+
             struct instance_binding_data {
                 bool instancing_enabled = false;
                 uint32_t per_vertex_size = 0;

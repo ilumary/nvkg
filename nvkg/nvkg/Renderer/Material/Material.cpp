@@ -29,6 +29,10 @@ namespace nvkg {
         vkDestroyPipelineLayout(device().device(), pipeline_layout, nullptr);
         
         Buffer::destroy_buffer(buffer);
+
+        for(auto& [stage, shader] : shaders) {
+            shader.reset();
+        }
     }
 
     void Material::bind(VkCommandBuffer commandBuffer) {

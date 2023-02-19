@@ -112,8 +112,6 @@ namespace nvkg {
 
         private:
 
-            
-
             bool has_index_buffer_ = false, has_vertex_buffer_ = false;
 
             uint32_t index_count_ = 0, vertex_count_ = 0;

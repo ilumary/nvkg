@@ -170,7 +170,7 @@ namespace nvkg {
             } file_handle_;
 
             ShaderModule(std::string file, bool runtime_compilation = true);
-            ~ShaderModule() { cleanup(); };
+            ~ShaderModule();
 
             ShaderModule(const ShaderModule&) = default;
             ShaderModule& operator=(const ShaderModule&) = default;
@@ -210,8 +210,6 @@ namespace nvkg {
             };
 
             void create();
-
-            void cleanup();
 
             /*
             * Parses binary data and returns it as an array of chars.

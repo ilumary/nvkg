@@ -236,6 +236,8 @@ namespace nvkg {
         recompile();
     }
 
+    ShaderModule::~ShaderModule() {};
+
     void ShaderModule::recompile() {
         std::filesystem::file_time_type crnt_last_write_time = std::filesystem::last_write_time(file_handle_.path_);
         if(crnt_last_write_time > file_handle_.last_write_time_) {
@@ -277,11 +279,6 @@ namespace nvkg {
 		shader_module_create_info.pCode = spirv_bin_data_u32.data();
 
 		NVKG_ASSERT(vkCreateShaderModule(device().device(), &shader_module_create_info, nullptr, &shader_module) == VK_SUCCESS, "Failed to create shader module");
-	}
-
-	void ShaderModule::cleanup() {
-		if (shader_module != VK_NULL_HANDLE)
-            vkDestroyShaderModule(device().device(), shader_module, nullptr);
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////// Private
