@@ -745,6 +745,16 @@ public:
         return (std::chrono::duration_cast<std::chrono::milliseconds>(elapsed_time)).count();
     }
 
+    /**
+     * @brief Get the number of nanoseconds that have elapsed between start() and stop().
+     *
+     * @return The number of nanoseconds.
+     */
+    [[nodiscard]] std::chrono::milliseconds::rep ns() const
+    {
+        return (std::chrono::duration_cast<std::chrono::nanoseconds>(elapsed_time)).count();
+    }
+
 private:
     /**
      * @brief The time point when measuring started.
