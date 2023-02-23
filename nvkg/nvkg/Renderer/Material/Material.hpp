@@ -72,7 +72,7 @@ namespace nvkg {
 
             std::map<VkShaderStageFlagBits, std::unique_ptr<ShaderModule>> shaders;
 
-            Buffer::Buffer buffer;
+            Buffer::Buffer buffer { VK_NULL_HANDLE };
             uint64_t buffer_size = 0;
 
             /*  

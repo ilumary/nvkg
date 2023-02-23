@@ -24,11 +24,16 @@ namespace nvkg {
             vkDestroyDescriptorSetLayout(device().device(), layout, nullptr);
         }
 
+        for(auto& [id, tex] : textures) {
+            delete tex;
+        }
+
         pipeline.destroy();
         
         vkDestroyPipelineLayout(device().device(), pipeline_layout, nullptr);
         
-        Buffer::destroy_buffer(buffer);
+        if(buffer_size > 0)
+            Buffer::destroy_buffer(buffer);
 
         for(auto& [stage, shader] : shaders) {
             shader.reset();
@@ -188,8 +193,8 @@ namespace nvkg {
                     }
 
                     descriptor_image_infos[img_counter] = {
-                        .sampler = textures[prop.id]->sampler->sampler,
-                        .imageView = textures[prop.id]->image_view->image_view,
+                        .sampler = textures[prop.id]->sampler.sampler,
+                        .imageView = textures[prop.id]->image_view.image_view,
                         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                     };
 

@@ -85,7 +85,11 @@ VkImageCreateInfo Image::create_image_create_info(VkImageType type,
 namespace nvkg {
 
     VulkanImage::VulkanImage(){}
-    VulkanImage::~VulkanImage(){}
+
+    VulkanImage::~VulkanImage() {
+        vkDestroyImage(device().device(), image, nullptr);
+        vkFreeMemory(device().device(), image_memory_, nullptr);
+    }
 
     void VulkanImage::create(VkExtent3D extent, VkFormat format, VkImageType type, VkImageCreateFlags flags,
                         VkImageAspectFlags aspect_flags, uint32_t mip_levels, uint32_t array_layers,
@@ -349,7 +353,9 @@ namespace nvkg {
     }
 
     VulkanImageView::VulkanImageView() {}
-    VulkanImageView::~VulkanImageView() {}
+    VulkanImageView::~VulkanImageView() {
+        vkDestroyImageView(device().device(), image_view, nullptr);
+    }
 
     void VulkanImageView::create(VulkanImage *image, VkImageViewType image_view_type, uint32_t base_mip_level) {
 		image_ = image;
@@ -383,7 +389,10 @@ namespace nvkg {
 	}
 
     VulkanSampler::VulkanSampler() {}
-    VulkanSampler::~VulkanSampler() {}
+    
+    VulkanSampler::~VulkanSampler() {
+        vkDestroySampler(device().device(), sampler, nullptr);
+    }
 
     void VulkanSampler::create(VkFilter mag_filter, VkFilter min_filter, VkSamplerAddressMode u, VkSamplerAddressMode v,
                         VkSamplerAddressMode w, bool enable_anisotropy, float max_anisotropy, VkSamplerMipmapMode mipmap_mode,

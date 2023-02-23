@@ -72,9 +72,8 @@ namespace nvkg {
 
 
     private:
-		VkImage staging_image_ = VK_NULL_HANDLE;
-        VkBuffer staging_buffer_ = VK_NULL_HANDLE;
-		VkDeviceMemory staging_memory_ = VK_NULL_HANDLE;
+        VkBuffer staging_buffer_ = VK_NULL_HANDLE; // freed after staging
+		VkDeviceMemory staging_memory_ = VK_NULL_HANDLE; // freed after staging
 		VkDeviceMemory image_memory_ = VK_NULL_HANDLE;
 
         std::unordered_map<VkFormat, FormatInfo> format_info_table_ = {
