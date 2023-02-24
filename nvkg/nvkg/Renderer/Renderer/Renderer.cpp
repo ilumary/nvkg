@@ -37,8 +37,8 @@ namespace nvkg {
             ubo.projection = camera->matrices.perspective;
             ubo.modelview = camera->matrices.view;
 
-            srm.material_->set_uniform_data("globalData", sizeof(ubo), &ubo);
-            srm.material_->bind(commandBuffer);
+            MaterialManager::get(srm.material_)->set_uniform_data("globalData", sizeof(ubo), &ubo);
+            MaterialManager::get(srm.material_)->bind(commandBuffer);
             srm.model_->bind(commandBuffer, VERTEX_BUFFER_BIND_ID);
             
             VkDeviceSize offsets[1] = { 0 };
@@ -61,11 +61,11 @@ namespace nvkg {
             m->draw(commandBuffer, 0);
         });*/
 
-        Material &tmp = sdf_text::sdf_material();
-        sdf_text::sdf_material().bind(commandBuffer);
+        material_handle tmp = sdf_text::sdf_material();
+        MaterialManager::get(tmp)->bind(commandBuffer);
 
         const auto sdf_sys = [&commandBuffer, &tmp](const sdf_text_outline& s, const render_mesh& r) {
-            tmp.push_constant(commandBuffer, "push", sizeof(sdf_text_outline), &s);
+            MaterialManager::get(tmp)->push_constant(commandBuffer, "push", sizeof(sdf_text_outline), &s);
             r.model_->bind(commandBuffer);
             r.model_->draw(commandBuffer, 0);
         };

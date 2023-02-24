@@ -253,8 +253,8 @@ namespace nvkg {
         });
     }
 
-    Material& sdf_text::sdf_material() { //TODO make shared_ptr
-        static nvkg::Material mat({
+    const material_handle sdf_text::sdf_material() {
+        static auto sdf_mat = MaterialManager::create({
             .shaders = {"sdf.vert", "sdf.frag"},
             .textures = {{"samplerColor", nvkg::TextureManager::load_2d_img("../assets/textures/font_sdf_rgba.png")}},
             .pipeline_configurator = [](nvkg::PipelineInit& pipeline) -> void {
@@ -273,7 +273,7 @@ namespace nvkg {
             },
         });
 
-        return mat;
+        return sdf_mat;
     };
 
 }

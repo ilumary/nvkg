@@ -24,29 +24,93 @@ namespace nvkg {
     #define VERTEX_BUFFER_BIND_ID 0
     #define INSTANCE_BUFFER_BIND_ID 1
 
+    struct instance_binding_data {
+        bool instancing_enabled = false;
+        uint32_t per_vertex_size = 0;
+        uint32_t per_instance_size = 0;
+    };
     
+    //TODO somehow get pointer to global ubo for continuos update without explicitly calling update from renderer
+    struct material_config {
+        std::vector<std::string> shaders;
+        std::map<std::string, SampledTexture*> textures;
+        std::function<void(PipelineInit& pipeline)> pipeline_configurator = {};
+        instance_binding_data instance_data = {};
+    };
+
+    /// @brief forward declare Material
+    class Material;
+
+    /// @brief material id used to reference any created material. 32 Bit should be sufficient for enough materials
+    using material_id = uint32_t;
+
+    /// @brief material generation used to determine if a material is alive
+    using material_generation = uint32_t;
+
+    /// @brief material handle hold an id and a generation
+    struct material_handle {
+        public:
+            static constexpr auto invalid_id = std::numeric_limits<material_id>::max();
+            static constexpr auto invalid_generation = std::numeric_limits<material_generation>::max();
+
+            constexpr material_handle() = default;
+            explicit constexpr material_handle(material_id id, material_generation gen = 0) noexcept : m_id_(id), m_gen_(gen) {}
+
+            constexpr auto operator<=>(const material_handle& rsh) const = default;
+
+            [[nodiscard]] constexpr auto id() const noexcept { return m_id_; }
+            [[nodiscard]] constexpr auto generation() const noexcept { return m_gen_; }
+
+        private:
+            material_id m_id_ {invalid_id};
+            material_generation m_gen_ {invalid_generation};
+    };
+
+    /// @brief material manager statically manages all materials in order to standardize storing them
+    class MaterialManager {
+        public:
+            /// @brief creates a new material and returns a unique handle
+            /// @param mc material config for configuring material
+            /// @return material handle
+            static const material_handle create(const material_config mc);
+
+            /// @brief retrieves pointer to material
+            /// @param mh material handle
+            /// @return pointer to material
+            static Material* get(const material_handle& mh);
+
+            /// @brief checks if material handle points to valid (='alive') material
+            /// @param mh material handle
+            /// @return bool
+            static const bool alive(const material_handle& mh) noexcept;
+
+            /// @brief invalidates material handle and destructs corresponding material
+            /// @param mh material handle
+            static const void destroy(const material_handle& mh) noexcept;
+
+            /// @brief destructs all materials. called at program close 
+            static const void cleanup() noexcept;
+
+        private:
+
+            static std::vector<material_id> recycled_ids_;
+            static std::vector<material_generation> generations_;
+            static material_id next_id_;
+
+            static std::vector<std::unique_ptr<Material>> materials_;
+    };
 
     class Material {
-        public:
+        private:
 
-            struct instance_binding_data {
-                bool instancing_enabled = false;
-                uint32_t per_vertex_size = 0;
-                uint32_t per_instance_size = 0;
-            };
-            
-            //TODO somehow get pointer to global ubo for continuos update without explicitly calling update from renderer
-            struct MaterialConfig {
-                std::vector<std::string> shaders;
-                std::map<std::string, SampledTexture*> textures;
-                std::function<void(PipelineInit& pipeline)> pipeline_configurator = {};
-                instance_binding_data instance_data{};
-            } config_;
-
-            Material(const MaterialConfig config);
+            Material(const material_config config);
 
             Material(const Material&) = delete;
             Material& operator=(const Material&) = delete;
+
+            friend MaterialManager; // make Material only constructible from MaterialManager
+
+        public:
 
             ~Material();
 
@@ -57,7 +121,9 @@ namespace nvkg {
             
             void bind(VkCommandBuffer commandBuffer);
 
-        private:
+        protected:
+
+            material_config config_;
 
             ShaderResource& get_res(Utils::StringId id);
             bool has_res(Utils::StringId id);

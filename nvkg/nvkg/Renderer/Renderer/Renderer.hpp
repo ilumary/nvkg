@@ -16,19 +16,16 @@ namespace nvkg {
             Renderer();
             ~Renderer();
 
-            void render(VkCommandBuffer& command_buffer, std::shared_ptr<CameraNew> camera, const ecs::registry& registry);
+            void render(VkCommandBuffer& command_buffer, std::shared_ptr<CameraNew> camera, ecs::registry& registry);
 
             void recreate_materials();
 
         private:
-
-            Utils::StringId global_data_id, transform_id;
-
             //TODO this needs to change
-            Model light_model;
-            std::unique_ptr<Material> light_material;
-            std::vector<glm::vec2> point_light_vertices = std::vector<glm::vec2>(0);
-            std::vector<uint32_t> point_light_indices = std::vector<uint32_t>(0);
+            //Model light_model;
+            //std::unique_ptr<Material> light_material;
+            //std::vector<glm::vec2> point_light_vertices = std::vector<glm::vec2>(0);
+            //std::vector<uint32_t> point_light_indices = std::vector<uint32_t>(0);
     };
 }
 

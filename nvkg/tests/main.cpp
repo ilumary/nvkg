@@ -34,17 +34,14 @@ int main() {
 
     auto frame_time = registry.create<nvkg::sdf_text_outline, nvkg::render_mesh>(
         { .55f, false, .75f, {-0.99, -0.99}, {.02f, .04f}, 0.f },
-        { .model_ = nvkg::sdf_text::generate_text("Frame Time: 00000 us"), .material_ = nullptr }
+        { .model_ = nvkg::sdf_text::generate_text("Frame Time: 00000 us") }
     );
 
     nvkg::render_mesh& frame_time_render_mesh = registry.get<nvkg::render_mesh>(frame_time);
 
-    nvkg::sdf_text_outline mu_outline = { .55f, false, .75f, {-0.99, -0.95}, {.02f, .04f}, 0.f };
-    nvkg::render_mesh mu_render_mesh = { .model_ = nvkg::sdf_text::generate_text("Memory Usage: 00000 MB"), .material_ = nullptr };
-
     auto mem_usage = registry.create<nvkg::sdf_text_outline, nvkg::render_mesh>(
         { .55f, false, .75f, {-0.99, -0.95}, {.02f, .04f}, 0.f },
-        { .model_ = nvkg::sdf_text::generate_text("Memory Usage: 00000 MB"), .material_ = nullptr }
+        { .model_ = nvkg::sdf_text::generate_text("Memory Usage: 00000 MB") }
     );
 
     nvkg::render_mesh& mem_usage_render_mesh = registry.get<nvkg::render_mesh>(mem_usage);
@@ -58,14 +55,14 @@ int main() {
     
     /////Instancing
 
-    nvkg::Material::MaterialConfig instanced_config = {
+    nvkg::material_config instanced_config = {
         .shaders = {"instancing.vert", "instancing.frag"},
         .instance_data = { true, sizeof(nvkg::Vertex), sizeof(nvkg::transform_3d) },
     };
 
     auto instanced_entity = registry.create<nvkg::shared_render_mesh, nvkg::instance_data>({ 
             .model_ = std::make_shared<nvkg::Model>("assets/models/cube.obj"),
-            .material_ = std::make_shared<nvkg::Material>(instanced_config)
+            .material_ = nvkg::MaterialManager::create(instanced_config)
         }, {}
     );
 

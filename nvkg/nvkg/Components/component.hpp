@@ -16,7 +16,7 @@ namespace nvkg {
 
     struct render_mesh { //normal rendering
         std::unique_ptr<Model> model_;
-        std::unique_ptr<Material> material_;
+        material_handle material_;
     };
 
     struct transform_3d {
@@ -47,7 +47,7 @@ namespace nvkg {
 
     struct shared_render_mesh {
         std::shared_ptr<Model> model_;
-        std::shared_ptr<Material> material_;
+        material_handle material_;
     };
 
     struct instance_data {

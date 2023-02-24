@@ -5,7 +5,66 @@
 
 namespace nvkg {
 
-    Material::Material(MaterialConfig config) {
+    /* MaterialManager */
+
+    std::vector<std::unique_ptr<Material>> MaterialManager::materials_ = []{
+        return std::vector<std::unique_ptr<Material>>();
+    }();
+
+    std::vector<material_id> MaterialManager::recycled_ids_ = []{
+        return std::vector<material_id>();
+    }();
+
+    std::vector<material_generation> MaterialManager::generations_ = []{
+        return std::vector<material_generation>();
+    }();
+
+    material_id MaterialManager::next_id_ = 0;
+
+    const material_handle MaterialManager::create(const material_config mc) {
+        if (!recycled_ids_.empty()) {
+            auto id = recycled_ids_.back();
+            recycled_ids_.pop_back();
+            materials_[id].reset(new Material(mc));
+            return material_handle{ id, generations_[id] };
+        }
+        materials_.emplace_back(new Material(mc));
+        auto handle = material_handle{ next_id_++ };
+        generations_.emplace_back();
+        return handle;
+    }
+
+    Material* MaterialManager::get(const material_handle& mh){
+        if(!alive(mh)) {
+            throw std::invalid_argument("Error: Invalid material handle");
+            return nullptr;
+        }
+        return materials_[mh.id()].get();
+    }
+
+    const bool MaterialManager::alive(const material_handle& mh) noexcept {
+        if (mh.id() < generations_.size()) {
+            return generations_[mh.id()] == mh.generation();
+        }
+        return false;
+    }
+
+    const void MaterialManager::destroy(const material_handle& mh) noexcept {
+        if (!alive(mh)) {
+            return;
+        }
+        materials_[mh.id()].reset(nullptr);
+        generations_[mh.id()]++;
+        recycled_ids_.push_back(mh.id());
+    }
+
+    const void MaterialManager::cleanup() noexcept {
+        materials_.clear();
+    }
+
+    /* Material */
+
+    Material::Material(material_config config) {
         config_ = config;
         for(auto& shader : config_.shaders) {
             std::unique_ptr<ShaderModule> tmp = std::make_unique<ShaderModule>(shader, true);
