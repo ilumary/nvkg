@@ -26,6 +26,8 @@ namespace nvkg {
 
     Context::~Context() {
         DescriptorPool::destroy_pool();
+
+        MaterialManager::cleanup();
     }
 
     void Context::create_cmdbf() {
