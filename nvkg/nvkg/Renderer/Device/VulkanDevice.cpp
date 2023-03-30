@@ -156,11 +156,9 @@ namespace nvkg {
 	void vulkan_device_impl::create_command_pool() {
 		QueueFamilyIndices::QueueFamilyIndices queueFamilyIndices = find_phys_queue_families();
 
-		VkCommandPoolCreateInfo poolInfo = {};
-		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		VkCommandPoolCreateInfo poolInfo = initializers::command_pool_create_info();
 		poolInfo.queueFamilyIndex = queueFamilyIndices.graphics_family_;
-		poolInfo.flags =
-			VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
 		NVKG_ASSERT(vkCreateCommandPool(device_, &poolInfo, nullptr, OUT &command_pool_) == VK_SUCCESS, "Failed to create command pool!");
 	}
@@ -204,17 +202,12 @@ namespace nvkg {
 	}
 
 	VkCommandBuffer vulkan_device_impl::begin_single_time_commands() {
-		VkCommandBufferAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandPool = command_pool_;
-		allocInfo.commandBufferCount = 1;
+		VkCommandBufferAllocateInfo allocInfo = initializers::command_buffer_allocate_info(command_pool_, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
 
 		VkCommandBuffer commandBuffer;
 		vkAllocateCommandBuffers(device_, &allocInfo, OUT &commandBuffer);
 
-		VkCommandBufferBeginInfo beginInfo{};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		VkCommandBufferBeginInfo beginInfo = initializers::command_buffer_begin_info();
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
 		vkBeginCommandBuffer(OUT commandBuffer, &beginInfo);

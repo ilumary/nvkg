@@ -120,11 +120,9 @@ namespace nvkg {
 
         VkCommandBuffer commandBuffer = get_crnt_cmdbf();
 
-        VkCommandBufferBeginInfo beginInfo{
-            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        };
+        VkCommandBufferBeginInfo cmd_buffer_begin_info = initializers::command_buffer_begin_info();
 
-        NVKG_ASSERT(vkBeginCommandBuffer(OUT commandBuffer, &beginInfo) == VK_SUCCESS,
+        NVKG_ASSERT(vkBeginCommandBuffer(OUT commandBuffer, &cmd_buffer_begin_info) == VK_SUCCESS,
             "Failed to begin recording command buffer");
         
         begin_swapchain_renderpass(commandBuffer);

@@ -47,7 +47,7 @@ namespace nvkg {
     /// @brief material generation used to determine if a material is alive
     using material_generation = uint32_t;
 
-    /// @brief material handle hold an id and a generation
+    /// @brief material handle hold an id and a generation 
     struct material_handle {
         public:
             static constexpr auto invalid_id = std::numeric_limits<material_id>::max();
