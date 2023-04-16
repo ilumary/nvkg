@@ -188,7 +188,7 @@ namespace nvkg {
         
         if(config_.pipeline_configurator) { config_.pipeline_configurator(pipeline_conf); } //user specified changes to pipeline
 
-        pipeline_conf.render_pass = SwapChain::GetInstance()->GetRenderPass()->GetRenderPass();
+        pipeline_conf.render_pass = SwapChain::get_instance()->get_render_pass()->get();
         pipeline_conf.pipeline_layout = pipeline_layout;
 
         NVKG_ASSERT(shaders.count(VK_SHADER_STAGE_VERTEX_BIT), "Vertex shader must be present");

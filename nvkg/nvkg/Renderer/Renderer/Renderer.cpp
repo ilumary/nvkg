@@ -23,6 +23,8 @@ namespace nvkg {
 
     void Renderer::recreate_materials() {}
 
+    //if own render systems get to be defined make the availible through function that mirrors render function
+    //so that they have access to the params like registry, commandBuffer and camera
     void Renderer::render(VkCommandBuffer& commandBuffer, std::shared_ptr<CameraNew> camera, ecs::registry& registry) {
         const auto render_sys = [&](const shared_render_mesh& srm, const instance_data& id){
             struct ubo {

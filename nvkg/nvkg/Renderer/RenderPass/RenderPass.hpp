@@ -166,7 +166,7 @@ namespace nvkg {
          *
          * @return the VkRenderPass object held by this instance
          */
-        VkRenderPass GetRenderPass() { return renderPass; }
+        VkRenderPass get() { return renderPass; }
 
         /**
          * @brief Cleans up the Vulkan RenderPass object.

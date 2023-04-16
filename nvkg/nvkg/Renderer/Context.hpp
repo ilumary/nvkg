@@ -51,7 +51,7 @@ namespace nvkg {
 
             ecs::registry& get_registry() { return registry_; }
 
-            float get_aspect_ratio() const { return swapchain.ExtentAspectRatio(); }
+            float get_aspect_ratio() const { return swapchain.extent_aspect_ratio(); }
 
             bool frame_started() { return is_frame_started; }
 
@@ -59,6 +59,7 @@ namespace nvkg {
 
         private:
             static std::vector<VkCommandBuffer> command_buffers;
+            std::vector<VkCommandBuffer> thread_command_buffer_collector;
 
             std::vector<thread_data> thread_data_;
             
@@ -66,7 +67,7 @@ namespace nvkg {
 
             void init_thread_data(uint32_t thread_count);
 
-            void create_cmdbf();
+            void create_primary_cmdbf();
             void free_cmdbf();
 
             void recreate_swapchain();
