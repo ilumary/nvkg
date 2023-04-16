@@ -3,10 +3,7 @@
 namespace nvkg {
 
     Renderer::Renderer() {
-        global_data_id = INTERN_STR("globalData");
-        transform_id = INTERN_STR("objectBuffer");
-
-        light_material = std::unique_ptr<Material>(new Material({
+        /*light_material = std::unique_ptr<Material>(new Material({
             .shaders = {"pointLight.vert", "pointLight.frag"},
         }));
 

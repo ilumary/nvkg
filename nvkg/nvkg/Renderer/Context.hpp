@@ -13,32 +13,19 @@
 
 namespace nvkg {
 
+    struct thread_data {
+        VkCommandPool command_pool_;
+        VkCommandBuffer command_buffer_;
+    };
+
     class Context {
         public:
 
-            Context(Window& window);
+            Context(Window& window, uint32_t thread_count = 0);
             ~Context();
-
-            SwapChain& get_swapchain() { return swapchain; }
-
-            int get_crnt_frame_index() const {
-                NVKG_ASSERT(!is_frame_started, "Can't get frame index when frame is not in progress!")
-                return current_frame_index;
-            }
-
-            float get_aspect_ratio() const { return swapchain.ExtentAspectRatio(); }
-
-            ecs::registry& get_registry() { return registry_; }
 
             void render();
             
-            bool frame_started() { return is_frame_started; }
-
-            VkCommandBuffer get_crnt_cmdbf() const { 
-                NVKG_ASSERT(is_frame_started, "Can't get command buffer when frame is not in progress!");
-                return command_buffers[current_frame_index]; 
-            }
-
             bool start_frame();
             void end_frame();
 
@@ -46,17 +33,40 @@ namespace nvkg {
 
             void set_clear_value(float r, float g, float b, float a) { clearValue = {r, g, b, a}; }
 
+            void set_camera(std::shared_ptr<CameraNew> cam) { camera_ = cam; }
+
+            SwapChain& get_swapchain() { return swapchain; }
+
             float get_frame_time() { return frame_time_; };
 
-            void set_camera(std::shared_ptr<CameraNew> cam) { camera_ = cam; }
+            VkCommandBuffer get_crnt_cmdbf() const { 
+                NVKG_ASSERT(is_frame_started, "Can't get command buffer when frame is not in progress!");
+                return command_buffers[current_frame_index]; 
+            }
+
+            int get_crnt_frame_index() const {
+                NVKG_ASSERT(!is_frame_started, "Can't get frame index when frame is not in progress!")
+                return current_frame_index;
+            }
+
+            ecs::registry& get_registry() { return registry_; }
+
+            float get_aspect_ratio() const { return swapchain.ExtentAspectRatio(); }
+
+            bool frame_started() { return is_frame_started; }
+
+            std::unique_ptr<BS::thread_pool> thread_pool_;
 
         private:
             static std::vector<VkCommandBuffer> command_buffers;
+
+            std::vector<thread_data> thread_data_;
             
             VkClearColorValue clearValue {0, 0, 0, 1.f};
 
+            void init_thread_data(uint32_t thread_count);
+
             void create_cmdbf();
-            void record_cmdbf();
             void free_cmdbf();
 
             void recreate_swapchain();

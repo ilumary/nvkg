@@ -10,8 +10,7 @@ namespace nvkg {
         vkDestroyRenderPass(device().device(), renderPass, nullptr);
     }
 
-    void
-    RenderPass::Begin(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkFramebuffer frameBuffer, VkOffset2D offset, VkExtent2D extent,
+    void RenderPass::Begin(VkRenderPass renderPass, VkCommandBuffer commandBuffer, VkFramebuffer frameBuffer, VkOffset2D offset, VkExtent2D extent,
                       VkClearValue *clearValues, uint32_t clearValueCount) {
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
