@@ -26,7 +26,7 @@ objects := $(patsubst nvkg/%, $(buildDir)/%, $(patsubst %.cpp, %.o, $(sources)))
 depends := $(patsubst %.o, %.d, $(objects))
 
 includes = -I $(abspath nvkg) -I $(externDir)/glslang -I $(externDir)/vulkan/include -I $(externDir)/glfw/include -I $(externDir)/glm -I $(externDir)/tinyobjloader -I $(externDir)/stb -I $(externDir)/vulkan/SPIRV-Cross/
-linkFlags = -L $(libDir) -lglfw3 -lspirv-cross -lglslang -lSPIRV -lGenericCodeGen -lglslang-default-resource-limits -lHLSL -lMachineIndependent -lOGLCompiler -lOSDependent -lSPVRemapper -L/opt/homebrew/opt/gcc/lib/gcc/12/
+linkFlags = -L $(libDir) -lglfw3 -lspirv-cross -lglslang -lSPIRV -lGenericCodeGen -lglslang-default-resource-limits -lHLSL -lMachineIndependent -lOGLCompiler -lOSDependent -lSPVRemapper -L/opt/homebrew/opt/gcc/lib/gcc/13/
 compileFlags := -std=c++2b $(includes) -O2
 glfwLib := $(libDir)/libglfw3.a
 
@@ -45,8 +45,8 @@ ifeq ($(UNAMEOS), Linux)
 endif
 ifeq ($(UNAMEOS),Darwin)
     platform := macos
-    #CXX = /opt/homebrew/opt/llvm/bin/clang++
-	CXX = aarch64-apple-darwin22-c++-12
+    #CXX = clang++
+	CXX = g++-13
     volkDefines = VK_USE_PLATFORM_MACOS_MVK
     linkFlags += -framework CoreVideo -framework IOKit -framework Cocoa -framework GLUT
 endif

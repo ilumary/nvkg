@@ -23,6 +23,8 @@ fi
 VULKAN_VERSION="1.3.238"
 GENERATOR="Unix Makefiles"
 EXTERN_DIR="${ROOT_DIR}/extern"
+CXX_COMPILER="clang++"
+C_COMPILER="clang"
 
 # Vulkan dependency variables
 VULKAN_EXTERN_DIR="${EXTERN_DIR}/vulkan"
@@ -45,6 +47,7 @@ setup_glfw() {
     echo "Setting up GLFW..."
     cmake -G "${GENERATOR}" -B"${EXTERN_DIR}"/glfw -S"${EXTERN_DIR}"/glfw
     make -C "${EXTERN_DIR}"/glfw -j"${NUMBER_OF_PROCESSORS}"
+    cp "${EXTERN_DIR}"/glfw/src/libglfw3.a "${ROOT_DIR}"/lib/
 }
 
 setup_glslang() {
@@ -60,6 +63,7 @@ setup_glslang() {
         -S"${EXTERN_DIR}"/glslang \
         -B"${EXTERN_DIR}"/glslang/build
     cmake --build "${EXTERN_DIR}"/glslang/build --target install -- -j"${NUMBER_OF_PROCESSORS}"
+    cp "${EXTERN_DIR}"/glslang/build/install/lib/*.a "${ROOT_DIR}"/lib
 }
 
 setup_glm() {
